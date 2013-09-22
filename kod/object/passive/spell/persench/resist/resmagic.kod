@@ -71,12 +71,28 @@ messages:
    {
       local iDuration;	   
       
-      % .6 to 4 minutes
-      iDuration = 40 + (iSpellPower * 2); 
+      % 1 to 6 minutes
+      iDuration = ((iSpellPower+1)/20) + 1;
       % translate to milliseconds
-      iDuration = iDuration * 1000;	  
+      iDuration = iDuration * 60 * 1000;
       
-      return random(iDuration/2,iDuration);
+      return iDuration;
+   }
+   
+   ModifyDefenseDamage(who = $, what = $, damage = $, atype = 0, aspell = 0)
+   {
+      local iResistanceStrength, iMax;
+
+      iResistanceStrength = Send(who,@GetEnchantedState,#what=self);
+      iMax = 25 - (iResistanceStrength)/8;
+      
+      if atype <> 0
+      {
+         % don't cap damage if there is a weapon component
+         iMax = MAX_DAMAGE_PER_HIT;
+      }
+
+      return bound(damage,0,iMax);
    }
 
    GetPotionClass()
