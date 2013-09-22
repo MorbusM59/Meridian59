@@ -110,13 +110,6 @@ messages:
       return bound(damage,0,iMax);
    }
 
-   EndEnchantment(who = $, report = TRUE, state = 0)
-   {
-      Send(who,@RemoveDefenseModifier,#what=self);
-
-      propagate;
-   }
-      
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
