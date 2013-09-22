@@ -84,16 +84,6 @@ messages:
       return iDuration;
    }
 
-   GetStateValue(who = $, iSpellPower = 0, target = $)
-   {
-      local iValue;
-      
-      iValue = send(self,@GetResistanceStrength,#iSpellPower=iSpellPower);
-      send(self,@AddResistances,#who=target,#value=iValue);
-      
-      return iValue;
-   }
-
    ModifyDefenseDamage(who = $, what = $, damage = $, atype = 0, aspell = 0)
    {
       local iResistanceStrength, iMax;
