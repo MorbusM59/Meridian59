@@ -118,7 +118,7 @@ classvars:
    
    viSpell_modifier = 0
 
-   viDefense_base = 50
+   viDefense_base = 25
    viDamage_base = 1
 
 properties:
