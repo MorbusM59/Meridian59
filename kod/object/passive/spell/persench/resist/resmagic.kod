@@ -19,8 +19,10 @@ resources:
    resistmagic_name_rsc = "resist magic"
    resistmagic_icon_rsc = iresmagc.bgf
    resistmagic_desc_rsc = \
-      "The war god fortifies you against magic attacks.  "
-      "Requires blue dragon scale to cast."
+      "Drains some of the caster's resistance to physical damage to create a "
+      "powerful barrier, that will protect her from magical attacks, both reducing "
+      "their severity and limiting the amount of damage they can inflict.  "
+      "Requires a blue dragon scale to cast."
    
    resistmagic_already_enchanted = "You are already resisting magic."
    resistmagic_success = "Kraanan fortifies %s%s against magic attacks."
@@ -60,6 +62,14 @@ messages:
 
       return;
    }	 
+   
+   AddResistances(who=$,value=$)
+   {
+      Send(who,@AddResistance,#what=-ATCK_SPELL_ALL,#value=value);
+      Send(who,@AddResistance,#what=-ATCK_WEAP_ALL,#value=-value/2);
+      
+      return;
+   }
 
    GetResistanceStrength(iSpellpower = 0)
    {
@@ -93,6 +103,14 @@ messages:
       }
 
       return bound(damage,0,iMax);
+   }
+   
+   RemoveResistances(who=$,value=$)
+   {
+      Send(who,@RemoveResistance,#what=-ATCK_SPELL_ALL,#value=value);
+      Send(who,@RemoveResistance,#what=-ATCK_WEAP_ALL,#value=-value/2);
+      
+      return;
    }
 
    GetPotionClass()
