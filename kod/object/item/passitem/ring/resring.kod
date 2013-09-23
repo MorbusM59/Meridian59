@@ -21,17 +21,21 @@ resources:
    resistring_icon_rsc = ring3.bgf            
   
    resistring_use_rsc = "You put the ring on."
-   resistring_dead_rsc = "The ring crumbles!"
+   resistring_condition_exc = " pulses and hums with magical energy."
+   resistring_condition_exc_mended = " pulses and hums with magical energy, but has been charged before."
+   resistring_condition_good = " glows softly, its energy waning ever so slowly."
+   resistring_condition_med = " glimmers weakly, much of its power having faded."
+   resistring_condition_poor = " shimmers faintly. Its magical energy seems to have almost vanished."
+   resistring_condition_broken = " looks dull and ordinary, its magic lost forever."
 
 classvars:
 
    vrIcon = resistring_icon_rsc
 
    vrUseMessage = resistring_use_rsc
-   vrDeadMessage = resistring_dead_rsc
 
-   viHits_init_min = 250
-   viHits_init_max = 350
+   viHits_init_min = 300
+   viHits_init_max = 300
 
    viBulk = 5
    viWeight = 10
@@ -40,6 +44,16 @@ classvars:
 
    % Resistance rings hide their color until revealed
    viUnrevealedColor = PT_ITEM_XLAT_BLUE_TO_WHITE
+   
+   vrPoss_article = object_article_cap_this_rsc
+
+   vbShow_condition = TRUE
+   vrCondition_exc = resistring_condition_exc
+   vrCondition_exc_mended = resistring_condition_exc_mended
+   vrCondition_good = resistring_condition_good
+   vrCondition_med = resistring_condition_med
+   vrCondition_poor = resistring_condition_poor
+   vrCondition_broken = resistring_condition_broken
 
 properties:
 
@@ -59,6 +73,7 @@ messages:
       }
       
       send(self,@AddResistances);
+      send(what,@AddDefenseModifier,#what=self);
       
       propagate;
    }
@@ -66,8 +81,30 @@ messages:
    NewUnused(what = $)
    {
       send(self,@RemoveResistances);
+      Send(what,@RemoveDefenseModifier,#what=self);
       
       propagate;
+   }
+   
+   DefendingHit(who = $, what = $, atype = 0, aspell = 0)
+   {
+      if aspell <> 0
+      {
+         if atype <> 0
+         {
+            % 50% chance to get damaged if partially magic.
+            if (random(1,100) < 51)
+            {
+               propagate;
+            }
+         }
+         else
+         {
+            % 100% chance to get damaged if pure magic.
+            propagate;
+         }  
+      }
+      return;
    }
       
    AddResistances()
@@ -97,6 +134,44 @@ messages:
    GetResistanceModifiers()
    {
       return [[piResistanceType,piResistanceChange]];
+   }
+   
+   % Things we handle to be a defense modifier:
+   ModifyDefensePower(who = $,what = $,defense_power = 0)
+   "Increase or decrease the defense of the defender."
+   {
+      return defense_power;
+   }
+
+   ModifyDefenseDamage(who = $,what = $,damage = $,atype = 0,aspell = 0)
+   "Increase or decrease damage done to defender."
+   {
+      return damage;
+   }
+   
+   CanMend()
+   "Resistance rings can now be recharged with mend."
+   {
+      local i, oItemAtt;
+      
+      for i in plItem_Attributes
+      {
+         oItemAtt = send(SYS,@FindItemAttByNum,#num=send(self,@GetNumFromCompound,#compound=first(i)));
+         
+         if oItemAtt = $
+         {
+            DEBUG("Illegal ItemAtt in list!");
+            
+            continue;
+         }
+         
+         if NOT send(oItemAtt,@ItemCanMend,#oItem=self)
+         {
+            return FALSE;
+         }
+      }
+      
+      return TRUE;
    }
 
 
