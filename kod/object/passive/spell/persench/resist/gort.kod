@@ -19,9 +19,10 @@ resources:
    ArmorOfGort_name_rsc = "armor of Gort"
    ArmorOfGort_icon_rsc = igort.bgf
    ArmorOfGort_desc_rsc = \
-      "Surrounds the caster with a powerful field which deflects "
-      "damage from extreme blows.  "
-      "Requires blue dragon scale to cast."
+      "Diverts some of your magical defenses to form a powerful ward "
+      "against physical attacks, both reducing their severity and limiting "
+      "the amount of damage they can inflict.  "
+      "Requires a blue dragon scale to cast."
    
    ArmorOfGort_already_enchanted_rsc = "You already have the Armor of Gort."
 
@@ -66,13 +67,21 @@ messages:
 
       return;
    }
+
+   AddResistances(who=$,value=$)
+   {
+      Send(who,@AddResistance,#what=-ATCK_WEAP_ALL,#value=value);
+      Send(who,@AddResistance,#what=-ATCK_SPELL_ALL,#value=-value/2);
+      
+      return;
+   }
    
    GetResistanceStrength(iSpellpower = 0)
    {
       %% strength varies from 7 to 40
       return iSpellPower/3 + 7;
    }
-
+   
    GetDuration(iSpellPower = 0)
    {
       local iDuration; 
@@ -98,6 +107,14 @@ messages:
       }
 
       return bound(damage,0,iMax);
+   }
+   
+   RemoveResistances(who=$,value=$)
+   {
+      Send(who,@RemoveResistance,#what=-ATCK_WEAP_ALL,#value=value);
+      Send(who,@RemoveResistance,#what=-ATCK_SPELL_ALL,#value=-value/2);
+      
+      return;
    }
 
 
