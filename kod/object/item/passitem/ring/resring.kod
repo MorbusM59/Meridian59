@@ -30,16 +30,13 @@ classvars:
    vrUseMessage = resistring_use_rsc
    vrDeadMessage = resistring_dead_rsc
 
-   % rate at which a charge will deplete from the ring--same as invisibility ring
-   viChargeRate = 60000
-
-   viHits_init_min = 15
-   viHits_init_max = 30
+   viHits_init_min = 250
+   viHits_init_max = 350
 
    viBulk = 5
    viWeight = 10
    
-   viValue_average = 280
+   viValue_average = 500
 
    % Resistance rings hide their color until revealed
    viUnrevealedColor = PT_ITEM_XLAT_BLUE_TO_WHITE
@@ -49,20 +46,8 @@ properties:
    piResistanceType = 0
    piResistanceChange = 50
 
-   ptCharge = $
-
 messages:
 
-   Delete()
-   {
-      if ptCharge <> $
-      {
-         DeleteTimer(ptCharge);
-         ptCharge = $;
-      }
-      
-      propagate;
-   }
 
    NewUsed(what = $)
    {
@@ -75,32 +60,12 @@ messages:
       
       send(self,@AddResistances);
       
-      if ptCharge <> $
-      {
-         DeleteTimer(ptCharge);
-      }
-      
-      ptCharge = CreateTimer(self,@ChargeTimer,viChargeRate);
-      
       propagate;
    }
 
    NewUnused(what = $)
    {
       send(self,@RemoveResistances);
-      
-      if ptCharge <> $ 
-      {
-         DeleteTimer(ptCharge);
-         ptCharge = $;
-      }
-      
-      piHits = piHits - 1;
-      if piHits <= 0
-      {
-         Send(poOwner,@MsgSendUser,#message_rsc=vrDeadMessage);
-         Send(self,@Delete);
-      }
       
       propagate;
    }
@@ -134,30 +99,6 @@ messages:
       return [[piResistanceType,piResistanceChange]];
    }
 
-   ChargeTimer()
-   "Called each minute to drain a hit."
-   {
-      ptCharge = $;
-      piHits = piHits - 1;
-
-      if piHits = 0
-      {
-         Send(poOwner, @TryUnuseItem, #what = self);
-         
-         return;
-      }
-      
-      ptCharge = CreateTimer(self, @ChargeTimer, viChargeRate);
-      
-      return;
-   }
-
-   UserLogoff()
-   {
-      Send(poOwner,@TryUnuseItem,#what=self);
-      
-      propagate;
-   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
