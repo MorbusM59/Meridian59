@@ -4515,8 +4515,7 @@ messages:
          {
             damage = Send(i,@ModifyDefenseDamage,#who=self,#what=what,#damage=damage,
                           #atype=atype,#aspell=aspell);
-            Send(i,@DefendingHit,#who=self,#what=what,#damage=damage,
-                          #atype=atype,#aspell=aspell);
+            Send(i,@DefendingHit,#who=self,#what=what,#atype=atype,#aspell=aspell);
          }
       
          iResistance = Send(self,@ResistanceCheck,#atype=atype,#aspell=aspell);                             
