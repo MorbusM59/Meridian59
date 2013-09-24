@@ -86,7 +86,7 @@ messages:
       propagate;
    }
    
-   DefendingHit(who = $, what = $, atype = 0, aspell = 0)
+   DefendingHit(who = $, what = $, damage = 0, atype = 0, aspell = 0)
    {
       if aspell <> 0
       {
