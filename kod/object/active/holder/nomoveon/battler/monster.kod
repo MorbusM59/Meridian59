@@ -762,7 +762,7 @@ messages:
       Send(self,@ClearBehavior);
       if actnow
       {
-         Send(self,@AttackTimer);
+         ptBehavior = CreateTimer(self,@AttackTimer,300);
       }
       else
       {
@@ -1435,6 +1435,18 @@ messages:
       propagate;
    }
 
+	% This is used to determine the initial chance to hit based on viLevel and viDifficulty.
+	GetBaseOffense()
+	{
+		return 1000 + viLevel*5 + (viDifficulty + piCombat_stance)*50;
+	}
+	
+	% This is used to determine the initial chance to hit based on viLevel and viDifficulty.
+	GetBaseDefense()
+	{
+		return 1000 + viLevel*5 + (viDifficulty - piCombat_stance)*50;
+	}
+	
    GetOffense(what = $, stroke_obj=$)
    "This returns the battler's ability to-hit.  Capped at 10000."
    {
@@ -1442,7 +1454,7 @@ messages:
 
       if piOffense = $
       {
-         iAttack = 1000 + 10*viLevel + 200*(viDifficulty + piCombat_stance);
+         iAttack = 1000 + 10*viLevel + 100*(viDifficulty + piCombat_stance);
       }
       else
       {
@@ -1464,7 +1476,7 @@ messages:
 
       if piDefense = $
       {
-         iDefense = 1000 + 10*viLevel + 200*(viDifficulty - piCombat_stance);
+         iDefense = 1000 + 10*viLevel + 100*(viDifficulty - piCombat_stance);
       }
       else
       {

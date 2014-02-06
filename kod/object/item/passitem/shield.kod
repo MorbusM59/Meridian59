@@ -121,7 +121,7 @@ messages:
 	  
 		oStroke = Send(SYS,@FindSkillByNum,#num=SKID_BASH);
 	   % This will trigger a free regular weapon attack on a successful parry.	  
-	   % Using TryAttack instead of DoExtraAttack since we want to factor in chance to hit.
+	   % Using TryAttack instead of DoSwings since we want to factor in chance to hit.
       Send(who,@TryAttack,#what=what,#stroke_obj=oStroke,#use_weapon=self,#activeuser=FALSE);
 
 	  return;

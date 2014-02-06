@@ -738,8 +738,8 @@ classvars:
    viGauntlet_space = 1
 
    % Our actual max is this plus a bonus for might.
-   viBulk_hold_max = 1700
-   viWeight_hold_max = 1700
+   viBulk_hold_max = 1000
+   viWeight_hold_max = 1000
 
    viMax_vigor = 200
 
@@ -4368,10 +4368,79 @@ messages:
       return TRUE;
    }
 
+	% This is used to determine the initial chance to hit based on agility and aim.
+	GetBaseDefense(what=$)
+	{
+		local i, oMonster, iDefense, iBonus;
+		
+      % Morphed?
+      oMonster = Send(self,@GetIllusionForm);
+      if (oMonster <> $) and Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED)
+      {
+			iDefense = Send(oMonster,@GetBaseDefense);
+      }
+      else
+      {
+			iDefense = 1000 + send(self,@GetAgility)*20;
+      }
+		
+      for i in plDefense_modifiers
+      {
+         iBonus = Send(i,@ModifyDefensePower,#who=self,#what=what,#defense_power=iDefense);
+         iDefense = iDefense * (100 + iBonus)/100;
+      }
+      
+      for i in plRadiusEnchantments
+      {
+         iBonus = Send(Nth(i,1),@ModifyDefensePower,#attacker=what,#iPower=Nth(i,2),#caster=Nth(i,3),#defense_power=iDefense);
+			iDefense = iDefense * (100 + iBonus)/100;
+      }
+		
+		% Disabled during testing.
+      % iDefense = iDefense + Send(Send(SYS,@GetParliament),@GetFactionDefenseBonus,#who=self);
+		
+		return iDefense;
+	}
+	
+	% This is used to determine the initial chance to hit based on agility and aim.
+	GetBaseOffense(what=$)
+	{
+		local i, oMonster, iOffense, iBonus;
+		
+      % Morphed?
+      oMonster = Send(self,@GetIllusionForm);
+      if (oMonster <> $) and Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED)
+      {
+			iOffense = Send(oMonster,@GetBaseOffense);
+      }
+      else
+      {
+			iOffense = 1000 + send(self,@GetAim)*20;
+      }
+		
+      % List of items and spells that affect chance-to-hit
+      for i in plAttack_modifiers
+      {
+         iBonus = Send(i,@ModifyHitRoll,#who=self,#what=what,#hit_roll=iOffense);
+         iOffense = iOffense * (100 + iBonus)/100;					 
+      }
+		
+      for i in plRadiusEnchantments
+      {
+			iBonus = Send(Nth(i,1),@ModifyHitRoll,#who=self,#what=what,#hit_roll=iOffense);
+			iOffense = iOffense * (100 + iBonus)/100;
+      }
+
+		% Disabled during testing.
+      % iOffense = iOffense + Send(Send(SYS,@GetParliament),@GetFactionHitrollBonus,#who=self);
+		
+		return iOffense;
+	}
+	
    % This returns the battler's ability to-hit. Ranges from 1 to 1000
    GetOffense(what = $, stroke_obj=$)
    {
-      local i, oWeapon, iStroke, iProficiency, iOffense, iBonus, oMonster;
+      local oWeapon, iStroke, iProficiency, iOffense, oMonster;
 
       oWeapon = $;
 
@@ -4400,36 +4469,6 @@ messages:
          }
          
          iOffense = 1000 + iStroke*10 + iProficiency*10;
-
-         if oWeapon <> $
-         {
-            if IsClass(oWeapon,&Weapon)
-            {
-               iBonus = Send(oWeapon,@ModifyHitRoll,#who=self,#target=what,#hit_roll=iOffense);
-               iOffense = iOffense * (100 + iBonus)/100;
-            }
-	     }
-      }
-
-      % List of items and spells that affect chance-to-hit
-      for i in plAttack_modifiers
-      {
-         iBonus = Send(i,@ModifyHitRoll,#who=self,#what=what,
-                         #hit_roll=iOffense,#stroke_obj=stroke_obj);
-         iOffense = iOffense * (100 + iBonus)/100;					 
-      }
-
-      % iOffense = iOffense + Send(Send(SYS,@GetParliament),@GetFactionHitrollBonus,#who=self);
-
-      % If we're using a ranged weapon and don't have a clear line of sight,
-      % then half our offense.
-      if what <> $
-         AND oWeapon <> $
-         AND IsClass(oWeapon,&RangedWeapon)
-         AND NOT Send(poOwner,@LineOfSight,#obj1=self,#obj2=what)
-         AND NOT (IsClass(self,&DM) AND Send(self,@PlayerIsImmortal))
-      {
-         iOffense = iOffense / 2;
       }
 
       return bound(iOffense,1,10000);
@@ -4438,7 +4477,7 @@ messages:
    % This returns the battler's ability to avoid being hit. Ranges from 1 to 1000.
    GetDefense(what = $, stroke_obj=$)
    {
-      local i, oWeapon, oShield, iParry, iDodge, iBlock, iAgility, iDefense, iBonus, oMonster;
+      local iParry, iDodge, iBlock, iDefense, oMonster;
 
       % Morphed?
       oMonster = Send(self,@GetIllusionForm);
@@ -4462,24 +4501,9 @@ messages:
          % Ask armor, it might give a penalty or bonus to dodge.         
          iDodge = Send(self,@GetDodgeAbility,#stroke_obj=stroke_obj);
 
-         iAgility = Send(self,@GetAgility);
          iDefense = 1000 + iParry*5 + iBlock*5 + iDodge*10;
       }
 
-      for i in plDefense_modifiers
-      {
-         iBonus = Send(i,@ModifyDefensePower,#who=self,#what=what,#defense_power=iDefense);
-         iDefense = iDefense * (100 + iBonus)/100;
-      }
-      
-      for i in plRadiusEnchantments
-      {
-         iBonus = Send(Nth(i,1),@ModifyDefensePower,#attacker=what,#iPower=Nth(i,2),#caster=Nth(i,3),#defense_power=iDefense);
-		 iDefense = iDefense * (100 + iBonus)/100;
-      }
-
-      % iDefense = iDefense + Send(Send(SYS,@GetParliament),@GetFactionDefenseBonus,#who=self);
-    
       return bound(iDefense,1,10000);
    }
 
@@ -10483,12 +10507,12 @@ messages:
 
    GetBulkMax()
    {
-      return viBulk_hold_max + (Send(self,@GetMight) * 20);
+      return viBulk_hold_max + (Send(self,@GetMight) * 40);
    }
 
    GetWeightMax()
    {
-      return viWeight_hold_max + (Send(self,@GetMight) * 20);
+      return viWeight_hold_max + (Send(self,@GetMight) * 40);
    }
 
    CountKnownAtLevel(school=$,level=$)

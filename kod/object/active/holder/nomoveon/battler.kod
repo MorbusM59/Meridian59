@@ -14,10 +14,6 @@ constants:
 
    include blakston.khd
 
-   % What's the percent chance to hit if offense and defense are equal?
-   % The higher this number is, the easier it is to hit in combat.
-   EQUAL_CHANCE_HIT = 500      
-
    % Threshold for the "wound" and "damage" levels of feedback.
    DAMAGE_THRESHOLD_WOUND = 5
    DAMAGE_THRESHOLD_DAMAGE = 15
@@ -37,8 +33,8 @@ resources:
    % battler_defender_slay - Psychochild's scimitar slays you.
    % battler_defender_miss - Psychochild's attack is blocked by you.
 
-   battler_attacker_crit = "~k~IYou exploit a flaw in %s%s's defenses to ready another attack!"  
-   battler_defender_crit = "~r~I%s%s exploits a flaw in your defenses to ready another attack!"  
+   battler_attacker_crit = "~k~IYou exploit %s%s's ineptitude to ready another attack!"  
+   battler_defender_crit = "~r~I%s%s exploits your ineptitude to ready another attack!"  
 
    battler_attacker_hit = "%sYour %s %s %s%s for ~k~B%i%s~B%s damage." 
    battler_attacker_fail = "%sYour %s fails to damage %s%s." 
@@ -136,8 +132,9 @@ resources:
    battler_pierce_wound = "pierces"
    battler_pierce_nick = "grazes"
 	
-   battler_backstab = "!"
-	battler_no_backstab = ""
+	battler_single = ""
+   battler_double = "!"
+   battler_quad = "!!"
 
 classvars:
 
@@ -321,7 +318,7 @@ messages:
    % For a monster, the stroke_obj is itself.
    TryAttack(what=$,stroke_obj=$,use_weapon=$,activeuser=TRUE)
    {
-      local iChanceToHit, iPreliminary, iDamage, oWeapon, iExtraHits;
+      local iBaseChanceToHit, iPreliminary, iDamage, oWeapon, iSwings;
 		
 		% We may use our shield as a weapon. Allow bash to pass the shield on as our use_weapon.
       if use_weapon <> $
@@ -334,68 +331,52 @@ messages:
 			oWeapon = Send(self,@GetWeapon);
 		}
 		
-      % Derived class should have checked all specific restrictions by this
-      %  point.
+      iSwings = 0;
+		
+      % Let's compare the attacker's aim to the defender's agility.
+		% We start out with a base of one swing per attack.
+		iBaseChanceToHit = 1000 * Send(self,@GetBaseOffense,#what=what) / Send(what,@GetBaseDefense,#what=self);
+      iBaseChanceToHit = bound(iBaseChanceToHit,250,4000);
+		
+		while iBaseChanceToHit > 0
+		{
+			if iBaseChanceToHit >= random(1,1000)
+			{
+				% We do one (more) swing!
+				iSwings = iSwings + 1;
+			}
 
-      % This is the generic checks and the calculation of chance to hit and
-      % damage.
-      iChanceToHit = (Send(self,@GetOffense,#what=what,#stroke_obj=stroke_obj)
-                      * EQUAL_CHANCE_HIT) / Send(what,@GetDefense,#what=self,#stroke_obj=stroke_obj);
-      iChanceToHit = bound(iChanceToHit,125,2000);
-      iExtraHits = 0;
-
-      if iChanceToHit < random(1,1000)
-	   {
-	      % Oops, a miss.  See if something happens.
-         Send(self,@AssessMiss,#what=what,#stroke_obj=stroke_obj);
-	   }
-	   else
-	   {
-		   if iChanceToHit >= random(1001,2000)
-         {
-            % We generate an extra hit!
-            iExtraHits = iExtraHits + 1;
-            % Let us tell them the good news.
-            if IsClass(self,&Player)
-            {
-               Send(self,@MsgSendUser,#message_rsc=battler_attacker_crit,#parm1=Send(what,@GetDef),#parm2=Send(what,@GetName));
-            }
-            
-            if IsClass(what,&Player)
-            {
-               Send(what,@MsgSendUser,#message_rsc=battler_defender_crit,#parm1=Send(self,@GetCapDef),#parm2=Send(self,@GetName));
-            }
-		   }
-
-         % We hit!
-		   iPreliminary = Send(self,@GetDamage,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon);
-		   iPreliminary = bound(iPreliminary,0,$);
-
-         iDamage = Send(what,@AssessDamage,#what=self,#damage=iPreliminary,#stroke_obj=stroke_obj,
-		                  #atype=Send(self,@GetDamageType,#use_weapon=use_weapon),#aspell=Send(self,@GetSpellType,#use_weapon=use_weapon));
-
-         Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#damage=iDamage,#use_weapon=oWeapon);
-	  
-         if iDamage = $
-         {
-            Send(self,@KilledSomething,#what=what,#use_weapon=oWeapon,
-                 #stroke_obj=stroke_obj);
-         }
-         else
-         {
-			   if (iDamage > 0 AND activeuser = TRUE)
-			   {   
-               Send(self,@DidDamage,#amount=iDamage,#what=what);
-			   }
-         }
-		 
-		   if iExtraHits > 0 AND iDamage <> $
-		   {
-            Post(self,@DoExtraHit,#preliminary=iPreliminary,#what=what,#stroke_obj=stroke_obj,
-					#use_weapon=oWeapon,#extra_hits=iExtraHits,#activeuser=activeuser);
-		   }
-      }
-      
+			iBaseChanceToHit = iBaseChanceToHit - 1000;
+		}
+			
+		if iSwings > 1
+		{
+			% Let us tell them the good news.
+			if IsClass(self,&Player)
+			{
+				Send(self,@MsgSendUser,#message_rsc=battler_attacker_crit,#parm1=Send(what,@GetDef),#parm2=Send(what,@GetName));
+			}
+			
+			if IsClass(what,&Player)
+			{
+				Send(what,@MsgSendUser,#message_rsc=battler_defender_crit,#parm1=Send(self,@GetCapDef),#parm2=Send(self,@GetName));
+			}
+		}
+		
+		if iSwings > 0
+		{
+			% In case we have at least one swing, let's calculate preliminary damage and pass it on to DoSwings.
+			iPreliminary = Send(self,@GetDamage,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon);
+			iPreliminary = bound(iPreliminary,0,$);
+	 
+			send(self,@DoSwings,#preliminary=iPreliminary,#what=what,#stroke_obj=stroke_obj,#use_weapon=oWeapon,#swings=iSwings,#activeuser=activeuser);
+		}
+		else
+		{
+			% Didn't even get a single swing. Pass the info onwards.
+			Send(self,@AssessMiss,#what=what,#stroke_obj=stroke_obj,#usedskill=FALSE);
+		}
+			
       if poOwner <> $
       {
          Send(poOwner,@SomethingAttacked,#what=self,#victim=what,#use_weapon=oWeapon);
@@ -404,35 +385,67 @@ messages:
       return TRUE;
    }
    
-   DoExtraHit(preliminary=0,what=$,stroke_obj=$,use_weapon=$,extra_hits=0,activeuser=TRUE)
+   DoSwings(preliminary=0,what=$,stroke_obj=$,use_weapon=$,swings=0,activeuser=TRUE)
    {
-      local iDamage;
+      local iDamage, iChanceToHit, Double;
 		
-		% This is a guaranteed hit, without chance to hit calculations.
-		extra_hits = extra_hits - 1;
-	  
-      iDamage = Send(what,@AssessDamage,#what=self,#damage=preliminary,#stroke_obj=stroke_obj,
-		   #atype=Send(self,@GetDamageType,#use_weapon=use_weapon),#aspell=Send(self,@GetSpellType,#use_weapon=use_weapon),
-		   #report_resistance=FALSE);
-		   
-      Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#damage=iDamage,#use_weapon=use_weapon);
+		% A swing has been made, but even though it didn't miss, it can still be blocked, dodged or parried.
+		% To figure that out, we compare the attacker's offensive skills to the defender's defensive skills.
+		% We start out with a 50% chance for each swing to hit.
+      iChanceToHit = 500 * Send(self,@GetOffense,#what=what,#stroke_obj=stroke_obj) / Send(what,@GetDefense,#what=self,#stroke_obj=stroke_obj);
+      iChanceToHit = bound(iChanceToHit,125,2000);
+		
+		% First, lower the swings we have left in this attack by one.
+		swings = swings - 1;
+		Double = FALSE;
+		
+		% Now see if we actually hit.
+		if iChanceToHit >= random(1,1000)
+		{
+			if iChanceToHit >= random(1001,2000)
+			{
+				preliminary = preliminary * 2;
+				Double = TRUE;
+			}
+			
+			iDamage = Send(what,@AssessDamage,#what=self,#damage=preliminary,#stroke_obj=stroke_obj,
+				#atype=Send(self,@GetDamageType,#use_weapon=use_weapon),#aspell=Send(self,@GetSpellType,
+				#use_weapon=use_weapon),#report_resistance=FALSE);
+				
+			Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#damage=iDamage,#use_weapon=use_weapon,#double=Double);
 
-      if iDamage = $
-      {
-         Send(self,@KilledSomething,#what=what,#use_weapon=use_weapon,#stroke_obj=stroke_obj);
-      }
-      else
-      {
-		 if (iDamage > 0 AND activeuser = TRUE)
-		 {   
-            Send(self,@DidDamage,#amount=iDamage,#what=what);
-		 }
+			% We hit and did fatal damage. Let's not do any extra swings against our enemy.
+			if iDamage = $
+			{
+				Send(self,@KilledSomething,#what=what,#use_weapon=use_weapon,#stroke_obj=stroke_obj);
+			}
+			else
+			{	
+				% Only trigger this if we were active. If we stood afk and did a riposte or bash, we don't consider that active.
+				if (iDamage > 0 AND activeuser = TRUE)
+				{   
+					Send(self,@DidDamage,#amount=iDamage,#what=what);
+				}
 
-		 if extra_hits > 0 
-		 {
-            Post(self,@DoExtraHit,#preliminary=preliminary,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon,#extra_hits=extra_hits);
-		 }
-      }
+				% We hit, but didn't kill the target. Let's see if we have any swings left. If so, do another swing.
+				if swings > 0
+				{
+					Post(self,@DoSwings,#preliminary=preliminary,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon,#swings=swings);
+				}
+			}
+		}
+		else
+		{
+			% Got blocked, dodged or parried. Pass the info onwards.
+			Send(self,@AssessMiss,#what=what,#stroke_obj=stroke_obj,#usedskill=TRUE);
+			
+			% Even though we missed with the swing, we may still hit with the next one.
+			if swings > 0
+			{
+				Post(self,@DoSwings,#preliminary=preliminary,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon,#swings=swings);
+			}
+		}
+			
 	  return;
    }
        
@@ -879,7 +892,7 @@ messages:
    }
 
    % This returns defense reason of why opponent missed this battler.
-   GetDefenseDesc(stroke_obj=$,what=$)
+   GetDefenseDesc(stroke_obj=$,what=$,usedskill=FALSE)
    {
       local iRandom, iParry, iBlock, iDodge, oSkill;
       
@@ -887,65 +900,64 @@ messages:
       iBlock = Send(self,@GetBlockAbility,#stroke_obj=stroke_obj);
       iDodge = Send(self,@GetDodgeAbility,#stroke_obj=stroke_obj)*2;
 
-      iRandom = 1000 + iParry + iBlock + iDodge;
+      iRandom = iParry + iBlock + iDodge;
       iRandom = random(0,iRandom);
-
-      if iRandom <= iParry
-      {
-	      if (IsClass(self,&Player) AND NOT Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED))
-		   {
-	         send(send(self,@LookupPlayerWeapon),@DamageGear);
-			   if stroke_obj <> Send(SYS,@FindSkillByNum,#num=SKID_FIRE)
-				AND Send(self,@HasSkill,#num=SKID_RIPOSTE) 
-				AND (100 + Send(self,@GetAbility,#num=SKID_RIPOSTE)) > random(0,199)
-			   {
-	            post(send(self,@LookupPlayerWeapon),@DoRiposte,#who=self,#what=what);
-		   	}
-			   else
-			   {
-	            send(send(self,@LookupPlayerWeapon),@DoParryAnimation);
-			   }
-				
-				if (Send(self,@CheckPlayerFlag,#flag=PFLAG_DID_DAMAGE) AND Send(self,@GetKillTarget) = what)
-				{
-					oSkill=Send(sys,@FindSkillByNum,#num=SKID_PARRY);
-					Send(oSkill,@ImproveAbility,#who=self,#target=what);
-					Send(self,@ResetGainFlags);
-				}
-		   }
-
-         return battler_parried;
-      }
-
-      if iRandom <= (iParry + iBlock)
-      {
-	      if (IsClass(self,&Player) AND NOT Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED))
-		   {
-	         send(send(self,@LookupPlayerShield),@DoBlockAnimation);
-		      send(send(self,@LookupPlayerShield),@DamageGear);
-			   if stroke_obj <> Send(SYS,@FindSkillByNum,#num=SKID_FIRE)
-				AND Send(self,@HasSkill,#num=SKID_BASH) 
-				AND (100 + Send(self,@GetAbility,#num=SKID_BASH)) > random(0,199)
-			   {
-	            post(send(self,@LookupPlayerShield),@DoBlockAttack,#who=self,#what=what);
-			   }			
-				
-				if (Send(self,@CheckPlayerFlag,#flag=PFLAG_DID_DAMAGE) AND Send(self,@GetKillTarget) = what)
-				{
-					oSkill=Send(sys,@FindSkillByNum,#num=SKID_BLOCK);
-					Send(oSkill,@ImproveAbility,#who=self,#target=what);
-					Send(self,@ResetGainFlags);
-				}
-		   }
-			
-         return battler_blocked;
-      }
-
-      if iRandom <= (iParry + iBlock + iDodge)
-      {
-	      if (IsClass(self,&Player) AND NOT Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED))
+		
+		if usedskill = TRUE
+		{
+			if iRandom <= iParry
 			{
+				if (IsClass(self,&Player) AND NOT Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED))
+				{
+					send(send(self,@LookupPlayerWeapon),@DamageGear);
+					if stroke_obj <> Send(SYS,@FindSkillByNum,#num=SKID_FIRE)
+					AND Send(self,@HasSkill,#num=SKID_RIPOSTE) 
+					AND (100 + Send(self,@GetAbility,#num=SKID_RIPOSTE)) > random(0,199)
+					{
+						post(send(self,@LookupPlayerWeapon),@DoRiposte,#who=self,#what=what);
+					}
+					else
+					{
+						send(send(self,@LookupPlayerWeapon),@DoParryAnimation);
+					}
+					
+					if (Send(self,@CheckPlayerFlag,#flag=PFLAG_DID_DAMAGE) AND Send(self,@GetKillTarget) = what)
+					{
+						oSkill=Send(sys,@FindSkillByNum,#num=SKID_PARRY);
+						Send(oSkill,@ImproveAbility,#who=self,#target=what);
+						Send(self,@ResetGainFlags);
+					}
+				}
+
+				return battler_parried;
+			}
+
+			if iRandom <= (iParry + iBlock)
+			{
+				if (IsClass(self,&Player) AND NOT Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED))
+				{
+					send(send(self,@LookupPlayerShield),@DoBlockAnimation);
+					send(send(self,@LookupPlayerShield),@DamageGear);
+					if stroke_obj <> Send(SYS,@FindSkillByNum,#num=SKID_FIRE)
+					AND Send(self,@HasSkill,#num=SKID_BASH) 
+					AND (100 + Send(self,@GetAbility,#num=SKID_BASH)) > random(0,199)
+					{
+						post(send(self,@LookupPlayerShield),@DoBlockAttack,#who=self,#what=what);
+					}			
+					
+					if (Send(self,@CheckPlayerFlag,#flag=PFLAG_DID_DAMAGE) AND Send(self,@GetKillTarget) = what)
+					{
+						oSkill=Send(sys,@FindSkillByNum,#num=SKID_BLOCK);
+						Send(oSkill,@ImproveAbility,#who=self,#target=what);
+						Send(self,@ResetGainFlags);
+					}
+				}
 				
+				return battler_blocked;
+			}
+
+			if (IsClass(self,&Player) AND NOT Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED))
+			{
 				if (Send(self,@CheckPlayerFlag,#flag=PFLAG_DID_DAMAGE) AND Send(self,@GetKillTarget) = what)
 				{
 					oSkill=Send(sys,@FindSkillByNum,#num=SKID_DODGE);
@@ -954,10 +966,10 @@ messages:
 				}
 			}
 		
-         return battler_dodged;
-      }
-      
-      return battler_misses;
+			return battler_dodged;
+		}
+
+		return battler_misses;
    }
 
    % The next three messages deal with the three defense skills.  These
@@ -979,13 +991,18 @@ messages:
       return 0;
    }
 
-   AssessHit(what = $, stroke_obj = $, damage = $, use_weapon=$)
+   AssessHit(what = $, stroke_obj = $, damage = $, use_weapon=$, double=FALSE)
    "This does the fallout of a hit, gives appropriate message, etc.  "
    "Called on self when hit opponent."
    {
       local rColor, oWeapon, rWeaponName, iDmg, rDamageDesc, iType, rBackstab;
 
-      rBackstab = battler_no_backstab;
+      rBackstab = battler_single;
+
+		if double
+		{
+			rBackstab = battler_double;
+		}		
 		
 		if use_weapon = $
       {
@@ -1005,11 +1022,20 @@ messages:
          % This returns the name of a melee weapon, the ammo of a ranged
          %  weapon, or the attack name for a monster.
          rWeaponName = Send(oWeapon,@GetAttackName);
+
+			% This marks critical hits and backstabs with an exclamation mark.
 			if IsClass(oWeapon,&ShortSword)
 			{
 				if Send(oWeapon,@IsBackstab,#attacker=self,#victim=what)
 				{
-					rBackstab = battler_backstab;
+					if double
+					{
+						rBackstab = battler_quad;
+					}
+					else
+					{
+						rBackstab = battler_double;
+					}
 				}
 			}
       }
@@ -1118,14 +1144,15 @@ messages:
       return;
    }
 
-   AssessMiss(what = $, stroke_obj = $)
+   AssessMiss(what = $, stroke_obj = $, usedskill = TRUE)
    "This does the fallout of a miss, gives appropriate message, etc. "
    "Called on self when missing."
    {
       local rColor, rDescriptor;
 
-      rColor = battler_blue_text;
-	  rDescriptor = Send(what,@GetDefenseDesc,#stroke_obj=stroke_obj,#what=self);
+		% This doesn't just handle messages, but all combat mechanics associated with the defense skills.
+		rDescriptor = Send(what,@GetDefenseDesc,#stroke_obj=stroke_obj,#what=self,#usedskill=usedskill);
+		rColor = battler_blue_text;
 
       % This is kinda kludgy, should call messages in subclasses instead.
       if IsClass(self,&Player)

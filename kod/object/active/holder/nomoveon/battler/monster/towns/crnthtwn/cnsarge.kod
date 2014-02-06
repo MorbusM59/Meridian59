@@ -71,6 +71,7 @@ messages:
          Create(&RingDefense),
          Create(&ShortSword),	
          Create(&Mace),
+         Create(&Falchion),
          Create(&LeatherArmor)],
        [ SKID_DODGE, SKID_PUNCH, SKID_SLASH, SKID_PROFICIENCY_AXE,
          SKID_PROFICIENCY_HAMMER, SKID_BRAWLING, SKID_PROFICIENCY_SHORTSWORD,

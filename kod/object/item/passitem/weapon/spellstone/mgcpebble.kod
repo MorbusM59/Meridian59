@@ -53,36 +53,39 @@ properties:
 
 messages:
 
-   Constructor()
-   {
-      piItem_flags = send(SYS,@EncodeTwoColorXLAT,#color1=XLAT_TO_SKY,#color2=XLAT_TO_SKY);
-      
-      propagate;
-   }
-
    SendAnimation()
    {
-      AddPacket(1,ANIMATE_NONE,2,2);
+      if (piItem_flags & ITEM_PALETTE_MASK) <> 0
+      {
+         AddPacket(1,ANIMATE_TRANSLATION, 1,piItem_flags&ITEM_PALETTE_MASK);
+      }
 
+      if piHits > 0 OR viBroken_group = $
+      {
+         AddPacket(1,ANIMATE_NONE, 2,viGround_group);
+      }
+      else
+      {
+         AddPacket(1,ANIMATE_NONE, 2,viBroken_group);
+      }
+      
       return;
    }
 
    SendLookAnimation()
    {
-      AddPacket(1,ANIMATE_NONE,2,1);
-
-      return;
-   }
-
-   SendInventoryAnimation()
-   {
-      if piAnimation = ANIM_FLASH
+      if (piItem_flags & ITEM_PALETTE_MASK) <> 0
       {
-         AddPacket(1,ANIMATE_ONCE,4,300,2,3,2,3,2,1);
+         AddPacket(1,ANIMATE_TRANSLATION, 1,piItem_flags&ITEM_PALETTE_MASK);
+      }
+
+      if piHits > 0 OR viBroken_group = $
+      {
+         AddPacket(1,ANIMATE_NONE, 2,viInventory_group);
       }
       else
       {
-         AddPacket(1,ANIMATE_NONE,2,1);
+         AddPacket(1,ANIMATE_NONE, 2,viBroken_group);
       }
       
       return;

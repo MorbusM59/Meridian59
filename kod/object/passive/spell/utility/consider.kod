@@ -18,22 +18,28 @@ resources:
    consider_name_rsc = "consider"
    consider_icon_rsc = iartific.bgf
    consider_desc_rsc = \
-      "Carefully consider your opponent, telling you about your odds in combat. "
+      "Considering your opponent allows you to judge your odds in combat. \n\n"
+		"Your primary chance to hit is based on your accuracy as well as "
+		"the speed of your opponent. If your primary chance to hit is too low, your attack "
+		"may fail completely and miss its target, but if it is high, you may swing multiple times! \n\n"
+		"Your secondary chance to hit is based on your expertise with the weapon you wield and the opponent's "
+		"defensive skills.  As you gain more skill with your weapon, your chance of actually striking your "
+		"opponent instead of merely hitting his weapon or shield increases.  If you outclass your opponent, you "
+		"may even aim for vulnerable spots! \n\n"
+		"In addition, considering your enemies will allow you to get a rough idea of their physical and "
+		"mental capabilities, spiritual alignment and overall strength."
       
    consider_no_self_target = "You believe you know yourself fairly well already.  Smart, strong, beautiful... "
                              "and humble of course!"
 
    consider_succeed = "After careful consideration, you come to some conclusions..."
-   consider_chance_to_hit = "Considering your current setup, you should have about a "
-                    "%i percent chance to %s %s%s and a %i percent chance to %s %s."
+   consider_chance_to_hit = "In average, your attacks will deal %i percent damage to %s%s.  "
+							"(%i percent primary chance and %i percent secondary chance to hit.)"							
+	consider_chance_to_get_hit = "Likewise, %s%s's attacks will deal an average of %i percent damage to you.  "
+							"(%i percent primary chance and %i percent secondary chance to hit.)"							
    consider_stats = "Comparing %s to yourself, you notice that %s seems %s muscular, %s "
-                    "agile, %s accurate, %s enduring, %s thoughtful and %s spiritual."
+							"agile, %s accurate, %s enduring, %s thoughtful and %s spiritual."
    consider_level = "You have to say, that at least at first glance, %s seems %s you and %s."
-   
-   consider_string_self_hit = "hit"
-   consider_string_self_double = "execute an extra attack against"
-   consider_string_enemy_hit = "get hit by"
-   consider_string_enemy_double = "suffer an additional attack from"
    
    consider_less = "less"
    consider_much_less = "way less"
@@ -119,8 +125,8 @@ messages:
    CastSpell(who = $, lTargets = $, iSpellPower = 0)
    {
       local iMig, iAgi, iAim, iMys, iInt, iSta, iKarma, iLevel, oTarget, oTargetWeapon, oWeapon, 
-      iChanceToHit, iChanceToGetHit, iHitpercent, iGetHitpercent, oStroke, oTargetStroke,
-      sMig, sAgi, sAim, sMys, sInt, sSta, sKarma, sLevel;
+      iChanceToHit, iChanceToGetHit, iChanceToDamage, iChanceToGetDamaged,
+		oStroke, oTargetStroke, sMig, sAgi, sAim, sMys, sInt, sSta, sKarma, sLevel;
       
       Send(who,@MsgSendUser,#message_rsc=consider_succeed);
 
@@ -162,62 +168,32 @@ messages:
 			}
 		}
          
-      iChanceToHit = (Send(who,@GetOffense,#what=oTarget,#stroke_obj=oStroke)* 500)
-                     / Send(oTarget,@GetDefense,#what=who,#stroke_obj=oStroke);
-      iChanceToHit = bound(iChanceToHit,125,2000);
+      iChanceToHit = (Send(who,@GetBaseOffense,#what=oTarget)* 100) / Send(oTarget,@GetBaseDefense,#what=who);
+      iChanceToHit = bound(iChanceToHit,25,400);
+               
+      iChanceToGetHit = (Send(oTarget,@GetBaseOffense,#what=who)* 100) / Send(who,@GetBaseDefense,#what=oTarget);
+      iChanceToGetHit = bound(iChanceToGetHit,25,400);
+
+      iChanceToDamage = Send(who,@GetOffense,#what=oTarget,#stroke_obj=oStroke)* 50 / Send(oTarget,@GetDefense,#what=who,#stroke_obj=oStroke);
+      iChanceToDamage = bound(iChanceToDamage,12,200);
+               
+      iChanceToGetDamaged = Send(oTarget,@GetOffense,#what=who,#stroke_obj=oTargetStroke)* 50 / Send(who,@GetDefense,#what=oTarget,#stroke_obj=oTargetStroke);
+      iChanceToGetDamaged = bound(iChanceToGetDamaged,12,200);
       
-      if iChanceToHit > 1000
-      {
-         iHitpercent = (iChanceToHit/10)-100;
-      }
-      else
-      {
-         iHitpercent = (iChanceToHit/10);
-      }
-         
-      iChanceToGetHit = (Send(oTarget,@GetOffense,#what=who,#stroke_obj=oTargetStroke)* 500)
-                     / Send(who,@GetDefense,#what=oTarget,#stroke_obj=oTargetStroke);
-      iChanceToGetHit = bound(iChanceToGetHit,125,2000);
-      
-      if iChanceToGetHit > 1000
-      {
-         iGetHitpercent = (iChanceToGetHit/10)-100;
-      }
-      else
-      {
-         iGetHitpercent = (iChanceToGetHit/10);
-      }
-      
-      if iChanceToHit > 1000
-      {
-         if iChanceToGetHit > 1000
-         {
-            Send(who,@MsgSendUser,#message_rsc=consider_chance_to_hit,#parm1=iHitPercent,
-			   #parm2=consider_string_self_double,#parm3=Send(oTarget,@GetDef),#parm4=Send(oTarget,@GetName),
-               #parm5=iGetHitPercent,#parm6=consider_string_enemy_double,#parm7=Send(oTarget,@GetHimHer));
-         }
-         else
-         {
-            Send(who,@MsgSendUser,#message_rsc=consider_chance_to_hit,#parm1=iHitPercent,
-			   #parm2=consider_string_self_double,#parm3=Send(oTarget,@GetDef),#parm4=Send(oTarget,@GetName),
-               #parm5=iGetHitPercent,#parm6=consider_string_enemy_hit,#parm7=Send(oTarget,@GetHimHer));
-         }
-      }
-      else
-      {
-         if iChanceToGetHit > 1000
-         {
-            Send(who,@MsgSendUser,#message_rsc=consider_chance_to_hit,
-              #parm1=iHitPercent,#parm2=consider_string_self_hit,#parm3=Send(oTarget,@GetDef),#parm4=Send(oTarget,@GetName),
-			  #parm5=iGetHitPercent,#parm6=consider_string_enemy_double,#parm7=Send(oTarget,@GetHimHer));
-         }
-         else
-         {
-            Send(who,@MsgSendUser,#message_rsc=consider_chance_to_hit,#parm1=iHitPercent,#parm2=consider_string_self_hit,
-			   #parm3=Send(oTarget,@GetDef),#parm4=Send(oTarget,@GetName),#parm5=iGetHitPercent,
-			   #parm6=consider_string_enemy_hit,#parm7=Send(oTarget,@GetHimHer));
-         }
-      }
+		Send(who,@MsgSendUser,#message_rsc=consider_chance_to_hit,
+				#parm1=iChanceToHit*iChanceToDamage/100,
+			   #parm2=Send(oTarget,@GetDef),
+				#parm3=Send(oTarget,@GetName),
+				#parm4=iChanceToHit,
+				#parm5=iChanceToDamage);
+
+		Send(who,@MsgSendUser,#message_rsc=consider_chance_to_get_hit,
+			   #parm1=Send(oTarget,@GetDef),
+				#parm2=Send(oTarget,@GetName),
+				#parm3=iChanceToGetHit*iChanceToGetDamaged/100,
+				#parm4=iChanceToGetHit,
+				#parm5=iChanceToGetDamaged);
+
       
       if IsClass(oTarget,&Player)
       {  
