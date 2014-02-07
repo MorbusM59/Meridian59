@@ -20,10 +20,14 @@ resources:
    falchion_icon_rsc = scimitar.bgf
    falchion_desc_rsc = \
       "This short yet sturdy blade can slice its way through "
-      "more than just brambles.  It feels light and balanced in your hand."
+      "more than just brambles.  It feels light and balanced in your hand.  "
+		"It is a favorite among thugs to finish off a weakened target from behind."
 
    falchion_window_overlay_rsc = povscim.bgf
    falchion_player_overlay = scimov.bgf
+	
+	cutthroat_worked = "With a quick step, you slip behind %s%s's back to finish %s off!"
+	cutthroat_target = "Before you realize what has happened, %s%s has slipped behind your back to finish you off. Your vision dims..."
 
 classvars:
    vrName = falchion_name_rsc
@@ -51,6 +55,18 @@ properties:
    piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH
 
 messages:
+
+	DoCutThroat(victim=$)
+	{
+		send(poOwner,@MsgSendUser,#message_rsc=cutthroat_worked,#parm1=send(victim,@GetDef),#parm2=send(victim,@GetName),#parm3=send(victim,@GetHimHer));
+		
+		if IsClass(victim,&player)
+		{
+			send(victim,@MsgSendUser,#message_rsc=cutthroat_target,#parm1=send(poOwner,@GetDef),#parm2=send(poOwner,@GetName));
+		}
+		
+		return;
+	}
 
 
 end

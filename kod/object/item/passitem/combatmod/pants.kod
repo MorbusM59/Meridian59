@@ -113,7 +113,7 @@ messages:
       return;
    }
 
-   DefendingHit(who = $,what = $)
+   DamageGear(who = $,what = $)
    {
       return;
    }

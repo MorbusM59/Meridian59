@@ -146,6 +146,7 @@ properties:
 
    % list of resistances, Each element is [value, type].
    plResistances = $
+	ptBlackJack = $
 
 messages:
 
@@ -408,10 +409,9 @@ messages:
 				Double = TRUE;
 			}
 			
-			iDamage = Send(what,@AssessDamage,#what=self,#damage=preliminary,#stroke_obj=stroke_obj,
-				#atype=Send(self,@GetDamageType,#use_weapon=use_weapon),#aspell=Send(self,@GetSpellType,
-				#use_weapon=use_weapon),#report_resistance=FALSE);
-				
+			% This handles the individual weapon's special effect.
+			iDamage = send(self,@DoSpecialCombatEffects,#preliminary=preliminary,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon);
+			
 			Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#damage=iDamage,#use_weapon=use_weapon,#double=Double);
 
 			% We hit and did fatal damage. Let's not do any extra swings against our enemy.
@@ -448,7 +448,48 @@ messages:
 			
 	  return;
    }
-       
+	
+   DoSpecialCombatEffects(preliminary=0,what=$,stroke_obj=$,use_weapon=$)
+	{
+		local Absolute, iMaxHealth;
+		
+		Absolute = FALSE;
+		
+		if IsClass(use_weapon,&Mace)
+		{
+			if Send(use_weapon,@IsBackstab,#attacker=self,#victim=what)
+			{
+				send(use_weapon,@DoBlackJack,#victim=what);
+			}
+		}
+		
+		if IsClass(use_weapon,&Falchion)
+		{
+			if IsClass(what,&Player)
+			{
+				iMaxHealth = send(what,@GetBaseMaxHealth);
+			}
+			else
+			{
+				iMaxHealth = send(what,@ReturnMaxHitPoints);
+			}
+			
+			if Send(use_weapon,@IsBackstab,#attacker=self,#victim=what)
+			{
+				if 100 * send(what,@GetHealth) / iMaxHealth <= 20
+				{
+					send(use_weapon,@DoCutThroat,#victim=what);
+					
+					Absolute = TRUE;
+					preliminary = send(what,@GetLevel)*100;
+
+				}
+			}
+		}
+
+		return Send(what,@AssessDamage,#what=self,#damage=preliminary,#stroke_obj=stroke_obj,#atype=Send(self,@GetDamageType,#use_weapon=use_weapon),#aspell=Send(self,@GetSpellType,#use_weapon=use_weapon),#report_resistance=FALSE,#absolute=Absolute);
+	}
+			
    GetLevel()
    {
       return 65;
@@ -1215,7 +1256,36 @@ messages:
    {
       return;
    }
+	
+	AllowBlackJack()
+	{
+		ptBlackJack = $;
+		
+		return;
+	}
+	
+	GetBlackJack()
+	{
+		return ptBlackJack;
+	}
 
+	SetBlackJack()
+	{
+		ptBlackJack = CreateTimer(self,@AllowBlackJack,60000);
+		
+		return;
+	}
+	
+   Delete()
+   {
+      if ptBlackJack <> $
+      {
+         DeleteTimer(ptBlackJack);
+         ptBlackJack = $;
+      }
+      
+      propagate;
+   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

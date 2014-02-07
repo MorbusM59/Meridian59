@@ -190,7 +190,7 @@ messages:
       return TRUE;
    }
    
-   DefendingHit(who = $,what = $)
+   DamageGear(who = $,what = $)
    {
       return;
    }

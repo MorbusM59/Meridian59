@@ -62,7 +62,7 @@ messages:
 
 		if Send(self,@IsBackstab,#attacker=Send(self,@GetOwner),#victim=target)
 		{
-			iBackstab = 100;
+			iBackstab = 50;
 		}
 
       % First, get base damage.
@@ -76,43 +76,7 @@ messages:
       return iDamage;
 	}
 	
-	IsBackstab(attacker=$,victim=$)
-	{
-      local iVictimAngle, iVictimRow, iVictimCol, iAttackerRow, iAttackerCol, iDist;
 
-		% This is a slightly modified version of the in-sight-check in player.kod,
-		% just this time, we check if the victim can see us instead.
-		iVictimAngle = Send(victim,@GetAngle);
-		iVictimRow = Send(victim,@GetRow);
-		iVictimCol = Send(victim,@GetCol);
-		iAttackerRow = Send(attacker,@GetRow);
-		iAttackerCol = Send(attacker,@GetCol);
-      iDist = Send(attacker,@SquaredDistanceTo,#what=victim);
-		
-		if iDist > 0
-			AND ( ((iVictimAngle > ANGLE_ENE OR iVictimAngle <= ANGLE_ESE)
-					  AND iAttackerCol < iVictimCol)
-				  OR (iVictimAngle > ANGLE_ESE AND iVictimAngle <= ANGLE_SSE
-					  AND (iAttackerRow - iVictimRow) < (iVictimCol - iAttackerCol))
-				  OR (iVictimAngle > ANGLE_SSE AND iVictimAngle <= ANGLE_SSW
-					  AND iAttackerRow < iVictimRow)
-				  OR (iVictimAngle > ANGLE_SSW AND iVictimAngle <= ANGLE_WSW
-					  AND (iAttackerRow - iVictimRow) < (iAttackerCol - iVictimCol))
-				  OR (iVictimAngle > ANGLE_WSW AND iVictimAngle <= ANGLE_WNW
-					  AND iAttackerCol > iVictimCol)
-				  OR (iVictimAngle > ANGLE_WNW AND iVictimAngle <= ANGLE_NNW
-					  AND (iAttackerRow - iVictimRow) > (iVictimCol - iAttackerCol))
-				  OR (iVictimAngle > ANGLE_NNW AND iVictimAngle <= ANGLE_NNE
-					  AND iAttackerRow > iVictimRow)
-				  OR (iVictimAngle > ANGLE_NNE AND iVictimAngle <= ANGLE_ENE
-					  AND (iAttackerRow - iVictimRow) > (iAttackerCol - iVictimCol))
-				 )
-		{
-			return TRUE;
-      }
-
-      return FALSE;
-	}
 	
 
 end

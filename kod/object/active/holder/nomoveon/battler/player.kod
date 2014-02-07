@@ -4921,7 +4921,10 @@ messages:
 	  
       if IsClass(what,&Player) OR IsClass(what,&Reflection) OR IsClass(what,&EvilTwin)
       {
+			if NOT absolute
+			{
             damage = random(damage/2,damage);
+			}
       }
 	  
       iDuration = 800;

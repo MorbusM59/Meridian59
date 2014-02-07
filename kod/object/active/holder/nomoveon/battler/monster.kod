@@ -4084,12 +4084,7 @@ messages:
    "construction, and to heal the monster, as well as for indicating "
    "its current damage."
    {
-      if viLevel < 40
-      {
-         return viLevel;
-      }
-
-      return ((120 * viLevel) / 100);
+      return 2 * viLevel;
    }
    
    ReturnMaxHitPoints()
