@@ -565,7 +565,7 @@ messages:
          iParry = iParry + WEAPON_NERUDITE_PARRY;
       }
 	  
-      return send(who,@GetAbility,#num=SKID_PARRY) * (100 + viParry_chance) / 100;
+      return send(who,@GetAbility,#num=SKID_PARRY) * (100 + viParry_chance + iParry) / 100;
    }
 
    GetBaseSpellModifier()
@@ -1131,7 +1131,12 @@ messages:
 	IsBackstab(attacker=$,victim=$)
 	{
       local iVictimAngle, iVictimRow, iVictimCol, iAttackerRow, iAttackerCol, iDist;
-
+	
+		if attacker = $ OR victim = $
+		{
+			return FALSE;
+		}
+		
 		% This is a slightly modified version of the in-sight-check in player.kod,
 		% just this time, we check if the victim can see us instead.
 		iVictimAngle = Send(victim,@GetAngle);
