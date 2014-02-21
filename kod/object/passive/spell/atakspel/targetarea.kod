@@ -1,0 +1,297 @@
+% Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+% All rights reserved.
+%
+% This software is distributed under a license that is described in
+% the LICENSE file that accompanies it.
+%
+% Meridian is a registered trademark.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+TargetedArea is AttackSpell
+
+constants:
+
+   include blakston.khd
+
+resources:
+
+	targetarea_name_rsc = "frost nova"
+   targetarea_icon_rsc = irthquak.bgf
+   targetarea_desc_rsc = \
+      "This is a standard point blank area effect spell."
+		
+   targetarea_first_rsc = \
+      "You channel all your energy into a violent %s!"
+   targetarea_third_rsc = \
+      "%s%s channels all his energy into a violent %s!"
+
+   targetarea_killed_someone = \
+      "%s%s falls victim to the deadly %s!"     
+   targetarea_killed_self = \
+      "You are consumed by your own %s!"
+
+   targetarea_cast_rsc = \
+      "Your are caught in a massive %s!"
+   targetarea_hit_rsc = \
+      "%s%s is caught in a massive %s!"
+
+   targetarea_sound = fquake.wav
+
+classvars:
+
+   vrName = targetarea_name_rsc
+   vrDesc = targetarea_desc_rsc
+   vrIcon = targetarea_icon_rsc
+
+	% Chance to increase is one in viChance_To_Increase.
+   viChance_To_Increase = 10
+
+   viAttack_spell = ATCK_SPELL_ALL + ATCK_SPELL_ALL
+   viOutlaw = TRUE
+   viHarmful = TRUE
+	viHarm_caster = FALSE
+
+   viCast_delay = 2000
+	viCast_time = 1000
+	viDamage = 10
+   viRange = $
+
+   % Damage is 100% within this distance
+   viMax_damage_distance = 0
+ 
+   % Damage is 0 outside this distance 
+   viZero_damage_distance = 10
+   
+	vbIsRangedAttack = TRUE
+	
+	%Visual stuff.
+   vrProjectile_Icon = $
+   viProjectileFlag = PROJ_FLAG_LIGHT_SOURCE
+   % Projectile lighting information.
+   viProjectileLightFlags = LIGHT_FLAG_ON | LIGHT_FLAG_DYNAMIC
+   % Medium light range, out of 255.
+   viProjectileLightIntensity = 100
+   % Default color is lightning.
+   viProjectileLightColor = LIGHT_LIGHTNING
+
+properties:
+
+
+messages:
+
+   CanPayCosts(who = $, lTargets = $, bItemCast = FALSE)
+   {
+      local target, i, iTotalRange;
+
+      % Can cast spell if the 1 target item is a battler
+      if Length(lTargets) <> 1
+      {
+         return FALSE;
+      }
+
+      target = First(lTargets);
+
+      % Don't allow casting on self.  This also avoids a potential problem:
+      %  if this spell were to kill the caster, he would die before the
+      %  reagents were used.  This would take some rewriting of AttackSpell
+      %  and Spell.  But, if cast from an item, smoke yourself all you want!
+      if target = who AND (NOT bItemCast)
+      {
+         Send(who,@WaveSendUser,#wave_rsc=spell_fail_wav);
+         Send(who,@MsgSendUser,#message_rsc=attack_spell_no_self_rsc,#parm1=vrName);
+         
+         return FALSE;
+      }
+
+      if not IsClass(target,&Battler)
+      {
+         Send(who,@WaveSendUser,#wave_rsc=spell_fail_wav);
+         Send(who,@MsgSendUser,#message_rsc=spell_bad_target, 
+              #parm1=vrName,#parm2=Send(target,@GetDef),#parm3=Send(target,@GetName));
+              
+         return FALSE;
+      }
+
+      if viRange <> $
+      {
+         iTotalRange = viRange;
+
+         % A little fudge factor to account for lag drift, etc.
+         if IsClass(target,&Player) AND Send(target,@HasMovedRecently)
+         {
+            iTotalRange = iTotalRange + RANGE_MOVEMENT_BONUS;
+         }
+
+         if Send(who,@SquaredDistanceTo,#what=target) > (iTotalRange * iTotalRange)
+         {
+            if NOT bItemCast
+            {
+               Send(who,@MsgSendUser,#message_rsc=attack_spell_out_of_range, 
+                    #parm1=Send(target,@GetCapDef),#parm2=Send(target,@GetName),
+                    #parm3=vrName);
+            }
+
+            return FALSE;
+         }
+      }
+
+      propagate;
+   }
+
+   CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
+   {
+      local lActive, each_obj, iPercent, iFinal, iDamage, oRoom, oTarget;
+
+      oTarget = First(lTargets);
+      oRoom = Send(who,@GetOwner);
+		
+      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
+      Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
+
+		iDamage = send(self,@GetDamage,#who=who,#target=oTarget,#iSpellPower=iSpellPower,#bItemCast=bItemCast);
+		
+		% We currently only have one target, which is the center of our AE.
+		% Let's add all the other battlers in the room to our list of potential targets.
+      lActive = Send(oRoom,@GetHolderActive);
+
+      for each_obj in lActive
+      {
+         each_obj = Send(oRoom,@HolderExtractObject,#data=each_obj);
+         
+         if IsClass(each_obj,&Battler) AND each_obj <> oTarget
+         {
+            lTargets = cons(each_obj,lTargets);
+         }
+      }
+		
+		% Now remove any of those targets from our hitlist that we can't attack.
+		lTargets = Send(self,@GetGoodTargets,#who=who,#lTargets=lTargets);
+     
+		% Finally, deal damage to all valid targets based on how far away they are.
+		for each_obj in lTargets
+		{
+			iPercent = send(self,@FallOffSlope,#who=oTarget,#target=each_obj);
+			
+			% Only bother assessing damage when the battler is in range.
+			if iPercent <> 0
+			{
+				% Send the projectile before things start dying.
+				Send(self,@CreateProjectile,#who=oTarget,#victim=each_obj);
+				
+				iFinal = iDamage * iPercent / 100;
+						
+				iFinal = Send(each_obj,@AssessDamage,#what=who,#damage=iFinal,#atype=viAttack_type,#aspell=Send(self,@GetAttackSpell),#absolute=pbAbsolute);
+
+				Send(who,@AssessHit,#what=each_obj,#damage=iFinal,#use_weapon=self,#stroke_obj=self,#improve=FALSE);
+
+				if iFinal = $
+				{
+					Send(who,@KilledSomething,#what=each_obj,#use_weapon=self);
+				} 
+				else
+				{
+					Send(self,@DoSideEffect,#who=who,#victim=each_obj,#damage=iFinal);
+				}
+				
+				Send(oRoom,@SomethingAttacked,#what=who,#victim=each_obj,#use_weapon=self);
+			}
+		}
+
+		% Finally, allow for improvement if the spell was not cast from an item.
+		if not bItemCast
+		{
+			Send(self,@ImproveAbility,#who=who,#target=oTarget);
+		}
+
+      return;
+   }
+
+   % Add a pretty projectile.
+   CreateProjectile(who=$,victim=$)
+   {
+		local oRoom;
+		
+		oRoom = Send(who,@GetOwner);
+		
+      Send(oRoom,@SomethingShot,#who=who,#target=victim,#projectile=self,#flags=viProjectileFlag);
+		
+      return;
+   }
+	
+   FallOffSlope(who=$, target=$)
+   "Returns a percentage based on distance and spell properties."
+   {
+       local iPercent, iDistance_squared, iMax_distance_squared, iZero_distance_squared;
+
+       % Do full damage within viMax_damage_distance, zero damage outside
+       % viZero_damage_distance, and an amount that falls off with distance
+       % between the two.
+       iPercent = 100;
+       
+       if who <> $
+       {
+          iDistance_squared = Send(who, @SquaredDistanceTo, #what=target);
+       }
+       else
+       {
+          % Full damage for targetareas without a caster
+          iDistance_squared = 0;
+       }
+       
+       iMax_distance_squared = viMax_damage_distance * viMax_damage_distance;
+       iZero_distance_squared = viZero_damage_distance * viZero_damage_distance;
+		 
+       if iDistance_squared > iMax_distance_squared
+       {
+			if iDistance_squared > iZero_distance_squared
+			{
+				iPercent = 0;
+			}
+			else
+			{
+				iPercent = 100 * (iZero_distance_squared - iDistance_squared) / (iZero_Distance_squared - iMax_distance_squared);
+			}
+       }
+       
+       return iPercent;
+   }
+	
+	% Visual stuff.
+   % Return the icon used to display a spell shooting through the air.
+   GetProjectileIcon()
+   {
+      return vrProjectile_Icon;
+   }
+
+   % Return the speed at which a particular spell should appear to shoot through the air.
+   GetProjectileSpeed()
+   {
+      return 5;
+   }
+
+   SendProjectileAnimation()
+   {
+      % Send animation info to user.  Default is no animation, display with group 1
+      AddPacket(1,ANIMATE_NONE, 2,1);
+
+      return;
+   }      
+
+   GetProjectileLightFlags()
+   {
+      return viProjectileLightFlags;
+   }
+
+   GetProjectileLightIntensity()
+   {
+      return viProjectileLightIntensity;
+   }
+
+   GetProjectileLightColor()
+   {
+      return viProjectileLightColor;
+   }
+	
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

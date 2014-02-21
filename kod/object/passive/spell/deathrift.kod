@@ -96,7 +96,7 @@ messages:
       propagate;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   GetCastTime(iSpellpower=0,who=$)
    {
       return bound(viCast_time-(iSpellpower*500),10000,60000);
    }

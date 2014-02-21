@@ -263,12 +263,19 @@ messages:
       return;
    }
 
-   BreakTrance(who = $, state = $)
+   InterruptCasting(who=$,event=$)
    {
-      % If caster runs out of mana or loses trance, spell ends.
-      Send(who,@RemoveEnchantment,#what=self,#state=state);
-
-      propagate;
+		if event = EVENT_REST OR event = EVENT_DISRUPT
+		{
+			return TRUE;
+		}
+		else
+		{
+			Send(who,@RemoveEnchantment,#what=self);
+			Send(who,@MsgSendUser,#message_rsc=fade_broke_trance);
+		}
+	      
+      return TRUE;
    }
 
    StartPeriodicEnchantment(who = $, state = $)
@@ -292,7 +299,6 @@ messages:
 
    SetSpellPlayerFlag(who=$, state=$)
    {
-      Send(who,@SetTranceFlag);
       Send(who,@SetPlayerFlag,#flag=PFLAG_ANONYMOUS,#value=TRUE);
       
       return;

@@ -2862,6 +2862,7 @@ messages:
       Send(self,@CreateOneSpellIfNew,#num=SID_EVALUATE,#class=&Evaluate);
       Send(self,@CreateOneSpellIfNew,#num=SID_ENGRAVE,#class=&Engrave);
       Send(self,@CreateOneSpellIfNew,#num=SID_SLITHERBOLT,#class=&Slitherbolt);
+      Send(self,@CreateOneSpellIfNew,#num=SID_FROSTNOVA,#class=&FrostNova);
 
       Send(self,@CreateOneSpellIfNew,#num=SID_CURSE_WEAPON,#class=&CurseWeapon);
       Send(self,@CreateOneSpellIfNew,#num=SID_PARDON,#class=&Pardon);
@@ -3059,9 +3060,6 @@ messages:
       Send(self,@CreateOneSpellIfNew,#num=SID_LOADOUT,#class=&Loadout);
       Send(self,@CreateOneSpellIfNew,#num=SID_CONVEYANCE,#class=&Conveyance);
       Send(self,@CreateOneSpellIfNew,#num=SID_CONSIDER,#class=&Consider);
-
-      % Trance may be searched for frequently, leave at end of list
-      Send(self,@CreateOneSpellIfNew,#num=SID_TRANCE,#class=&Trance);
 
       return;
    }

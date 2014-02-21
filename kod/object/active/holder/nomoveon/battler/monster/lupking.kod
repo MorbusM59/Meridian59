@@ -139,7 +139,7 @@ messages:
 
    SomethingMoved(what=$)
    {
-      local oTrance, oActive, lActive, i;
+      local oActive, lActive, i;
 
       if what <> self OR poOwner = $
       {
@@ -147,7 +147,7 @@ messages:
       }
 
       % Shake the ground when I take a step.
-      % Small chance each person might lose any active trance.
+      % Small chance at disrupting spell casting.
 
       Send(poOwner,@Rumble,#duration=250,#disruption=50);
       
@@ -472,9 +472,6 @@ messages:
 
       }
    
-      oSpell = Send(SYS,@FindSpellByNum,#num=SID_EARTHQUAKE);
-      post(oSpell,@DoEarthQuake,#where=poOwner,#severity=2);
-
       propagate;
    }
 

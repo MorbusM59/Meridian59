@@ -42,7 +42,7 @@ classvars:
 
    vrSucceed_wav = Slitherbolt_sound
 
-   viPostCast_time = 5        % in seconds, since it works off gettime()
+   viCast_delay = 5000        % in seconds, since it works off gettime()
 
    viProjectileFlag = PROJ_FLAG_FOLLOW_GROUND
    % No projectile light information, currently

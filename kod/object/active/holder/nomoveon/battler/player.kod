@@ -1513,7 +1513,7 @@ messages:
          }
       }
       
-      Send(self,@BreakTrance,#event=EVENT_NEWOWNER);
+      Send(self,@InterruptCasting,#event=EVENT_NEWOWNER);
      
       if (piFlags2 & PFLAG2_HUNTED)
       {
@@ -4833,8 +4833,7 @@ messages:
    }
 
    % Handles damage done to player
-   AssessDamage(what = $,damage = $, atype = 0, aspell = 0, stroke_obj = $,
-              report = True, report_resistance = TRUE, absolute = FALSE)
+   AssessDamage(what=$,damage=$,atype=0,aspell=0,stroke_obj=$,report=True,report_resistance=TRUE,absolute=FALSE)
    {
       local i, iResistance, oSoldierShield, gainchance, color_rsc, iDuration, oSpell, oGort,
             iLimit, iFlat, iFlatBonus, iPercent, iPercentBonus, origdamage, oWeapon, shrunken;
@@ -4953,6 +4952,8 @@ messages:
 
       if damage > 0
       {
+			Send(self,@AddCastingTime,#addedtime=10000*damage/piBase_Max_Health,#event=EVENT_DAMAGE);
+			
          if Send(self,@CheckPlayerFlag,#flag=PFLAG2_PARALYZED,#flagset=2)
          {
             Send(self,@RemoveEnchantment,#what=Send(SYS,@FindSpellByNum,#num=SID_PARALYZE));
@@ -5937,14 +5938,7 @@ messages:
    }
 
    LoseHealth(amount = $, decay = FALSE)
-   "decay = TRUE if you lose a HP over time because you are boosted over max "
-   "by some sort of vamp effect. If this is true, you shouldn't break a trance."
    {
-      if piFlags & PFLAG_TRANCE AND NOT decay
-      {
-         Send(self,@BreakTrance,#event=EVENT_DAMAGE);
-      }
-
       piHealth = piHealth - amount;
       
       Send(self,@NewHealth);
@@ -10038,7 +10032,7 @@ messages:
          return;
       }
       
-      Send(self,@BreakTrance,#event=EVENT_REST);
+      Send(self,@InterruptCasting,#event=EVENT_REST);
       ptRest = CreateTimer(self,@RestTimer,Send(self,@GetRestTime));
       Send(self,@ResetPlayerFlagList);
 
@@ -10162,20 +10156,6 @@ messages:
       return (piHealth <= 0);
    }
 
-   SetTranceFlag()
-   {
-      piFlags = piFlags | PFLAG_TRANCE;
-      
-      return;
-   }
-
-   ClearTranceFlag()
-   {
-      piFlags = piFlags & (~PFLAG_TRANCE);
-      
-      return;
-   }
-
    SetFlickerFlag()
    {
       piDrawfx = piDrawfx | FLICKERING_YES;
@@ -10207,49 +10187,6 @@ messages:
       }
       
       return;
-   }
-
-   BreakTrance(event = 0, what = $)
-   {
-      local i, oEnch,state, bFound, oYellNum, oYellRoom;
-
-      bFound = FALSE;
-      for i in plEnchantments
-      {
-         oEnch = Nth(i,2);
-         if IsClass(oEnch,&Spell) OR IsClass(oEnch,&Trance)
-         {
-            state = $;
-            if Length(i) >= 3
-            {
-               state = Nth(i,3);
-            }
-
-            Send(oEnch,@BreakTrance,#who=self,#state=state,#event=event,#what=what);
-            bFound = TRUE;
-         }
-      }
-
-      if event = EVENT_NEWOWNER
-      {
-         for oYellNum in Send(poOwner,@GetYellZone)
-         {
-            oYellRoom = Send(SYS,@FindRoomByNum,#num=oYellNum);
-            if Send(oYellRoom,@BreakTrance,#who=self)
-            {
-               bFound = TRUE;
-               
-               break;
-            }
-         }
-      }
-      
-      if Send(poOwner,@BreakTrance,#who=self,#event=event)
-      {
-         bFound = TRUE;
-      }
-      
-      return bFound;
    }
 
    RecalcBulkAndWeight()

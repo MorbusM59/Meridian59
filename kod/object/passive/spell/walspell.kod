@@ -54,16 +54,6 @@ messages:
       propagate;
    }
 
-   DoubleCheckAfterTrance(who = $, lTargets = $, iSpellPower = 0)
-   {
-      if NOT Send(self,@CheckForSummoningLimit,#who=who)
-      {
-         return FALSE;
-      }
-
-      propagate;
-   }      
-
    GetNumSpellTargets()
    {
       return 0;

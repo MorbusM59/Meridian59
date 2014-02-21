@@ -40,8 +40,6 @@ classvars:
    viManaDrain = 7
    viDrainTime = 1000
 
-   viCast_time = 2000
-
    vbCheck_Exertion = TRUE
    viSpellExertion = 2
 
@@ -61,8 +59,8 @@ classvars:
    viIcon_animation_start = 2
    viIcon_animation_end = 2
 
-   viCast_time = 0
-   viPostCast_time = 1
+   viCast_time = 2000
+   viCast_delay = 1000
 
    vrSucceed_wav = $
 
@@ -104,16 +102,9 @@ messages:
       return 0;
    }
 
-   BreakTrance(who = $, state = $)
+   InterruptCasting(who = $, state = $)
    {
-      % If caster runs out of mana or loses trance, spell ends.
-      if IsClass(first(state),&prism)
-      {
-         Send(first(state),@CasterBrokeTrance,#who=who);
-         Send(who,@RemoveEnchantment,#what=self,#state=state);
-
-         propagate;
-      }
+			% removed component, under construction
 
       return;
    }
@@ -194,7 +185,7 @@ messages:
 
    SetSpellPlayerFlag(who=$)
    {
-      Send(who,@SetTranceFlag);
+		% removed component, under construction
 
       return;
    }
@@ -227,8 +218,7 @@ messages:
    EndEnchantment(who=$,state=$)
    "Called when caster breaks trance or runs out of mana (ends involvement inspell)."
    {
-      Send(who,@ClearTranceFlag);
-      Send(First(state),@CasterBrokeTrance,#who=who);
+			% removed component, under construction
 
       return;
    }

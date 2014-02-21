@@ -107,14 +107,14 @@ messages:
       return FALSE;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   GetCastTime(iSpellpower=0,who=$)
    {
       % Since this spell uses the trance, don't scale it down depending on iSpellpower
       return viCast_time;
    }
 
    PerformEngrave(caster = $,oTarget = $, sMessage = $)
-   "Realistically, this will usually be called by SomethingSaidDuringTrance."
+   "Realistically, this will usually be called by SomethingSaidWhileCasting."
    {
       local oItemAtt;
       
@@ -139,10 +139,10 @@ messages:
       return;
    }
 
-   SomethingSaidDuringTrance(who=$,string=$,lTargets = $)
+   SomethingSaidWhileCasting(who=$,string=$,lTargets = $)
    {
       % Don't print fizzle message.
-      send(who,@BreakTrance,#event=EVENT_STEER);
+      send(who,@InterruptCasting,#event=EVENT_STEER);
       send(self,@PerformEngrave,#caster=who,#oTarget=first(lTargets),#sMessage=string);
 
       return;

@@ -80,7 +80,7 @@ classvars:
    % Touch spells typically DO have a spell type.
    viSpellType = 0          
 
-   viPostCast_time = 1
+   viCast_delay = 1000
 
    % Cannot enchant others with touch attacks.
    vbCanCastOnOthers = FALSE

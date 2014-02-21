@@ -135,7 +135,22 @@ resources:
 	battler_single = ""
    battler_double = "!"
    battler_quad = "!!"
-
+	
+	spell_cast_begin = "You focus your whole will on casting %s."
+	spell_cast_steered = "As you utter the magical words, your %s spell triggers!"
+	spell_cast_interrupted = "Your %s spell has been interrupted!"
+	spell_cast_interrupted_cast = "You abandon your %s spell to cast something else!"
+	spell_cast_interrupted_newowner = "You abandon your attempt to cast %s and leave the area."
+	spell_cast_interrupted_run = "The delicate magicks of your %s spell collapse as you move too fast."
+	spell_cast_interrupted_damage = "Distracted by the intense pain, your %s spell fizzles!"
+	spell_cast_interrupted_attack = "You decide to save the %s spell for later and attack!"
+	spell_cast_interrupted_use = "Your %s spell fizzles as you focus your attention elsewhere."
+	spell_cast_interrupted_rest = "You sit down and decide to cast the %s spell some other time."
+	spell_cast_interrupted_disrupt = "A burst of magical energy disrupts your %s spell!"
+	
+	spell_cast_failed_sound = spelfail.wav
+	battler_can_cast_sound = healwand.wav
+	
 classvars:
 
    viObject_flags = MOVEON_NO | BATTLER_YES
@@ -144,9 +159,14 @@ classvars:
 
 properties:
 
-   % list of resistances, Each element is [value, type].
    plResistances = $
 	ptBlackJack = $
+	ptBattlerIsCasting = $
+	ptPostCastDelay = $
+	poSpellBeingCast = $
+	plTargets = $
+	piSpellpower = 0
+	pbAwaitsInput = FALSE
 
 messages:
 
@@ -455,34 +475,37 @@ messages:
 		
 		Absolute = FALSE;
 		
-		if IsClass(use_weapon,&Mace)
+		if use_weapon <> $
 		{
-			if Send(use_weapon,@IsBackstab,#attacker=self,#victim=what)
+			if IsClass(use_weapon,&Mace)
 			{
-				send(use_weapon,@DoBlackJack,#victim=what);
-			}
-		}
-		
-		if IsClass(use_weapon,&Falchion)
-		{
-			if IsClass(what,&Player)
-			{
-				iMaxHealth = send(what,@GetBaseMaxHealth);
-			}
-			else
-			{
-				iMaxHealth = send(what,@ReturnMaxHitPoints);
+				if Send(use_weapon,@IsBackstab,#attacker=self,#victim=what)
+				{
+					send(use_weapon,@DoBlackJack,#victim=what);
+				}
 			}
 			
-			if Send(use_weapon,@IsBackstab,#attacker=self,#victim=what)
+			if IsClass(use_weapon,&Falchion)
 			{
-				if 100 * send(what,@GetHealth) / iMaxHealth <= 20
+				if IsClass(what,&Player)
 				{
-					send(use_weapon,@DoCutThroat,#victim=what);
-					
-					Absolute = TRUE;
-					preliminary = send(what,@GetLevel)*100;
+					iMaxHealth = send(what,@GetBaseMaxHealth);
+				}
+				else
+				{
+					iMaxHealth = send(what,@ReturnMaxHitPoints);
+				}
+				
+				if Send(use_weapon,@IsBackstab,#attacker=self,#victim=what)
+				{
+					if 100 * send(what,@GetHealth) / iMaxHealth <= 20
+					{
+						send(use_weapon,@DoCutThroat,#victim=what);
+						
+						Absolute = TRUE;
+						preliminary = send(what,@GetLevel)*100;
 
+					}
 				}
 			}
 		}
@@ -1276,6 +1299,220 @@ messages:
 		return;
 	}
 	
+	StartCastingTimer(casttime=0,castdelay=0,oSpell=$,lTargets=$,iSpellpower=$,bAwaitsInput=FALSE)
+	{
+		% If we are currently casting another spell, make sure to interrupt that first.
+		if poSpellBeingCast <> oSpell
+		{
+			send(self,@InterruptCasting,#event=EVENT_CAST,#what=oSpell);
+		}
+
+		% If our spell does not have a cast delay, don't bother setting a timer for it.
+		if castdelay > 0
+		{
+			ptPostCastDelay = CreateTimer(self,@CanCastAgain,castdelay);
+		}
+		
+		ptBattlerIsCasting = CreateTimer(self,@FinishCasting,casttime);
+		poSpellBeingCast = oSpell;
+		plTargets = lTargets;
+		piSpellpower = iSpellpower;
+		pbAwaitsInput = bAwaitsInput;
+		
+		if IsClass(self,&Player) AND casttime > 0
+		{
+			Send(self,@MsgSendUser,#message_rsc=spell_cast_begin,#parm1=Send(poSpellBeingCast,@GetName));
+		}
+		
+		return;
+	}
+	
+	GetSpell()
+	{
+		return poSpellBeingCast;
+	}
+	
+	GetTargets()
+	{
+		return plTargets;
+	}
+
+	GetCastingTimer()
+	{
+		return ptBattlerIsCasting;
+	}
+	
+	GetCastingTimeLeft()
+	{
+		return gettimeremaining(ptBattlerIsCasting);
+	}
+	
+	GetDelayTimer()
+	{
+		return ptPostCastDelay;
+	}
+	
+	AwaitsInput()
+	{
+		return pbAwaitsInput;
+	}
+
+	FinishCasting()
+	{
+		ptBattlerIsCasting = $;
+		
+		Send(self,@CastSpell);
+		
+		return;
+	}
+	
+	CanCastAgain()
+	{
+		ptPostCastDelay = $;
+		
+		if IsClass(self,&Player)
+		{
+			Send(self,@WaveSendUser,#wave_rsc=battler_can_cast_sound);
+		}
+		
+		return;
+	}
+	
+	CastSpell()
+	{
+ 		% If the player has deflect up, check if the spell is reflected.
+		if plTargets <> $ AND IsClass(First(plTargets),&Battler) AND Send(First(plTargets),@TryDeflect,#what=poSpellBeingCast,#caster=self)
+		{
+			Send(poSpellBeingCast,@CastSpell,#who=self,#lTargets=self,#iSpellpower=piSpellpower/2);
+		}
+		else
+		{
+			Send(poSpellBeingCast,@CastSpell,#who=self,#lTargets=plTargets,#iSpellpower=piSpellpower);
+		}
+		
+		poSpellBeingCast = $;
+		plTargets = $;
+		piSpellpower = 0;
+		pbAwaitsInput = FALSE;
+	
+		return;
+	}
+
+	% Our spell is ended for one reason or another. This may either be a genuine interrupt or a steering event,
+	% such as when specifying an elusion destination or distilling a potion.
+	InterruptCasting(event=$)
+	{	
+		local i;
+		
+		% Before we do anything else, let's see if we have any maintained spells that are dropped by the interrupt.
+		if IsClass(self,&Player)
+		{
+			for i in send(self,@GetEnchantmentList)
+			{
+				Send(Nth(i,2),@InterruptCasting,#who=self,#event=event,#what=poSpellBeingCast);
+			}
+			for i in send(self,@GetRadiusEnchantments) 
+			{
+				if Nth(i,3) = self
+				{
+					Send(Nth(i,1),@InterruptCasting,#who=self,#event=event,#what=poSpellBeingCast);
+				}
+			}
+		}
+	
+		% Check if we are currently casting a spell.
+		if ptBattlerIsCasting <> $
+		{
+			% If so, see if the spell in questions is actually interrupted by this event.
+			if Send(poSpellBeingCast,@InterruptCasting,#event=event)
+			{
+				% If we are a player and didn't interrupt willingly, give a message and a fizzle sound.
+				if IsClass(self,&Player) AND event = EVENT_STEER
+				{
+					Send(self,@MsgSendUser,#message_rsc=spell_cast_steered,#parm1=Send(poSpellBeingCast,@GetName));
+					Send(self,@WaveSendUser,#wave_rsc=send(poSpellBeingCast,@GetSpellSound));
+				}
+				else
+				{
+					if event = EVENT_CAST
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_cast,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_NEWOWNER
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_newowner,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_RUN
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_run,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_DAMAGE
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_damage,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_ATTACK
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_attack,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_USE
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_use,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_REST
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_rest,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = EVENT_DISRUPT
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted_disrupt,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					if event = $
+					{
+						Send(self,@MsgSendUser,#message_rsc=spell_cast_interrupted,#parm1=Send(poSpellBeingCast,@GetName));
+					}
+					
+					Send(self,@WaveSendUser,#wave_rsc=spell_cast_failed_sound);
+				}
+				
+				% Delete the timer and reset all our spell properties.
+				DeleteTimer(ptBattlerIsCasting);
+				ptBattlerIsCasting = $;
+				poSpellBeingCast = $;
+				plTargets = $;
+				piSpellpower = 0;
+				pbAwaitsInput = FALSE;
+			}
+		}
+		
+		return;
+	}
+	
+	AddCastingTime(addedtime=$,event=$)
+	{
+		local iTime;
+		
+		if ptBattlerIsCasting = $
+		{
+			return;
+		}
+		
+		iTime = GetTimeRemaining(ptBattlerIsCasting);
+		iTime = iTime + addedtime;
+		DeleteTimer(ptBattlerIsCasting);
+		ptBattlerIsCasting = CreateTimer(self,@FinishCasting,iTime);
+		
+		% If we take damage, add addedtime to our remaining cast time.
+		% If the total time exceeds twice the original cast time, interrupt the spell.
+		if iTime > 3 * Send(poSpellBeingCast,@GetCastTime,#iSpellpower=piSpellpower,#who=self) / 2
+		{
+         Send(self,@InterruptCasting,#event=event);
+		}
+		
+		return;
+	}
+		
+	
+	
    Delete()
    {
       if ptBlackJack <> $
@@ -1283,7 +1520,19 @@ messages:
          DeleteTimer(ptBlackJack);
          ptBlackJack = $;
       }
-      
+
+      if ptBattlerIsCasting <> $
+      {
+         DeleteTimer(ptBattlerIsCasting);
+			ptBattlerIsCasting = $;
+		}
+		
+      if ptPostCastDelay <> $
+      {
+         DeleteTimer(ptPostCastDelay);
+			ptPostCastDelay = $;
+		}
+		
       propagate;
    }
 

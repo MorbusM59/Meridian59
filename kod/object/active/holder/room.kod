@@ -3330,7 +3330,7 @@ messages:
       return viTerrain_Type;
    }
 
-   BreakTrance(who=$, event=$)
+   InterruptCasting(who=$, event=$)
    {
       local i, oEnch, lState, bRetVal;
 
@@ -3344,7 +3344,7 @@ messages:
             lState = Nth(i,3);
             if who = Nth(lState,2)
             {
-               bRetVal = Send(oEnch,@BreakTrance,#who=who,#event=event,
+               bRetVal = Send(oEnch,@InterruptCasting,#who=who,#event=event,
                               #state=lState,#location=self);
             }
          }
@@ -3356,7 +3356,7 @@ messages:
             lState = Nth(i,3);
             if who = First(lState)
             {
-               bRetVal = Send(oEnch,@BreakTrance,#who=who,#event=event,
+               bRetVal = Send(oEnch,@InterruptCasting,#who=who,#event=event,
                               #state=lState,#location=self);
             }
          }
@@ -3858,25 +3858,23 @@ messages:
 
    Rumble(duration=250, disruption=0)
    {
-      local oTrance, oActive, i;
+      local oActive, i;
 
       % Shake the ground.
-      % A chance each person might lose any active trance.
+      % A chance each person may get interrupted.
 
-      oTrance = Send(SYS,@FindSpellByNum,#num=SID_TRANCE);
       for i in plActive
       {
          oActive = first(i);
          if isClass(oActive,&Player)
          {
-            Send(oActive,@EffectSendUserDuration,#effect=EFFECT_SHAKE,
-                 #duration=duration);
+            Send(oActive,@EffectSendUserDuration,#effect=EFFECT_SHAKE,#duration=duration);
+				
             if random(1,100) < disruption
-               AND Send(oActive,@IsEnchanted,#what=oTrance)
             {
                % Post this so we don't disrupt Earthquake (which caused this
                %  disruption).
-               Post(oActive,@BreakTrance,#event=EVENT_DISRUPT);
+               Post(oActive,@InterruptCasting,#event=EVENT_DISRUPT);
             }
          }
       }

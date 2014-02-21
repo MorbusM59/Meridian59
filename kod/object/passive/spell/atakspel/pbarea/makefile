@@ -4,7 +4,7 @@
 
 !include $(TOPDIR)\common.mak
 
-DEPEND = ..\atakspel.bof
-BOFS = boltspel.bof splashspel.bof pbarea.bof targetarea.bof
+DEPEND = ..\pbarea.bof
+BOFS = earthqua.bof
 
 !include $(KODDIR)\kod.mak

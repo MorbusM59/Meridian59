@@ -14,16 +14,13 @@ constants:
 
    include blakston.khd
 
-   % How much health does the caster get back?
-   DAMAGE_FACTOR_TO_HEAL = 2
-
 resources:
 
    VampiricDrain_name_rsc = "vampiric drain"
    VampiricDrain_icon_rsc = ivamptou.bgf
    VampiricDrain_desc_rsc = \
       "Draws out the very life force of the target and converts the energy into "
-      "life for the caster.  Reagents unknown."
+      "life for the caster.  Requires the blood of an Avar Shaman to cast."
 
    VampiricDrain_death = "You drain the last bit of %s%s's life force."
    VampiricDrain_health_gain = "You siphon your victim's life force, gaining ~g~B%i~B~n health."
@@ -47,18 +44,12 @@ classvars:
 
    vrSucceed_wav = VampiricDrain_sound
 
-   % In seconds, since it works off GetTime().
-   viPostCast_time = 2
+   viCast_delay = 0000
+	viCast_time = 2000
+	viDamage = 10
+   viRange = 20
    
 properties:
-
-   piDamageMin = 12
-   piDamageMax = 18
-
-   piRange = 4
-
-   % No bonus from Mana Focus
-   piManaFocusBonus = 0
 
 messages:
 
@@ -83,13 +74,13 @@ messages:
       % Take some of that damage and add it to our health!
       if damage <> $
       {
-         % Add half of the damage done.
-         iToHeal = bound(damage/DAMAGE_FACTOR_TO_HEAL,1,$);
+         % Heal for three times the damage dealt.
+         iToHeal = bound(damage*3,1,$);
       }
       else
       {
-         % Ah!  We killed someone.  Give them a large bonus based on max damage.
-         iToHeal = bound(piDamageMax/DAMAGE_FACTOR_TO_HEAL,1,$);
+         % Ah!  We killed someone.  Give them a littel bonus.
+         iToHeal = bound(viDamage*4,1,$);
          Post(who,@MsgSendUser,#message_rsc=VampiricDrain_death,
               #parm1=Send(victim,@GetDef),#parm2=Send(victim,@GetName));
       }

@@ -126,7 +126,7 @@ messages:
             else
             {
                lState = Send(Nth(i,3),@GetEnchantedState,#what=Nth(i,1));
-               Send(Nth(i,1),@BreakTrance,#who=Nth(i,3),#state=lState,#event=EVENT_STEER);
+               Send(Nth(i,1),@InterruptCasting,#who=Nth(i,3),#state=lState,#event=EVENT_STEER);
             }
          }
       }

@@ -57,8 +57,7 @@ classvars:
 
    viCast_time = 3000
 
-   % in seconds, since it works off GetTime()
-   viPostCast_time = 5        
+   viCast_delay = 5000        
 
    vbCastable_in_HappyLand = FALSE
 

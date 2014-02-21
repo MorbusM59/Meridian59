@@ -1869,7 +1869,7 @@
    SID_ACID_TOUCH = 45
    SID_BLIND = 46
    SID_HOLD = 47
-   SID_TRANCE = 48
+	SID_FROSTNOVA = 48
    SID_DEFILE = 49
    SID_UMBRELLA = 50
    SID_INVISIBILITY = 51
@@ -2000,6 +2000,7 @@
    SID_DEATH_RIFT = 185
    SID_CONSIDER = 186
    SID_BERSERKER_AXE = 187
+
 
    % Depreciated spell IDs
    SID_LIGHTNING = 1                   % use SID_LIGHTNING_BOLT
@@ -2237,7 +2238,7 @@
    CAUSE_USER_INPUT = 1
    CAUSE_PORTAL = 2
 
-   % Event types for trance breaking
+   % Event types that may lead to a spell being interrupted
    EVENT_CAST = 1
    % Player is trying to steer an enchantment to go his way possibly ending it
    %  early due to success.  Also used when the spell stops itself.

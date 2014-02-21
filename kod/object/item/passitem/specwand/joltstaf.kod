@@ -155,7 +155,7 @@ messages:
             continue;
          }
 
-         if send(first(i),@BreakTrance,#event=EVENT_DISRUPT)
+         if send(first(i),@InterruptCasting,#event=EVENT_DISRUPT)
          {
             for j in send(oRoom,@GetHolderActive)
             {

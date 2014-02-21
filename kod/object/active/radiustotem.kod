@@ -98,7 +98,7 @@ messages:
 
       for i in plEnchantments
       {
-         Send(Nth(i,2),@BreakTrance,#who=self,#state=Nth(i,3),#event=EVENT_STEER);
+         Send(Nth(i,2),@InterruptCasting,#who=self,#state=Nth(i,3),#event=EVENT_STEER);
          DeleteTimer(Nth(i,1));
       }
 

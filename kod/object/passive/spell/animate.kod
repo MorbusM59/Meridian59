@@ -98,37 +98,12 @@ messages:
       return 1;
    }
 
-   DoubleCheckAfterTrance(who = $, lTargets = $)
-   {
-      local oRoom, oTarget;
-
-      oRoom = send(who,@GetOwner);
-      oTarget = first(lTargets);
-      if oRoom <> send(oTarget,@GetOwner)
-      {
-         send(who, @MsgSendUser, #message_rsc=spell_trance_break,#parm1=vrName);
-         send(who, @WaveSendUser, #wave_rsc=spell_trance_break_sound);
-
-         return FALSE;
-      }
-
-      propagate;
-   }
-
    CastSpell(who = $, lTargets = $, iSpellPower = 1)
    {
       local oRisen, oRoom, iRow, iCol, iFine_Row, iFine_Col, oTarget, iLevel, iNum, iDurationSecs;
 
       oRoom = send(who,@GetOwner);
       oTarget = first(lTargets);
-
-      if oRoom <> send(oTarget,@GetOwner)
-      {
-         send(who,@MsgSendUser,#message_rsc=spell_trance_break,#parm1=vrName);
-         send(who,@WaveSendUser,#wave_rsc=spell_trance_break_sound);
-
-         return;
-      }
 
       iRow = send(oTarget,@GetRow);
       iCol = send(oTarget,@GetCol);

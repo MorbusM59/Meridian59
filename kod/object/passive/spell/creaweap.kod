@@ -60,7 +60,7 @@ messages:
       return 0;
    }
         
-   SomethingSaidDuringTrance(who=$,string=$)
+   SomethingSaidWhileCasting(who=$,string=$)
    {
          local i, iSpellPower, iCount,isWeaponCreateable, oWeapon, oItemAtt,iSpellPercent;
          iCount = 0;        
@@ -88,7 +88,7 @@ messages:
                 
                 if(isWeaponCreateable = true)
                 {
-                         Send(who,@BreakTrance,#event=EVENT_STEER);
+                         Send(who,@InterruptCasting,#event=EVENT_STEER);
                          % Weapon has half its hits, + iSpellPower% of the other half.
                         Send(oWeapon,@SetHits,#number=(Send(oWeapon,@GetHits)*(iSpellPower+100))/200);
 

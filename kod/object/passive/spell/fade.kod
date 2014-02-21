@@ -93,7 +93,6 @@ messages:
 
    SetSpellPlayerFlag(who = $)
    {
-      Send(who,@SetTranceFlag);
       Send(who,@SetPlayerFlag,#flag=PFLAG_INVISIBLE,#value=TRUE);
       
       return;
@@ -112,7 +111,6 @@ messages:
 
    EndEnchantment(who = $, report=TRUE)
    {
-      Send(who,@ClearTranceFlag);
       Send(who,@SetPlayerFlag,#flag=PFLAG_INVISIBLE,#value=FALSE);
       if report
       {
@@ -122,19 +120,20 @@ messages:
       return;
    }
 
-   BreakTrance( who = $, state = $ )
+   InterruptCasting(who=$,event=$)
    {
-      %% clean up trance
-      Send(who,@ClearTranceFlag);
-      Send(who,@RemoveEnchantment,#what=self);
-      Send(who,@MsgSendUser,#message_rsc=fade_broke_trance);
-      
-      return;
+		if event = EVENT_CAST OR event = EVENT_DAMAGE OR event = EVENT_ATTACK OR event = EVENT_USE
+		{
+			Send(who,@RemoveEnchantment,#what=self);
+			Send(who,@MsgSendUser,#message_rsc=fade_broke_trance);
+		}
+	      
+      return TRUE;
    }
 
    OfferToNewCharacters()
    {
-      % It's a PKing only spell.  Denied.
+      % It's quested for, nope.
       return FALSE;
    }
    

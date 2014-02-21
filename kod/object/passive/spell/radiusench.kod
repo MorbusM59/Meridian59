@@ -71,7 +71,7 @@ classvars:
    viMana = 5
    viManaDrain = 3
    viDrainTime = 5000
-   viPostCast_time = 1
+   viCast_delay = 1000
    viBaseRange = 5
 
    viLightColor = LIGHT_SPECTRAL
@@ -197,7 +197,7 @@ messages:
          for i in lMaintaining
          {
             iState = Send(who,@GetEnchantedState,#what=Nth(i,2));
-            Send(Nth(i,2),@BreakTrance,#who=who,#state=iState,#event=EVENT_STEER);
+            Send(Nth(i,2),@InterruptCasting,#who=who,#state=iState,#event=EVENT_STEER);
          }
       }
 
@@ -399,7 +399,7 @@ messages:
          }
          else
          {
-            Post(self,@BreakTrance,#who=who,#state=state,#event=EVENT_STEER);
+            Post(self,@InterruptCasting,#who=who,#state=state,#event=EVENT_STEER);
          }
       }
 
@@ -415,7 +415,7 @@ messages:
       return;
    }
    
-   BreakTrance(who=$, event=$, state=$, location=$, iPower=$)
+   InterruptCasting(who=$, event=$, state=$, location=$, iPower=$)
    "If caster runs out of mana or loses trance, spell ends."
    {
       local oUser, oObj, oRoom, lEnchanted;
@@ -439,8 +439,7 @@ messages:
          AND event = EVENT_NEWOWNER
       {
          if oRoom <> $
-            AND NOT (viAffectsEnemies
-                     AND Send(oRoom,@CheckRoomFlag,#flag=ROOM_NO_COMBAT))
+            AND NOT (viAffectsEnemies AND Send(oRoom,@CheckRoomFlag,#flag=ROOM_NO_COMBAT))
          {
             return FALSE;
          }
@@ -448,13 +447,13 @@ messages:
    
       iPower = Nth(state,3);
 
-      % Clean up Trance.
       if IsClass(who,&User)
       {
-         Send(who,@ClearTranceFlag);
          Send(who,@RemoveEnchantment,#what=self);
       }
+		
       lEnchanted = Nth(state,2);
+		
       for oUser in lEnchanted
       {
          Send(self,@LeaveRadius,#who=oUser,#iPower=iPower,#caster=who);
@@ -501,8 +500,6 @@ messages:
 
    SetSpellPlayerFlag(who=$)
    {
-      Send(who,@SetTranceFlag);
-      
       return;
    }
    

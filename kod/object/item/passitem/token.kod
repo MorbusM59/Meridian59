@@ -254,7 +254,7 @@ messages:
       ptTortureTimer = CreateTimer(self,@TortureHolder,TOKEN_FATIGUE_TIME);
 
       % Cancels rescue and elusion when a player picks up a token
-      Send(poOwner,@BreakTrance);
+      Send(poOwner,@InterruptCasting);
       Send(poOwner,@CancelRescue);
       
       if vrTokenOverlay <> $

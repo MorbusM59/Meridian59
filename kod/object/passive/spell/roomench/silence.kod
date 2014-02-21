@@ -102,7 +102,8 @@ messages:
       Send(oRoom,@SomeoneSaid,#type=SAY_MESSAGE,#string=Silence_on,#what=self);
       Send(oRoom,@RoomStartEnchantment,#what=self,#state=[who,iSpellPower],
            #time=send(self,@GetDuration,#iSpellPower=iSpellPower),#iSpellPower=iSpellPower,#lastcall=FALSE);
-      Send(who,@SetTranceFlag);
+		
+		% removed component, under construction
 
       % See if there's a Jala song going on and try to kill it
       % Format of lJalaInfo is: [timer, spell object, state]
@@ -130,7 +131,7 @@ messages:
       propagate;
    }
 
-   BreakTrance(who=$, event=$, state=$, location=$)
+   InterruptCasting(who=$, event=$, state=$, location=$)
    {
       local oRoom;
 

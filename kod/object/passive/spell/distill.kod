@@ -52,6 +52,7 @@ classvars:
    viMana = 20
    viSpellExertion = 25
    viCast_time = 30000   
+	vbAwaitsInput =  TRUE	
 
 properties:
 
@@ -90,7 +91,7 @@ messages:
       return FALSE;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   GetCastTime(iSpellpower=0,who=$)
    {
       % Since this spell uses the trance, don't scale it down depending on
       %  iSpellpower
@@ -98,7 +99,7 @@ messages:
    }
 
    PerformDistill(caster = $,oTarget = $)
-   "Realistically, this will usually be called by SomethingSaidDuringTrance."
+   "Realistically, this will usually be called by SomethingSaidWhileCasting."
    {
       If Send(self,@CanPayIngredients,#caster=caster,#oTarget=oTarget)
       {
@@ -194,8 +195,7 @@ messages:
 
       % Again: Cut and paste from spell.kod
 
-      lIngredients = Send(self,@GetIngredients,#caster=caster,
-                          #oTarget=oTarget);
+      lIngredients = Send(self,@GetIngredients,#caster=caster,#oTarget=oTarget);
       
       if NOT IsClass(caster,&Player)
       {
@@ -271,9 +271,8 @@ messages:
       }
 
       iLevel = Send(oTarget,@GetLevel);
-      iAbility = Send(caster,@GetSpellAbility,
-                      #spell_num=Send(oTarget,@GetSpellNum));
-      iSkill = Send(caster,@GetSpellAbility,#spell_num=viSpell_num);
+      iAbility = Send(caster,@GetAbility,#num=Send(oTarget,@GetSpellNum));
+      iSkill = Send(caster,@GetAbility,#num=viSpell_num);
       iSpellPower = Send(self,@GetSpellPower,#who=caster);
 
       % Potion is created at spellpower determined by the distill skill and
@@ -326,7 +325,7 @@ messages:
       return lIngredients;
    }
 
-   SomethingSaidDuringTrance(who=$,string=$,lTargets = $)
+   SomethingSaidWhileCasting(who=$,string=$,lTargets = $)
    "Check if string is a potion spell.  If it is make it the target."
    {
       local lSpells, name, oTarget, iAbility, iRand, i;
@@ -335,7 +334,7 @@ messages:
       iRand = Random(1,100);
 
       % Use EVENT_STEER: don't print fizzle message
-      Send(who,@BreakTrance,#event=EVENT_STEER);  
+      Send(who,@InterruptCasting,#event=EVENT_STEER);  
 
       for i in lSpells
       {
@@ -359,30 +358,8 @@ messages:
          return;
       }
     
-      % Get percent in the target spell.  If not there or fail check bail and
-      %  print failure.
-      iAbility = Send(who,@GetSpellAbility,
-                      #spellnum=Send(oTarget,@GetSpellNum));
-
-      if iAbility <> $
-      {
-         if iRand > iAbility
-         {
-            % If pass check Start distilling.      
-            Send(self,@PerformDistill,#caster=who,#oTarget=oTarget);
-         }
-         else
-         {
-            Send(who,@MsgSendUser,#message_rsc=Distill_fail_target,
-                 #parm1=Send(oTarget,@GetName));
-         }
-      }
-      else
-      {
-         Send(who,@MsgSendUser,#message_rsc=Distill_Dont_have_target,
-              #parm1=Send(oTarget,@GetName));
-      }
-      
+      Send(self,@PerformDistill,#caster=who,#oTarget=oTarget);
+   
       return;
    }  
 

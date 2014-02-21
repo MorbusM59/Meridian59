@@ -55,8 +55,7 @@ classvars:
    vrSucceed_wav = shatter_sound
    viFlash = FLASH_BAD
 
-   % in seconds, since it works off gettime()
-   viPostCast_time = 5        
+   viCast_delay = 5000      
 
    vrToo_few_hp = shatter_not_enough_hp
 

@@ -22,7 +22,7 @@ resources:
 
    ShockingFury_desc_rsc = \
       "Releases Faren's fury as a large amount of electricity directed at a target at short range.  "
-      "Requires blue mushrooms and elderberries to cast."
+      "Requires nothing but a violent will to cast, but will leave your extremely drained and unable to act for a few moments."
 
    ShockingFury_sound = fzap.wav
 
@@ -38,18 +38,16 @@ classvars:
 
    viSchool = SS_FAREN
    viSpell_level = 3
-   viMana = 8
+   viMana = 20
 
    vrSucceed_wav = ShockingFury_sound
 
-   % In seconds, since it works off GetTime().
-   viPostCast_time = 2
+   viCast_delay = 4000
+	viCast_time = 0
+	viDamage = 30
+   viRange = 6
 
 properties:
-
-   piDamageMin = 12
-   piDamageMax = 20
-   piRange = 5
 
 messages:
 
@@ -58,8 +56,6 @@ messages:
       % separate message so can change, then set from admin mode
 
       plReagents = $;
-      plReagents = Cons([&BlueMushroom,2],plReagents);
-      plReagents = Cons([&Elderberry,1],plReagents);
 
       return;
    }

@@ -315,7 +315,6 @@ messages:
 
       for i in plCasters
       {
-         Send(i,@ClearTranceFlag);
          Send(i,@RemoveEnchantment,#what=poSpell);
       }
 

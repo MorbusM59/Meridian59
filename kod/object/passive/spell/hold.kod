@@ -49,8 +49,7 @@ classvars:
 
    viFlash = FLASH_BAD
 
-   % In seconds, since it works off GetTime()
-   viPostCast_time = 2
+   viCast_delay = 2000
 
 properties:
 

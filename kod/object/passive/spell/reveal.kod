@@ -65,7 +65,7 @@ messages:
       return 1;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   GetCastTime(iSpellpower=0,who=$)
    {
       if who <> $ and isClass(who,&DM)
       {

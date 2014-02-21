@@ -20,7 +20,7 @@ resources:
    illusionarywounds_desc_rsc = \
       "Causes the victim to see imagined wounds, but imagination "
       "always gives in to one's right mind, assuming one lives so long.  "
-      "Requires solagh and firesand."
+      "Requires a vial of solagh to cast."
 
    illusionarywounds_cast = "Your illusion takes the form of %s."
 
@@ -38,6 +38,10 @@ classvars:
    viSpell_level = 3
    viMana = 10
 
+   viCast_delay = 0
+	viCast_time = 2000
+	viDamage = 25
+   viRange = 4	
    viSpellExertion = 3
 
    vrSucceed_wav = illusionarywounds_sound
@@ -47,10 +51,6 @@ classvars:
    viNoNewbieOffense = TRUE
 
 properties:
-
-   piRange = 4
-
-   piManaFocusBonus = 0
 
    % This is NOT affected by resistances, even though it has a damage type.
    pbAbsolute = TRUE
@@ -67,7 +67,6 @@ messages:
    {
       plReagents = $;
       plReagents = Cons([&Solagh,1],plReagents);
-      plReagents = Cons([&FireSand,1],plReagents);
 
       return;
    }
@@ -81,7 +80,6 @@ messages:
       if plRandomSpells = $
       {
          plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_BLAST_OF_FIRE),plRandomSpells);
-         plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_SHOCKING_FURY),plRandomSpells);
          plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_EXPLOSIVE_FROST),plRandomSpells);
          plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_SPLASH_OF_ACID),plRandomSpells);
       }

@@ -1593,6 +1593,11 @@ messages:
          % Should scale based on damage?
          piHatred = piHatred + 1;
       }
+		
+		if iDamage > 0
+		{
+			Send(self,@AddCastingTime,#addedtime=50000*damage/piMax_hit_points,#event=EVENT_DAMAGE);
+		}
 
       piHit_points = piHit_points - iDamage;
       

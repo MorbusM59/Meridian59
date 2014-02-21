@@ -657,7 +657,7 @@ messages:
       local theTime, iPenaltyTime, i;
       
       piTimeLoggedIn = Send(self,@GetTimeLoggedIn);
-      Send(self,@BreakTrance);
+      Send(self,@InterruptCasting);
       pbLogged_on = FALSE;
 
       Send(self,@CancelIfOffer);
@@ -2825,56 +2825,56 @@ messages:
          return;
       }
 	  
-	  % 3.1 Get current tick (ms resolution)    
-	  iCurrentTime = GetTickCount();
-      
-	  % 3.2 Get time-deltas
-	  iDelta = iCurrentTime - piLastMoveUpdateTime;
+		% 3.1 Get current tick (ms resolution)    
+		iCurrentTime = GetTickCount();
+
+		% 3.2 Get time-deltas
+		iDelta = iCurrentTime - piLastMoveUpdateTime;
       iDeltaVigor = iCurrentTime - piLastVigorDrainTime;
 	  
-	  % 3.3 Bound time-deltas
-	  % Prevents long teleports after stops and negative numbers
-	  iDelta = bound(iDelta,0,Send(Send(SYS, @GetSettings), @GetMoveMaxLag));
-	  iDeltaVigor = bound(iDeltaVigor,0,3000);
+		% 3.3 Bound time-deltas
+		% Prevents long teleports after stops and negative numbers
+		iDelta = bound(iDelta,0,Send(Send(SYS, @GetSettings), @GetMoveMaxLag));
+		iDeltaVigor = bound(iDeltaVigor,0,3000);
 	  
-	  % 3.4 TCP workaround
-	  % iDelta can be 0 (~16 within ms resolution for +- 1 tick) in case
+		% 3.4 TCP workaround
+		% iDelta can be 0 (~16 within ms resolution for +- 1 tick) in case
       % we're processing buffered up TCP segments with several requests at once.
-	  % This can either happen because of IP packetloss and retransmits (legal)
-	  % or because someone is sending multiple positions at once by purpose (illegal).
-	  % So we must allow up to a certain amount of such buffered up requests,
-	  % but limit it so no one can exploit it too much.
-	  if iDelta <= 16
-	  {
-	    % if within the limits of allowed multiple requests
-		if piMovesInTick < Send(self,@GetMoveAmountTolerance)
+		% This can either happen because of IP packetloss and retransmits (legal)
+		% or because someone is sending multiple positions at once by purpose (illegal).
+		% So we must allow up to a certain amount of such buffered up requests,
+		% but limit it so no one can exploit it too much.
+		if iDelta <= 16
 		{
-		  % fallback to default dt expected from client
-		  iDelta = Send(Send(SYS, @GetSettings), @GetMoveDefaultInterval);
-		  
-	      piMovesInTick = piMovesInTick + 1;
-		}
-		else
-		{
-		  % this is too many buffered up requests
-		  % reset position for this and any following in this tick
-          Send(SYS,@UtilGoNearSquare,#what=self,#where=poOwner,
-              #new_row=iRow,
-			  #new_col=iCol,
-              #fine_row=iFineRow,
-              #fine_col=iFineCol,
-              #new_angle=iAngle);
+			% if within the limits of allowed multiple requests
+			if piMovesInTick < Send(self,@GetMoveAmountTolerance)
+			{
+			  % fallback to default dt expected from client
+			  iDelta = Send(Send(SYS, @GetSettings), @GetMoveDefaultInterval);
+			  
+				piMovesInTick = piMovesInTick + 1;
+			}
+			else
+			{
+				% this is too many buffered up requests
+				% reset position for this and any following in this tick
+				 Send(SYS,@UtilGoNearSquare,#what=self,#where=poOwner,
+					  #new_row=iRow,
+				  #new_col=iCol,
+					  #fine_row=iFineRow,
+					  #fine_col=iFineCol,
+					  #new_angle=iAngle);
 
-		  % make a logentry
-          if piCheaterLogs < MAX_LOGGED_THRESHOLD
-          {
-            piCheaterLogs = piCheaterLogs + 1;
-            Debug("ALERT!",Send(self,@GetTrueName),self,"exceeded multiple reqmove limit");
-          }
-		 
-          return;
+			  % make a logentry
+				 if piCheaterLogs < MAX_LOGGED_THRESHOLD
+				 {
+					piCheaterLogs = piCheaterLogs + 1;
+					Debug("ALERT!",Send(self,@GetTrueName),self,"exceeded multiple reqmove limit");
+				 }
+			 
+				 return;
+			}
 		}
-	  }
 	  else
 	  {
 	    % reset moves in tick counter
@@ -2954,12 +2954,10 @@ messages:
 			
 			return;
          }
-
-		 % break trance
-         if (piFlags & PFLAG_TRANCE)
-         { 
-            Send(self,@BreakTrance,#event=EVENT_RUN); 
-         }
+			
+			% Running makes casting harder and extends casting time. It will interrupt the spell if casting
+			% time is more than doubled.
+			Send(self,@AddCastingTime,#addedtime=300,#event=EVENT_RUN);
 
 		 % stop dance
          if Send(self,@CheckPlayerFlag,#flag=PFLAG2_DANCING,#flagset=2)
@@ -3887,7 +3885,7 @@ messages:
 
    UserSay(type = $,string = $)
    {      
-      local i, oSpell, lEnchantData;
+      local lTargets, oSpell;
         
       % A room can completely block a piece of communication if it chooses.
       % An excellent example is Out Of Grace, which blocks all tells to 
@@ -3954,21 +3952,14 @@ messages:
          OR type = SAY_EMOTE
          OR type = SAY_DM
       {
-         if Send(self,@CheckPlayerFlag,#flag=PFLAG_TRANCE)
+         if send(self,@AwaitsInput)
          {
-            % See if the trance spell does anything special 
-            %  with says.  Note that the 'say' will still go off.
+            % If we are marked to expect input, send the string to the spell that is currently being cast.
 
-            for i in plEnchantments
-            {
-               if IsClass(nth(i,2),&Trance)
-               {                
-                  lEnchantData = nth(i,3);
-                  oSpell = first(lEnchantData);
-                  Post(oSpell,@SomethingSaidDuringTrance,
-                       #who=self,#string=string,#lTargets=Nth(lEnchantData,3));
-               }
-            }
+				oSpell = send(self,@GetSpell);
+				lTargets = send(self,@GetTargets);
+				
+				Post(oSpell,@SomethingSaidWhileCasting,#who=self,#string=string,#lTargets=lTargets);
          }
          
          Send(poOwner,@SomeoneSaidRoom,#what=self,#type=type,#string=string);
@@ -4539,10 +4530,7 @@ messages:
          Send(self,@NotifyMonstersOfPresence);
       }
 
-      if piFlags & PFLAG_TRANCE
-      {
-         Send(self,@BreakTrance,#event=EVENT_USE);
-      }
+		Send(self,@InterruptCasting,#event=EVENT_USE);
       
       if NOT IsClass(what,&Item) 
       {
@@ -4563,10 +4551,9 @@ messages:
          Send(self,@NotifyMonstersOfPresence);
       }
 
-      if piFlags & PFLAG_TRANCE
-      {
-         Send(self,@BreakTrance,#event=EVENT_USE);
-      }
+
+		Send(self,@InterruptCasting,#event=EVENT_USE);
+
 
       if not IsClass(what,&Item)
       {
@@ -4594,10 +4581,9 @@ messages:
          Send(self,@NotifyMonstersOfPresence);
       }
       
-      if piFlags & PFLAG_TRANCE
-      {
-         Send(self,@BreakTrance,#event=EVENT_ATTACK);
-      }
+
+		Send(self,@InterruptCasting,#event=EVENT_ATTACK);
+
 
       if Send(self,@CheckPlayerFlag,#flag=PFLAG_NO_FIGHT)
       {  
@@ -4634,11 +4620,6 @@ messages:
          Send(self,@NotifyMonstersOfPresence);
       }   
 
-      if piFlags & PFLAG_TRANCE
-      {
-         Send(self,@BreakTrance,#event=EVENT_CAST,#what=oSpell);
-      }
-
       if Send(self,@CheckPlayerFlag,#flag=PFLAG_NO_MAGIC)
       {  
          Send(self,@MsgSendUser,#message_rsc=user_no_cast);
@@ -4669,8 +4650,7 @@ messages:
       % Do we need a specific set of targets?
       lFinalTargets = Send(oSpell,@GetTargets,#who=self,#lTargets=lTargets);
 
-      if NOT Send(poOwner,@ReqSpellCast,#who=self,#oSpell=oSpell,
-                  #lItems=lFinalTargets)
+      if NOT Send(poOwner,@ReqSpellCast,#who=self,#oSpell=oSpell,#lItems=lFinalTargets)
       {
          % A spell cannot be cast in this room.
          return;        
@@ -4680,18 +4660,15 @@ messages:
       iSpellPower = Send(oSpell,@GetSpellPower,#who=self);
 
       % First make sure user has enough magic points, reagents, etc.
-      if NOT Send(oSpell,@CanPayCosts,#who=self,#lTargets=lFinalTargets,
-                  #iSpellpower=iSpellpower)
+      if NOT Send(oSpell,@CanPayCosts,#who=self,#lTargets=lFinalTargets,#iSpellpower=iSpellpower)
       {
          % Player failed some sort of internal check
          return;
       }
 
-      if Send(oSpell,@PayCosts,#who=self,#iSpellPower=iSpellPower,
-              #lTargets=lFinalTargets)
+      if Send(oSpell,@PayCosts,#who=self,#iSpellPower=iSpellPower,#lTargets=lFinalTargets)
       {
-         Send(oSpell,@BeginCastingTrance,#who=self,#lTargets=lFinalTargets,
-              #iSpellPower=iSpellPower);
+         Send(oSpell,@BeginCastingSpell,#who=self,#lTargets=lFinalTargets,#iSpellPower=iSpellPower);
       }
       
       return;
@@ -4705,12 +4682,6 @@ messages:
       local oCommand;
 
       oCommand = Send(SYS,@findGuildCommandByNum,#num=Command_num);
-
-      % If a player is in a trance, break it
-      if piFlags & PFLAG_TRANCE
-      {
-         Send(self,@BreakTrance,#event=EVENT_CAST,#what=oCommand);
-      }
 
       % Be sure player has guild command.
       if Send(self,@HasGuildCommand,#command_num=Command_num)
@@ -5707,10 +5678,7 @@ messages:
 
    UserApply(what = $,apply_on = $)
    {
-      if (piFlags & PFLAG_TRANCE)
-      {
-         Send(self,@BreakTrance,#event=EVENT_USE);
-      }
+		Send(self,@InterruptCasting,#event=EVENT_USE);
 
       if NOT IsClass(what,&Item) 
       {

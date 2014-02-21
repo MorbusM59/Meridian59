@@ -14,8 +14,6 @@ constants:
 
    include blakston.khd
 
-   TRANCE_TIME = 30000
-
 resources:
 
    Elusion_name_rsc = "elusion"
@@ -49,6 +47,7 @@ classvars:
    viSpell_level = 6
    viMana = 20
    viSpellExertion = 50
+	viCast_time = 30000
 
 
 	% Chance to increase is one in viChance_To_Increase.
@@ -56,6 +55,8 @@ classvars:
 
    vrSucceed_wav = Elusion_sound
    viFlash = FLASH_GOOD
+	
+	vbAwaitsInput =  TRUE
 
 properties:
 
@@ -111,40 +112,29 @@ messages:
       propagate;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   BeginCastingSpell(who=$,lTargets=$,iSpellpower=$)
    {
-      % Since this spell uses the trance, don't scale it down depending on iSpellpower
-      return viCast_time;
-   }
-
-   BeginCastingTrance(who=$,lTargets=$,iSpellpower=$)
-   {
-      local oTrance, lLocations, sLocations;
-
-      %%Get rid of the regular casting trance, we need a special one put on below.
-      send(who,@BreakTrance,#event=EVENT_STEER);  
-
-      oTrance = send(SYS,@FindSpellByNum,#num=SID_TRANCE);
+      local lLocations, sLocations;
 
       lLocations = send(self,@GetLocations,#iSpellpower=iSpellpower,#target=who);
-      
       sLocations = send(self,@GetLocationsString,#lLocations=lLocations);
+		
       send(who,@MsgSendUser,#message_rsc=Elusion_location_list,#parm1=sLocations);
 
-      % lTargets is of the form = [location1, location2,...]
-      send(oTrance,@BeginCastingTrance,#what=self,#who=who,#lTargets=lLocations,#time=TRANCE_TIME);
+      % lTargets is of the form = [location1, location2,...], cast time is viCast_time itself since the spell awaits input.
+		Send(who,@StartCastingTimer,#casttime=viCast_time,#oSpell=self,#who=who,#lTargets=lLocations,#iSpellpower=iSpellpower,#bAwaitsInput=vbAwaitsInput);
 
-      propagate;
+      return;
    }
 
-   SomethingSaidDuringTrance(who=$,string=$,lTargets = $)
+   SomethingSaidWhileCasting(who=$,string=$,lTargets = $)
    {
       local lAllTargets, oGuildHall, sRoomName, bFound, oRoom;
 
       % Check if string is a location.  If it is, and the caster has sufficent spellpower make 
       %   it the target.  Get percent in the target spell.  If not there or fail check bail and print failure.
 
-      send(who,@BreakTrance,#event=EVENT_STEER);  %% don't print fizzle message
+      send(who,@InterruptCasting,#event=EVENT_STEER);  %% don't print fizzle message
 
       bFound = FALSE;
 
@@ -260,13 +250,6 @@ messages:
       sString = GetTempString();
       
       return sString;
-   }
-
-   DoubleCheckAfterTrance(who=$,lTargets=$)
-   {
-      send(who,@MsgSendUser,#message_rsc=Elusion_No_Location_Given);        
-             
-      return;
    }
 
    SpellBannedInArena()

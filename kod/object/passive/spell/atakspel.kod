@@ -20,15 +20,18 @@ resources:
 
    attack_spell_hit_rsc = "You hit %s%s."
    attack_spell_no_self_rsc = "You can't cast %s on yourself."
-   attack_spell_out_of_range = "%s%s is too far away to hit with %s."
+   attack_spell_out_of_range = "Your %s does not have enough range to cause %s%s any harm."
 
 classvars:
 
    viAttack_type = 0
    viAttack_spell = ATCK_SPELL_ALL
 
-   % In seconds, since it works off GetTime(),
-   viPostCast_time = 2
+   viCast_delay = 2000
+	viCast_time = 1000
+	viDamage = 10
+   viRange = $
+	
 
    viHarmful = TRUE
    viOutlaw = TRUE
@@ -40,96 +43,24 @@ classvars:
 
 properties:
 
-   piDamageMin = 0
-   piDamageMax = 0
-   piRange = $
-
-   % Maximum amount of bonus damage mana focus gives us for casting this spell.
-   piManaFocusBonus = 5
-
    pbAbsolute = FALSE
 
 messages:
-
-   CanPayCosts(who = $, lTargets = $, bItemCast = FALSE)
-   {
-      local target, i, iTotalRange;
-
-      % Can cast spell if the 1 target item is a battler
-      if Length(lTargets) <> 1
-      {
-         return FALSE;
-      }
-
-      target = First(lTargets);
-
-      % Don't allow casting on self.  This also avoids a potential problem:
-      %  if this spell were to kill the caster, he would die before the
-      %  reagents were used.  This would take some rewriting of AttackSpell
-      %  and Spell.  But, if cast from an item, smoke yourself all you want!
-      if target = who AND (NOT bItemCast)
-      {
-         Send(who,@WaveSendUser,#wave_rsc=spell_fail_wav);
-         Send(who,@MsgSendUser,#message_rsc=attack_spell_no_self_rsc,#parm1=vrName);
-         
-         return FALSE;
-      }
-
-      if not IsClass(target,&Battler)
-      {
-         Send(who,@WaveSendUser,#wave_rsc=spell_fail_wav);
-         Send(who,@MsgSendUser,#message_rsc=spell_bad_target, 
-              #parm1=vrName,#parm2=Send(target,@GetDef),#parm3=Send(target,@GetName));
-              
-         return FALSE;
-      }
-
-      if piRange <> $
-      {
-         iTotalRange = piRange;
-
-         % A little fudge factor to account for lag drift, etc.
-         if IsClass(target,&Player) AND Send(target,@HasMovedRecently)
-         {
-            iTotalRange = iTotalRange + RANGE_MOVEMENT_BONUS;
-         }
-
-         if Send(who,@SquaredDistanceTo,#what=target) > (iTotalRange * iTotalRange)
-         {
-            if NOT bItemCast
-            {
-               Send(who,@MsgSendUser,#message_rsc=attack_spell_out_of_range, 
-                    #parm1=Send(target,@GetCapDef),#parm2=Send(target,@GetName),
-                    #parm3=vrName);
-            }
-
-            return FALSE;
-         }
-      }
-
-      propagate;
-   }
 
    GetNumSpellTargets()
    {
       return 1;
    }
 
-   CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
-   {
-      local iDamage, iManaFocus, oRoom, oTarget;
-
-      oTarget = First(lTargets);
-
-      oRoom = Send(who,@GetOwner);
-      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
-      Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
-
-      iDamage = piDamageMax*100;
+	GetDamage(who=$,target=$,iSpellPower=0,bItemCast=FALSE)
+	{
+		local iDamage, iManaFocus;
+		
+      iDamage = viDamage*100;
 
       if IsClass(who,&Player)
       {
-         Send(who,@SetKillTarget,#target=oTarget);
+         Send(who,@SetKillTarget,#target=target);
          Send(who,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
 
          if NOT bItemCast
@@ -138,28 +69,59 @@ messages:
             piCast_successes = piCast_successes + 1 ;
             Send(who,@DoCast);      %% window overlay
 
-            % Reduce damage based on spell power.
-            iDamage = (iDamage * (50 + (iSpellPower / 2))) / SPELLPOWER_MAXIMUM;
+            % Scale damage with the spell's spellpower.
+            iDamage = iDamage * iSpellPower / 100;
 
-            if Send(who,@CheckPlayerFlag,#flag=PFLAG_MANA_FOCUS)
+            if Send(who,@CheckPlayerFlag,#flag=PFLAG_MANA_FOCUS) and viSchool = SS_FAREN
             {
-               % Bonus if we have mana focus up.
-               iManaFocus = First(Send(who,@GetEnchantedState,
-                                  #what=Send(SYS,@FindSpellByNum,#num=SID_MANA_FOCUS))) + 1;
-
-               % This takes the spellpower of Mana Focus (iManaFocus), and uses
-               %  that to scale our "bonus" damage.
-               % Bonus damage is 1 to piManaFocusBonus, scaled by the power of iManaFocus.
-               iDamage = iDamage + ((iManaFocus * piManaFocusBonus) / SPELLPOWER_MAXIMUM);
+               % Scale damage with mana focus' spellpower if we have it up and if we are casting a Faren spell.
+               iManaFocus = First(Send(who,@GetEnchantedState,#what=Send(SYS,@FindSpellByNum,#num=SID_MANA_FOCUS))) + 1;
+               iDamage = iDamage + iDamage * iManaFocus / 100;
             }
          }
       }
+		
+		return iDamage;
+	}
+	
+   CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
+   {
+      local iDamage, iTotalRange, oRoom, oTarget;
+		
+      oTarget = First(lTargets);
+      oRoom = Send(who,@GetOwner);
+		
+      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
+      Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
+      Send(self,@CreateProjectile,#who=who,#victim=oTarget);
+		
+		% Finally, let's check if we are still in range of our target at this point. If not,
+		% our spell fails with full cost.
+      if viRange <> $
+      {
+         iTotalRange = viRange;
+
+         % A little fudge factor to account for lag drift, etc.
+         if IsClass(oTarget,&Player) AND Send(oTarget,@HasMovedRecently)
+         {
+            iTotalRange = iTotalRange + RANGE_MOVEMENT_BONUS;
+         }
+
+         if Send(who,@SquaredDistanceTo,#what=oTarget) > (iTotalRange * iTotalRange)
+         {
+            if NOT bItemCast
+            {
+               Send(who,@MsgSendUser,#message_rsc=attack_spell_out_of_range,#parm1=vrName,#parm2=Send(oTarget,@GetDef),#parm3=Send(oTarget,@GetName));
+            }
+
+            return;
+         }
+      }
+		
+		iDamage = send(self,@GetDamage,#who=who,#target=oTarget,#iSpellPower=iSpellPower,#bItemCast=bItemCast);
      
-      % After figuring damage, do an AssessDamage.  This will handle the necessary
-      %  attack messages.
-      iDamage = Send(oTarget,@AssessDamage,#what=who,#damage=iDamage,
-                     #atype=viAttack_type,#aspell=Send(self,@GetAttackSpell),
-                     #absolute=pbAbsolute);
+      % After figuring damage, do an AssessDamage.  This will handle the necessary attack messages.
+      iDamage = Send(oTarget,@AssessDamage,#what=who,#damage=iDamage,#atype=viAttack_type,#aspell=Send(self,@GetAttackSpell),#absolute=pbAbsolute);
 
       Send(who,@AssessHit,#what=oTarget,#damage=iDamage,#use_weapon=self,#stroke_obj=self,#improve=FALSE);
 
@@ -171,14 +133,11 @@ messages:
       Send(oRoom,@SomethingAttacked,#what=who,#victim=oTarget,#use_weapon=self);
 
       Send(self,@DoSideEffect,#who=who,#victim=oTarget,#damage=iDamage);
-
+		
       if not bItemCast
       {
          Send(self,@ImproveAbility,#who=who,#target=oTarget);
       }
-
-      % DON'T PROPAGATE!  This way, events will be handled in the proper
-      %  order.
 
       return;
    }
@@ -198,18 +157,23 @@ messages:
       return vbIsRangedAttack;
    }
 
+   % This is for the attack message infrastructure.
+   GetAttackName()
+   {
+      return vrName;
+   }
+	
    % The chance to do something in addition to normal damage.
    DoSideEffect(who=$,victim=$,damage=0)
    {
       return;
    }
 
-   % This is for the attack message infrastructure.
-   GetAttackName()
+   % Add a pretty projectile.
+   CreateProjectile(who=$,victim=$)
    {
-      return vrName;
+      return;
    }
-
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

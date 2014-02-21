@@ -4,7 +4,7 @@
 
 !include $(TOPDIR)\common.mak
 
-DEPEND = ..\atakspel.bof
-BOFS = boltspel.bof splashspel.bof pbarea.bof targetarea.bof
+DEPEND = ..\targetarea.bof
+BOFS = frostnova.bof
 
 !include $(KODDIR)\kod.mak

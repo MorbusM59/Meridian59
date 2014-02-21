@@ -1,0 +1,268 @@
+% Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+% All rights reserved.
+%
+% This software is distributed under a license that is described in
+% the LICENSE file that accompanies it.
+%
+% Meridian is a registered trademark.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PointBlankArea is AttackSpell
+
+constants:
+
+   include blakston.khd
+
+resources:
+
+	pbarea_name_rsc = "frost nova"
+   pbarea_icon_rsc = irthquak.bgf
+   pbarea_desc_rsc = \
+      "This is a standard point blank area effect spell."
+		
+   pbarea_first_rsc = \
+      "You channel all your energy into a violent %s!"
+   pbarea_third_rsc = \
+      "%s%s channels all his energy into a violent %s!"
+
+   pbarea_killed_someone = \
+      "%s%s falls victim to the deadly %s!"     
+   pbarea_killed_self = \
+      "You are consumed by your own %s!"
+
+   pbarea_cast_rsc = \
+      "Your are caught in a massive %s!"
+   pbarea_hit_rsc = \
+      "%s%s is caught in a massive %s!"
+
+   pbarea_sound = fquake.wav
+
+classvars:
+
+   vrName = pbarea_name_rsc
+   vrDesc = pbarea_desc_rsc
+   vrIcon = pbarea_icon_rsc
+
+	% Chance to increase is one in viChance_To_Increase.
+   viChance_To_Increase = 10
+
+   viAttack_spell = ATCK_SPELL_ALL + ATCK_SPELL_ALL
+   viOutlaw = TRUE
+   viHarmful = TRUE
+	viHarm_caster = FALSE
+
+   viCast_delay = 2000
+	viCast_time = 1000
+	viDamage = 10
+   viRange = 0
+	
+   % Damage is 100% within this distance
+   viMax_damage_distance = 5
+ 
+   % Damage is 0 outside this distance 
+   viZero_damage_distance = 30
+	
+	%Visual stuff.
+   vrProjectile_Icon = $
+   viProjectileFlag = PROJ_FLAG_LIGHT_SOURCE
+   % Projectile lighting information.
+   viProjectileLightFlags = LIGHT_FLAG_ON | LIGHT_FLAG_DYNAMIC
+   % Medium light range, out of 255.
+   viProjectileLightIntensity = 100
+   % Default color is lightning.
+   viProjectileLightColor = LIGHT_LIGHTNING
+
+properties:
+
+
+messages:
+
+   GetNumSpellTargets()
+   {
+      return 0;
+   }
+
+   CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
+   {
+      local lActive, each_obj, iPercent, iFinal, iDamage, oRoom;
+
+		lTargets = $;
+		
+		if IsClass(who,&Battler)
+		{
+			oRoom = Send(who,@GetOwner);
+			Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
+			Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
+		}
+		else
+		{
+			oRoom = who;
+			Send(oRoom,@SomethingWaveRoom,#wave_rsc=Send(self,@GetSpellSound));
+		}
+
+		% We don't get a target from the spell, so let's find the targets here.
+      lActive = Send(oRoom,@GetHolderActive);
+
+      for each_obj in lActive
+      {
+         each_obj = Send(oRoom,@HolderExtractObject,#data=each_obj);
+         
+         if IsClass(each_obj,&Battler)
+         {
+            lTargets = cons(each_obj,lTargets);
+         }
+      }
+		
+		% If we have an actual player caster, let's make sure our targets don't violate his ethics.
+		if IsClass(who,&Player)
+		{
+			% Now remove any of those targets from our hitlist that we can't attack.
+			lTargets = Send(self,@GetGoodTargets,#who=who,#lTargets=lTargets);
+			
+			% We have found some valid targets, let's pass the first of them on to GetDamage to set a killtarget.
+			iDamage = send(self,@GetDamage,#who=who,#target=First(lTargets),#iSpellPower=iSpellPower,#bItemCast=bItemCast);
+		}
+		else
+		{
+			iDamage = viDamage;
+		}
+		
+		  
+		% Finally, deal damage to all valid targets based on how far away they are.
+		for each_obj in lTargets
+		{
+			iPercent = send(self,@FallOffSlope,#who=who,#target=each_obj);
+			
+			% Only bother assessing damage when the battler is in range.
+			if iPercent <> 0
+			{
+				% In case we have a caster, send pretty projectiles from him to the targets.
+				if IsClass(who,&Battler)
+				{
+					% Send the projectile before things start dying to avoid a nil target.
+					Send(self,@CreateProjectile,#who=who,#victim=each_obj);
+					% Notify the room that something has attacked.
+					Send(oRoom,@SomethingAttacked,#what=who,#victim=each_obj,#use_weapon=self);
+				}
+				
+				iFinal = iDamage * iPercent / 100;
+						
+				iFinal = Send(each_obj,@AssessDamage,#what=who,#damage=iFinal,#atype=viAttack_type,#aspell=Send(self,@GetAttackSpell),#absolute=pbAbsolute);
+
+				if IsClass(who,&Battler)
+				{
+					Send(who,@AssessHit,#what=each_obj,#damage=iFinal,#use_weapon=self,#stroke_obj=self,#improve=FALSE);
+				}
+
+				if iFinal = $
+				{
+					if IsClass(who,&Battler)
+					{
+						Send(who,@KilledSomething,#what=each_obj,#use_weapon=self);
+					}						
+				} 
+				else
+				{
+					Send(self,@DoSideEffect,#who=who,#victim=each_obj,#damage=iFinal);
+				}
+			}
+		}
+
+		% Finally, allow for improvement if the spell was not cast from an item.
+		if not bItemCast AND IsClass(who,&Player)
+		{
+			Send(self,@ImproveAbility,#who=who);
+		}
+
+      return;
+   }
+
+   % Add a pretty projectile.
+   CreateProjectile(who=$,victim=$)
+   {
+		local oRoom;
+		
+		oRoom = Send(who,@GetOwner);
+		
+      Send(oRoom,@SomethingShot,#who=who,#target=victim,#projectile=self,#flags=viProjectileFlag);
+		
+      return;
+   }
+	
+   FallOffSlope(who=$, target=$)
+   "Returns a percentage based on distance and spell properties."
+   {
+       local iPercent, iDistance_squared, iMax_distance_squared, iZero_distance_squared;
+
+       % Do full damage within viMax_damage_distance, zero damage outside
+       % viZero_damage_distance, and an amount that falls off with distance
+       % between the two.
+       iPercent = 100;
+       
+       if who <> $
+       {
+          iDistance_squared = Send(who, @SquaredDistanceTo, #what=target);
+       }
+       else
+       {
+          % Full damage for targetareas without a caster
+          iDistance_squared = 0;
+       }
+       
+       iMax_distance_squared = viMax_damage_distance * viMax_damage_distance;
+       iZero_distance_squared = viZero_damage_distance * viZero_damage_distance;
+		 
+       if iDistance_squared > iMax_distance_squared
+       {
+			if iDistance_squared > iZero_distance_squared
+			{
+				iPercent = 0;
+			}
+			else
+			{
+				iPercent = 100 * (iZero_distance_squared - iDistance_squared) / (iZero_Distance_squared - iMax_distance_squared);
+			}
+       }
+       
+       return iPercent;
+   }
+	
+	% Visual stuff.
+   % Return the icon used to display a spell shooting through the air.
+   GetProjectileIcon()
+   {
+      return vrProjectile_Icon;
+   }
+
+   % Return the speed at which a particular spell should appear to shoot through the air.
+   GetProjectileSpeed()
+   {
+      return 5;
+   }
+
+   SendProjectileAnimation()
+   {
+      % Send animation info to user.  Default is no animation, display with group 1
+      AddPacket(1,ANIMATE_NONE, 2,1);
+
+      return;
+   }      
+
+   GetProjectileLightFlags()
+   {
+      return viProjectileLightFlags;
+   }
+
+   GetProjectileLightIntensity()
+   {
+      return viProjectileLightIntensity;
+   }
+
+   GetProjectileLightColor()
+   {
+      return viProjectileLightColor;
+   }
+	
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -46,8 +46,7 @@ classvars:
 	% Chance to increase is one in viChance_To_Increase.
    viChance_To_Increase = 12
 	
-   % viPostCast_time is in seconds, since it works off GetTime()
-   viPostCast_time = 1
+   viCast_delay = 1000
 
    % Can non-PK characers use this song?
    vbCanNewbieSing = TRUE     
@@ -139,7 +138,7 @@ messages:
          Send(oRoom,@SomeoneSaid,#type=SAY_MESSAGE,#string=jala_song_starts,
               #what=self);
          Send(self,@StartMusic,#oCaster=who,#rMusic=prMusic);
-         Send(who,@SetTranceFlag);
+			% removed component, under construction
          Send(oRoom,@EnchantAllOccupants,#what=self);
       }
 
@@ -151,7 +150,7 @@ messages:
       return [thisVolume,who,iSpellPower];
    }
 
-   BreakTrance(who=$, event=$, state=$, location=$)
+   InterruptCasting(who=$, event=$, state=$, location=$)
    "If caster runs out of mana or loses trance, spell ends."
    {
       local oRoom;
@@ -299,7 +298,7 @@ messages:
            #what=self);
       % Send $ as midi_rsc to end music and resume default.
       Send(self,@StartMusic,#oCaster=oCaster,#rMusic=$);
-      Send(oCaster,@ClearTranceFlag);
+			% removed component, under construction
       
       return;
    }
@@ -329,10 +328,7 @@ messages:
 
    SetSpellPlayerFlag(who=$, state=$)
    {
-      if who = Nth(state,2)
-      {
-         Send(who,@SetTranceFlag);
-      }
+		% removed component, under construction
       
       return;
    }

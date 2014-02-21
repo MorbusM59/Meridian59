@@ -158,7 +158,7 @@ messages:
       propagate;
    }
 
-   SomethingSaidDuringTrance(who=$,string=$)
+   SomethingSaidWhileCasting(who=$,string=$)
    {
       local oPrism, oPrey, lTargets;
 
@@ -176,7 +176,7 @@ messages:
       if oPrey <> $
       {
          % Use EVENT_STEER so we don't print message
-         Send(who,@breaktrance,#event=EVENT_STEER);  
+         Send(who,@InterruptCasting,#event=EVENT_STEER);  
          lTargets = cons(oPrey,lTargets);
          Send(self,@CastSpell,#who=who,#lTargets=lTargets,
               #ispellpower=Send(self,@GetSpellPower,#who=who));
@@ -214,7 +214,7 @@ messages:
       state = Send(who,@GetEnchantedState,#what=self);
       if isclass(first(state),&prism)
       {
-         Send(who,@SetTranceFlag);
+			% removed component, under construction
       }
       else
       {

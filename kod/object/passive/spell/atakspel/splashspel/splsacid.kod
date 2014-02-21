@@ -22,7 +22,7 @@ resources:
 
    SplashOfAcid_desc_rsc = \
       "Splashes Qor's unholy corrosive acid on a target at short range.  "
-      "Requires entroot berries to cast."
+      "Requires an entroot berry to cast."
 
    SplashOfAcid_sound = qacid.wav
 
@@ -42,17 +42,12 @@ classvars:
 
    vrSucceed_wav = SplashOfAcid_sound
 
-   % In seconds, since it works off GetTime().
-   viPostCast_time = 2
+   viCast_delay = 0
+	viCast_time = 2000
+	viDamage = 30
+   viRange = 4
 
 properties:
-
-   piDamageMin = 16
-   piDamageMax = 25
-   piRange = 3
-   
-   % No bonus from Mana Focus
-   piManaFocusBonus = 0
 
 messages:
 
@@ -61,7 +56,7 @@ messages:
       % separate message so can change, then set from admin mode
 
       plReagents = $;
-      plReagents = cons([&EntrootBerry,2],plReagents);
+      plReagents = cons([&EntrootBerry,1],plReagents);
 
       return;
    }

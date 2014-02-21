@@ -109,7 +109,7 @@ messages:
          {
             if send(i,@CheckPlayerFlag,#flag=PFLAG_TRANCE)
             { 
-               send(i,@BreakTrance,#event=EVENT_DISRUPT); 
+               send(i,@InterruptCasting,#event=EVENT_DISRUPT); 
  	         }
  	         
             Send(i,@EffectSendUserDuration,#effect=EFFECT_WHITEOUT,#duration=750);

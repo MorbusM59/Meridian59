@@ -80,7 +80,7 @@ messages:
 
    SetSpellPlayerFlag(who = $)
    {
-      Send(who,@SetTranceFlag);
+		% removed component, under construction
       Send(who,@SetPlayerFlag,#flag=PFLAG_MANA_FOCUS,#value=TRUE);
       
       return;
@@ -107,16 +107,18 @@ messages:
       return;
    }
 
-   BreakTrance( who = $, state = $, event = 0, what = $ )
+   InterruptCasting(who=$,event=0,what=$)
    {
-      %% Attack Spells (fireballs and lightning bolts) must not break this trance
-      if event = EVENT_CAST
-         AND IsClass(what,&AttackSpell)
+      %% Attack Spells (fireballs and lightning bolts) or running must not remove the spell
+      if event = EVENT_CAST OR event = EVENT_RUN OR event = EVENT_NEWOWNER
       {
-         return;
+			return FALSE;
       }
+		else
+		{
+			Send(who,@RemoveEnchantment,#what=self);
+		}
 
-      Send(who,@RemoveEnchantment,#what=self);
       return;
    }
    

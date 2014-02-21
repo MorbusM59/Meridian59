@@ -36,25 +36,25 @@ classvars:
 	% Chance to increase is one in viChance_To_Increase.
    viChance_To_Increase = 8
 
+	viCast_delay = 2000
+	viCast_time = 1000
+	viDamage = 10
+   viRange = $
+	
 properties:
-
-   piRange = $
-
-   % Maximum amount of bonus damage mana focus gives us for casting this spell.
-   piManaFocusBonus = 10
 
 messages:
 
-   CastSpell(who = $, lTargets = $)
+   % Add a pretty projectile.
+   CreateProjectile(who=$,victim=$)
    {
-      local oOwner;
-   
-      % Show bolt flying through the air
-      oOwner = Send(who,@GetOwner);
-      Send(oOwner,@SomethingShot,#who=who,#target=First(lTargets), 
-           #projectile=self,#flags=viProjectileFlag);
-
-	   propagate;
+		local oRoom;
+		
+		oRoom = Send(who,@GetOwner);
+		
+      Send(oRoom,@SomethingShot,#who=who,#target=victim,#projectile=self,#flags=viProjectileFlag);
+		
+      return;
    }
 
    % Return the icon used to display a spell shooting through the air.

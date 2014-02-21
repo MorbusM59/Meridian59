@@ -54,8 +54,7 @@ classvars:
 	% Chance to increase is one in viChance_To_Increase.
    viChance_To_Increase = 6
 
-   % in seconds, since it works off GetTime()
-   viPostCast_time = 3
+   viCast_delay = 3000
 
    % Default animation speed for icon in ms
    viAnimationSpeed = 200

@@ -44,7 +44,6 @@ resources:
    spell_insufficient_magic = "You don't have enough mana to cast %s!"
    spell_insufficient_reagent = "You don't have the reagents to cast %s!"
    spell_out_of_range = "%s%s is out of range."
-   spell_begin_trance = "You start to cast %s."
    spell_safety_on = \
       "You can't make an antisocial cast; you don't want to attack innocents."
    spell_safety_no_unlawful = \
@@ -116,11 +115,6 @@ resources:
       "words out and wave your arms around in hopes of a miracle."
    spell_forgot4 = "Klaatu Veratu Nepto?!?!"
 
-   spell_trance_begin = "You focus your whole will on casting %s."
-   spell_trance_break = \
-      "Your concentration is broken and the %s spell fizzles."
-   spell_trance_break_sound = spelfail.wav
-
    spell_disabled = \
       "~g~BAn unseen force rips the words of the spell from your throat "
       "before you can fully utter them."
@@ -148,7 +142,7 @@ classvars:
 
    % Some spells and skills do not check your exertion.
    vbCheck_Exertion = TRUE    
-   viSpellExertion = 2
+   viSpellExertion = 0
 
    viSpell_Num = $
    viSchool = $
@@ -158,6 +152,9 @@ classvars:
 
 	% Chance to increase is one in viChance_To_Increase. The standard rate is one in five.
    viChance_To_Increase = 5
+	
+	% Some spells require the player to say something to properly function.
+	vbAwaitsInput = FALSE
 
    viShow_enchantment_icon = ENCHANTMENT_SHOW_ALL
 
@@ -169,10 +166,11 @@ classvars:
    viIcon_animation_start = 2
    viIcon_animation_end = 2
 
-   % viCast_time is in milliseconds.
+   % How long does the cast take? In milliseconds.
    viCast_time = 0
-   % viPostCast_time in seconds, since it works off GetTime().
-   viPostCast_time = 1
+	
+   % How soon can the caster cast the next spell? In milliseconds.
+   viCast_delay = 1000
 
    vrSucceed_wav = $
 
@@ -707,8 +705,17 @@ messages:
    CanPayCosts(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE,
                bMade = FALSE)
    {
-      local iLists, oUserObject, iNum, i, oOwner, oVictim, oRoom, iRand,
-            oSpell;
+      local iLists, oUserObject, iNum, i, oOwner, oVictim, oRoom, iRand, oSpell;
+				
+		if send(who,@GetSpell) = self
+		{
+			return FALSE;
+		}
+
+		if send(who,@GetDelayTimer) <> $
+		{
+			return FALSE;
+		}
       
       if NOT IsClass(who,&Player)
       {
@@ -760,11 +767,6 @@ messages:
          }
       }
       
-      if NOT Send(who,@IsOkayAttackTime,#seconds=viPostCast_Time)
-      {
-         return FALSE;
-      }
-
       oRoom = Send(who,@GetOwner);
 
       oVictim = $;
@@ -1145,8 +1147,7 @@ messages:
       lGoodTargets = Send(self,@GetTargets,#who=who,#lTargets=lTargets);
 
       % This gets all valid targets, checking for bad targets, safeties, etc.
-      lGoodTargets = Send(self,@GetAttackTargets,#who=who,
-                          #lTargets=lGoodTargets,#report=report);
+      lGoodTargets = Send(self,@GetAttackTargets,#who=who,#lTargets=lGoodTargets,#report=report);
 
       return lGoodTargets;
    }
@@ -1773,40 +1774,13 @@ messages:
       return TRUE;
    }
 
-   DoubleCheckAfterTrance(who=$, lTargets = $, iSpellPower = 0)
+   BeginCastingSpell(who = $, lTargets = $, iSpellPower = 0)
    {
-      if IsClass(who,&User) AND Send(who,@IsResting)  
-      {
-         Send(who,@MsgSendUser,#message_rsc=spell_no_rest);
-
-         return FALSE;
-      }
-
-      if (Send(self,@IsHarmful)
-          AND IsClass(who,&Player)
-          AND NOT Send(self,@CheckPlayerAttack,#who=who,#lTargets=lTargets))
-         OR NOT Send(Send(who,@GetOwner),@ReqSpellCast,#who=who,#oSpell=self,
-                     #lItems=lTargets)
-      {
-         return FALSE;
-      }
-
-      if NOT Send(self,@IsHarmful)
-         AND NOT Send(self,@CheckPlayerHelp,#who=who,#lTargets=lTargets)
-      {
-         return FALSE;
-      }
-
-      return TRUE;
-   }
-
-   BeginCastingTrance(who = $, lTargets = $, iSpellPower = 0)
-   {
-      local oTrance, oObject, oOwner, i, oTarget, lFinalTargets, iCastTime;
-
+      local oObject, oOwner, i, oTarget, lFinalTargets, iCastTime;
+		
       oOwner = Send(who,@GetOwner);
 
-      iCastTime = Send(self,@GetTranceTime,#iSpellpower=iSpellpower,#who=who);
+      iCastTime = Send(self,@GetCastTime,#iSpellpower=iSpellpower,#who=who);
 
       % Give casting message to people nearby.
       for i in Send(oOwner,@GetHolderActive)
@@ -1828,50 +1802,25 @@ messages:
          }
       }
 
-      % Is spell instant-cast?
-      if iCastTime = 0
-      {
-         % Double-check to get valid targets.
-         lFinalTargets = Send(self,@GetGoodTargets,#who=who,
-                              #lTargets=lTargets);
+		% Double-check to get valid targets.
+		lFinalTargets = Send(self,@GetGoodTargets,#who=who,#lTargets=lTargets);
 
-         if lFinalTargets <> $ AND IsClass(First(lFinalTargets),&Battler)
-            AND Send(First(lFinalTargets),@TryDeflect,#what=self,#caster=who)
-         {
-            Send(self,@CastSpell,#who=who,#lTargets=[who],
-                 #iSpellPower=iSpellPower/2);
-         }             
-         else
-         {
-            Send(self,@CastSpell,#who=who,#lTargets=lFinalTargets,
-                 #iSpellpower=iSpellpower);
-         }
-         
-         return;
-      }
-      
-      % Do anything we want to do before placing the trance, like Send
-      %  explanatory messages.  See rescue for an example.
-      Send(self,@DoPreTranceEffects,#who=who,#lTargets=lTargets,
-           #iSpellpower=iSpellpower);
-
-      oTrance = Send(SYS,@FindSpellByNum,#num=SID_TRANCE);
-      Send(who,@MsgSendUser,#message_rsc=spell_trance_begin,
-           #parm1=Send(self,@GetName));
-
-      Send(oTrance,@BeginCastingTrance,#what=self,#who=who,#lTargets=lTargets,
-           #time=iCastTime);
-           
+      % Do anything we want to do before starting the cast, such as informational messages.
+      Send(self,@DoPreCastEffects,#who=who,#lTargets=lTargets,#iSpellpower=iSpellpower);
+		
+		% Begin casting the spell. Unless interrupted, the spell will cast once iCastTime has passed.
+		Send(who,@StartCastingTimer,#casttime=iCastTime,#castdelay=viCast_delay,#oSpell=self,#who=who,#lTargets=lFinalTargets,#iSpellpower=iSpellpower,#bAwaitsInput=vbAwaitsInput);
+          
       return;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   GetCastTime(iSpellpower=0,who=$)
    {
       local iPercent;
       
       if iSpellpower = 0
       {
-         Debug("Bad iSpellpower passed to GetTranceTime");
+         Debug("Bad iSpellpower passed to GetCastTime");
       }
       
       if viCast_time = 0
@@ -1880,13 +1829,13 @@ messages:
          return 0;
       }
 
-      % 51% for high, 149% for low
-      iPercent = 150 - iSpellPower;   
+      % 50 to 99 percent of viCast_time
+      iPercent = 100 - (iSpellPower/2 + 1);   
       
       return (viCast_time*iPercent)/100;
    }
 
-   DoPreTranceEffects(who=$,lTargets=$,iSpellpower=$)
+   DoPreCastEffects(who=$,lTargets=$,iSpellpower=$)
    {
       return;
    }
@@ -1932,7 +1881,7 @@ messages:
       return;
    }
 
-   BreakTrance()
+   InterruptCasting(event=$)
    {
       return TRUE;
    }
@@ -2045,7 +1994,7 @@ messages:
       return;
    }
 
-   SomethingSaidDuringTrance()
+   SomethingSaidWhileCasting()
    {
       return;
    }
@@ -2284,15 +2233,6 @@ messages:
       }
       
       return FALSE;
-   }
-
-   TranceBroken(oCaster=$)
-   {
-      Send(oCaster,@MsgSendUser,#message_rsc=spell_trance_break,
-           #parm1=Send(self,@GetName));
-      Send(oCaster,@WaveSendUser,#wave_rsc=spell_trance_break_sound);
-      
-      return;
    }
 
    GiveAdvice()

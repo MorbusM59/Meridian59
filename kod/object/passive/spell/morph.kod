@@ -95,13 +95,13 @@ messages:
       propagate;
    }
 
-   GetTranceTime(iSpellpower=0,who=$)
+   GetCastTime(iSpellpower=0,who=$)
    {
       local iPercent;
       
       if iSpellpower = 0
       {
-         Debug("Bad iSpellpower passed to GetTranceTime");
+         Debug("Bad iSpellpower passed to GetCastTime");
       }
       
       % Don't eliminate the casting time for DMs since they can use this
@@ -211,7 +211,7 @@ messages:
       return;
    }
 
-   SomethingSaidDuringTrance(who=$,string=$)
+   SomethingSaidWhileCasting(who=$,string=$)
    {
       local iForm, iCount, i, iLevel, iSpellPower, bDM;
             
@@ -259,7 +259,7 @@ messages:
       if iForm <> -1
       {
          % Use EVENT_STEER so we don't print fizzle message.
-         Send(who,@BreakTrance,#event=EVENT_STEER);  
+         Send(who,@InterruptCasting,#event=EVENT_STEER);  
          Send(self,@PerformMorph,#caster=who,#victim=who,#iIllusion_type=iForm,
               #iSpellpower=iSpellpower);
       }
