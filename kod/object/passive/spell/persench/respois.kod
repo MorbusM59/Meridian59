@@ -64,11 +64,7 @@ messages:
 
    GetStateValue(iSpellPower=$)
    {
-      local ifactor;    
-
-      iFactor = bound(iSpellPower,10,99);
-
-      return iFactor;
+      return iSpellPower*2;
    }
   
    GetDuration(iSpellPower = 0)

@@ -1004,6 +1004,17 @@ properties:
 
    % Players will naturally fall out of groups if they aren't getting kills
    ptLeaveBuilderGroupTimer = $
+	
+	% Internal Spell Cooldowns
+	ptBlind = $
+	ptDazzle = $
+	ptHold = $
+	
+	% These 4 properties handle hold and blind diminishing returns.
+	ptBlinded = $
+	piBlinded = 0
+	ptHeld = $
+	piHeld = 0
 
 messages:
 
@@ -6627,32 +6638,32 @@ messages:
    
    GetMight()
    {
-      return bound((piMight + piMightMod),1,MAXIMUM_STAT);
+      return bound((piMight + piMightMod/100),1,MAXIMUM_STAT);
    }
    
    GetIntellect()
    {
-      return bound((piIntellect + piIntellectMod),1,MAXIMUM_STAT);
+      return bound((piIntellect + piIntellectMod/100),1,MAXIMUM_STAT);
    }
    
    GetAgility()
    {
-      return bound((piAgility + piAgilityMod),1,MAXIMUM_STAT);
+      return bound((piAgility + piAgilityMod/100),1,MAXIMUM_STAT);
    }
    
    GetAim()
    {
-      return bound((piAim + piAimMod),1,MAXIMUM_STAT);
+      return bound((piAim + piAimMod/100),1,MAXIMUM_STAT);
    }
    
    GetStamina()
    {
-      return bound((piStamina + piStaminaMod),1,MAXIMUM_STAT);
+      return bound((piStamina + piStaminaMod/100),1,MAXIMUM_STAT);
    }
    
    GetMysticism()
    {
-      return bound((piMysticism + piMysticismMod),1,MAXIMUM_STAT);
+      return bound((piMysticism + piMysticismMod/100),1,MAXIMUM_STAT);
    }
 
    GetRawMight()
@@ -13237,6 +13248,126 @@ messages:
 	   }
 	   return;
    }
+	
+	InternalCooldown(spellid=$)
+	{
+		if spellid = SID_BLIND 
+		{
+			ptBlind = CreateTimer(self,@AllowCastingBlind,30000);
+		}
+		
+		if spellid = SID_DAZZLE
+		{
+			ptDazzle = CreateTimer(self,@AllowCastingDazzle,30000);
+		}
+		
+		if spellid = SID_HOLD
+		{
+			ptHold = CreateTimer(self,@AllowCastingHold,20000);
+		}		
+		return;
+	}
+	
+	AllowCastingBlind()
+	{
+		ptBlind = $;
+		
+		return;
+	}
+	
+	CanCastBlind()
+	{
+		return ptBlind;
+	}
+	
+	GetBlindCooldown()
+	{
+		return gettimeremaining(ptBlind);
+	}
+	
+	AllowCastingDazzle()
+	{
+		ptDazzle = $;
+		
+		return;
+	}
+	
+	CanCastDazzle()
+	{
+		return ptDazzle;
+	}
+
+	GetDazzleCooldown()
+	{
+		return gettimeremaining(ptDazzle);
+	}
+	
+	AllowCastingHold()
+	{
+		ptHold = $;
+		
+		return;
+	}
+	
+	CanCastHold()
+	{
+		return ptHold;
+	}
+	
+	GetHoldCooldown()
+	{
+		return gettimeremaining(ptHold);
+	}
+	
+	DiminishingReturns(spellid=$)
+	{
+		if spellid = SID_BLIND or spellid = SID_DAZZLE
+		{
+			if ptBlinded <> $
+			{
+				DeleteTimer(ptBlinded);
+			}	
+			ptBlinded = CreateTimer(self,@AllowBlindingMe,30000);
+			piBlinded = piBlinded + 1;
+		}
+		
+		if spellid = SID_HOLD
+		{
+			if ptHeld <> $
+			{
+				DeleteTimer(ptHeld);
+			}
+			ptHeld = CreateTimer(self,@AllowHoldingMe,20000);
+			piHeld = piHeld + 1;
+		}		
+		return;
+	}
+	
+	AllowBlindingMe()
+	{
+		ptBlinded = $;
+		piBlinded = 0;
+		
+		return;
+	}
+	
+	CanBeBlinded()
+	{
+		return piBlinded;
+	}
+	
+	AllowHoldingMe()
+	{
+		ptHeld = $;
+		piHeld = 0;
+		
+		return;
+	}
+	
+	CanBeHeld()
+	{
+		return piHeld;
+	}
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

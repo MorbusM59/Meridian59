@@ -20,7 +20,7 @@ resources:
    denial_desc_rsc = \
       "Causes the caster to unrealize their wounds, but beware when "
       "you realize its a hoax, because the wounds are still just as deep!  "
-      "Requires a firesand and solagh to cast."
+      "Requires solagh to cast."
 
    denial_on_rsc = "Your wounds suspiciously disappear."
    denial_failed_rsc = "Hmmm, you can't seem to convince yourself of perfect health."
@@ -76,7 +76,6 @@ messages:
    ResetReagents()
    {
       plReagents = $;
-      plReagents = Cons([&FireSand,2], plReagents);
       plReagents = Cons([&Solagh,1],plReagents);
 
       return;
@@ -96,14 +95,16 @@ messages:
 
    GetStateValue(who = $, Target = $, iSpellPower = 1)
    {
-      local iHPGain, iSpellpowerBonus;
+      local iHPGain;
       
       iHPGain = send(who,@GetMaxHealth) - send(who,@GetHealth);
+		
+		iHPGain = iHPGain * iSpellPower / 100;
+		
+      send(who,@GainHealth,#amount=iHPGain);
 
-      iSpellpowerBonus = (iSpellpower + 1) / 5;  %0 - 20, this is the percent of damage you don't get back when the enchantment fails.
-      iHPGain = send(who,@GainHealthNormal,#amount=iHPGain);
-
-      return iHPGain - (iSpellpowerBonus * iHPGain)/ 100 ;
+		% Make this way harder to purge: 4SP required to remove 1 HP.
+      return iHPGain*4;
    }
 
 
@@ -118,8 +119,8 @@ messages:
    {
       if state
       {
-         Send(who,@LoseHealth,#amount=state);
-      
+			send(who,@LoseHealth,#amount=state/4);
+			
          if send(who,@GetHealth) < 1
 	      {
             % Don't die: too harsh; makes spell unusable.

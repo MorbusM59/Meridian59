@@ -64,6 +64,12 @@ messages:
       
       propagate;
    }
+	
+   GetStateValue(who = $, iSpellPower = 0)      
+   {      		
+		% Make this a lot harder to purge!
+      return iSpellPower*2;
+   }
 
    SetSpellPlayerFlag(who=$)
    {
