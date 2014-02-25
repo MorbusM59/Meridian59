@@ -15,9 +15,6 @@ constants:
 
    include blakston.khd
 
-	% What percentage of each spell's state will Purge remove?
-   PURGE_PERCENTAGE = 50
-
 resources:
 
    Purge_name_rsc = "purge"
@@ -214,24 +211,24 @@ messages:
 				iTime = GetTimeRemaining(oTimer);
 				iState = Nth(i,3);
 				
-				% Calculate the new state of the enchantment.
-				iState = iState - spellpower * PURGE_PERCENTAGE / 100;
+				% Calculate the new state and time of the enchantment.
+				iNewState = iState - spellpower / (2 * Send(oSpell,@GetPurgeFactor));
+				iTime = iTime * iNewState / iState;
 				
 				% Start the new enchantment with the time left and the new state,
-				% but only if iState is greater than 0.
-				if iState > 0
+				% but only if iNewState is greater than 0.
+				if iNewState > 0
 				{
 					% Remove the current enchantment, but don't report.
 					Send(who,@RemoveEnchantment,#what=oSpell,#report=FALSE);
-					Send(who,@StartEnchantment,#what=oSpell,#state=iState,#time=iTime,#lastcall=send(oSpell,@GetLastCall),#addicon=send(oSpell,@GetAddicon));
-					% This is a temporary solution for spells that add extra effects based on the state value, such as super strength.
-					% These extra effects are started in GetStateValue and removed by RemoveEnchantment.
-					Send(oSpell,@GetStateValue,#who=who,#iSpellPower=iState,#target=who);
+					% Extra effects like added stat points are handled in GetStateValue, so we have to call it here.
+					Send(oSpell,@GetStateValue,#who=who,#iSpellPower=iNewState,#target=who);
+					Send(who,@StartEnchantment,#what=oSpell,#state=iNewState,#time=iTime,#lastcall=send(oSpell,@GetLastCall),#addicon=send(oSpell,@GetAddicon));
 				}
 				else
 				{
 					% Remove the current enchantment and report.
-					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE);
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE,#eliminated=TRUE);
 					bRemovedSomething = TRUE;
 				}
 			}

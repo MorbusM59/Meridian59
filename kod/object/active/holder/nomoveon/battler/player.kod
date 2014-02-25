@@ -729,6 +729,9 @@ resources:
    player_truced = "Shal'ille's magic compels you to respect the truce."
    
    Jig_cannot_attack = "It wouldn't feel right to attack the %s while you two are dancing so well together!"
+	
+	denial_death = "Death has caught up with you. Your vision dims..."
+	denial_survived = "You pull through!"
    
 classvars:
 
@@ -1016,6 +1019,9 @@ properties:
 	ptHeld = $
 	piHeld = 0
 
+	% This here is started when a person enters limbo after dropping to 0 from a denial.
+	ptDenialDeathTimer = $
+	
 messages:
 
    Constructor()
@@ -4912,22 +4918,22 @@ messages:
 
       Send(self,@LoseHealth,#amount=damage);
 	  
-	  oWeapon = Send(what,@GetWeapon);
-	     
-	  if IsClass(what,&Monster)
-	  {
-	     RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),Send(what,@GetTrueName),aspell,atype,damage,origdamage,player_monster_attack_string);
-	  }
-	  else
-	  {
-	     if oWeapon <> $
-	     {
-            RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),Send(what,@GetTrueName),aspell,atype,damage,origdamage,Send(Send(what,@GetWeapon),@GetTrueName));
-	     }
-	     else
-	     {
-            RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),Send(what,@GetTrueName),aspell,atype,damage,origdamage,player_no_weapon_string);
-	     }
+		oWeapon = Send(what,@GetWeapon);
+		  
+		if IsClass(what,&Monster)
+		{
+			RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),Send(what,@GetTrueName),aspell,atype,damage,origdamage,player_monster_attack_string);
+		}
+		else
+		{
+			if oWeapon <> $
+			{
+				RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),Send(what,@GetTrueName),aspell,atype,damage,origdamage,Send(Send(what,@GetWeapon),@GetTrueName));
+			}
+			else
+			{
+				RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),Send(what,@GetTrueName),aspell,atype,damage,origdamage,player_no_weapon_string);
+			}
       }
 
       if piHealth <= 0
@@ -6638,32 +6644,32 @@ messages:
    
    GetMight()
    {
-      return bound((piMight + piMightMod/100),1,MAXIMUM_STAT);
+      return bound((piMight + piMightMod),1,MAXIMUM_STAT);
    }
    
    GetIntellect()
    {
-      return bound((piIntellect + piIntellectMod/100),1,MAXIMUM_STAT);
+      return bound((piIntellect + piIntellectMod),1,MAXIMUM_STAT);
    }
    
    GetAgility()
    {
-      return bound((piAgility + piAgilityMod/100),1,MAXIMUM_STAT);
+      return bound((piAgility + piAgilityMod),1,MAXIMUM_STAT);
    }
    
    GetAim()
    {
-      return bound((piAim + piAimMod/100),1,MAXIMUM_STAT);
+      return bound((piAim + piAimMod),1,MAXIMUM_STAT);
    }
    
    GetStamina()
    {
-      return bound((piStamina + piStaminaMod/100),1,MAXIMUM_STAT);
+      return bound((piStamina + piStaminaMod),1,MAXIMUM_STAT);
    }
    
    GetMysticism()
    {
-      return bound((piMysticism + piMysticismMod/100),1,MAXIMUM_STAT);
+      return bound((piMysticism + piMysticismMod),1,MAXIMUM_STAT);
    }
 
    GetRawMight()
@@ -8209,6 +8215,19 @@ messages:
       %  for Portal of Life to reduce penalties.  We get the default value of
       %  piDeathCost from SYS, so that we can adjust global death penalties.
 
+		% Kill the denial death timer in case someone is killed in limbo.
+		% Also allow him to move and fight again.
+		if ptDenialDeathTimer <> $
+		{
+			DeleteTimer(ptDenialDeathTimer);
+			ptDenialDeathTimer = $;
+			
+			Send(self,@SetPlayerFlag,#flag=PFLAG_NO_MOVE,#value=FALSE);
+			Send(self,@SetPlayerFlag,#flag=PFLAG_NO_FIGHT,#value=FALSE);
+			Send(self,@SetPlayerFlag,#flag=PFLAG_NO_MAGIC,#value=FALSE);
+			Send(self,@EffectSendUser,#effect=EFFECT_PARALYZE_OFF);	
+		}
+		
       if Send(self,@GetOwner) <> $
          AND Send(Send(self,@GetOwner),@GetRoomNum) = RID_UNDERWORLD
       {
@@ -13368,6 +13387,36 @@ messages:
 	{
 		return piHeld;
 	}
-
+	
+	StartDenialDeathTimer()
+	{
+		ptDenialDeathTimer = CreateTimer(self,@CutTheThread,10000);
+		
+		return;
+	}
+	
+	CutTheThread()
+	{
+		ptDenialDeathTimer = $;
+		
+		if send(self,@GetHealth) > 0
+		{
+			Send(self,@MsgSendUser,#message_rsc=denial_survived);
+		}
+		else
+		{
+			Send(self,@MsgSendUser,#message_rsc=denial_death);
+			Send(self,@Killed,#what=self);		
+		}
+		
+		% In either case, release the poor bastard.
+		Send(self,@SetPlayerFlag,#flag=PFLAG_NO_MOVE,#value=FALSE);
+		Send(self,@SetPlayerFlag,#flag=PFLAG_NO_FIGHT,#value=FALSE);
+		Send(self,@SetPlayerFlag,#flag=PFLAG_NO_MAGIC,#value=FALSE);
+		Send(self,@EffectSendUser,#effect=EFFECT_PARALYZE_OFF);	
+		
+		return;	
+	}
+	
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

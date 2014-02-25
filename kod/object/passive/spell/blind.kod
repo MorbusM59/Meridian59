@@ -235,8 +235,9 @@ messages:
    {
       local iDuration;
 
-      % 5 to 10 seconds based on spellpower and between -2 and +2 seconds depending on the target's karma.
-      iDuration = 5000 + iSpellPower * 50 - 20 * Send(target,@GetKarma,#detect=TRUE);
+      % 5 to 10 seconds based on spellpower and up to a 2 seconds bonus depending on the target's karma,
+		% to compensate for low spellpower. Capped at 10 seconds.
+      iDuration = 5000 + iSpellPower * 50 + 20 * bound(Send(target,@GetKarma,#detect=TRUE),0,100);
 		iDuration = bound(iDuration,3000,10000);
 		
       return iDuration;

@@ -66,14 +66,14 @@ messages:
 
    GetStateValue(who = $, iSpellPower = 0, target = $)
    {
-      send(Target,@AddMight,#points=iSpellPower*20);
+      send(Target,@AddMight,#points=iSpellPower/5);
 
       return iSpellPower;
    }
 
    EndEnchantment( who = $, state = 0, report = TRUE )
    {
-      send(who,@AddMight,#points=-state*20);
+      send(who,@AddMight,#points=-state/5);
      
       propagate;
    }

@@ -55,7 +55,7 @@ messages:
    ResetReagents()
    {
       plReagents = $;
-      plReagents = Cons([&ElderBerry,3],plReagents);
+      plReagents = Cons([&ElderBerry,1],plReagents);
 
       return;
    }
@@ -71,7 +71,7 @@ messages:
    {
       local iDuration;
       
-      iDuration = 1500 + 10 * iSpellPower;
+      iDuration = 1200 + 24 * iSpellPower;  %% 20 to 60 minutes
       iDuration = iDuration * 1000;
       
       return iDuration;
