@@ -75,14 +75,10 @@ messages:
       return;
    }
 
-   AdjustHealthTime(time=0, lRadiusState=0)
-   "Reduces time passed in so that health regens faster.  Returns reduced time."
+   AdjustRegeneration(lRadiusState=0)
+   "Adds up to 500 to health gained per tick. At base rate, that is 1 health every 2 seconds."
    {
-      local iTime;
-
-      iTime = (time * (200-Nth(lRadiusState,2))) / 200;
-
-      return iTime;
+      return Nth(lRadiusState,2)*5;
    }
 
 

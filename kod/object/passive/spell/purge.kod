@@ -228,7 +228,7 @@ messages:
 				else
 				{
 					% Remove the current enchantment and report.
-					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE,#eliminated=TRUE);
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE);
 					bRemovedSomething = TRUE;
 				}
 			}

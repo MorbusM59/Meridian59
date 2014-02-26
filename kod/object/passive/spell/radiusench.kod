@@ -592,9 +592,9 @@ messages:
       return chance;
    }
 
-   AdjustHealthTime(time=0, lRadiusState=0)
+   AdjustRegeneration(lRadiusState=0)
    {
-      return time;
+      return 0;
    }
 
    AdjustVigorTime(time=0, lRadiusState=0)

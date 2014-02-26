@@ -861,7 +861,6 @@ properties:
    ptRest = $
 
    % Poison info
-   ptPoison = $
    piPoisonStrength = 0
 
    % List of objects adding overlays to us.
@@ -1053,13 +1052,7 @@ messages:
          DeleteTimer(ptMana);
          ptMana = $;
       }
-
-      if ptPoison <> $
-      {
-         DeleteTimer(ptPoison);
-         ptPoison = $;
-      }
-      
+   
       if ptAdvancement <> $
       {
          DeleteTimer(ptAdvancement);
@@ -1078,7 +1071,43 @@ messages:
          ptCrystalizeManaSurgeTimer = $;
          piCrystalizeManaSurging = FALSE;
       }
+		
+      if ptBlind <> $
+      {
+         DeleteTimer(ptBlind);
+         ptBlind = $;
+      }
 
+      if ptDazzle <> $
+      {
+         DeleteTimer(ptDazzle);
+         ptDazzle = $;
+      }
+		
+      if ptHold <> $
+      {
+         DeleteTimer(ptHold);
+         ptHold = $;
+      }
+		
+      if ptBlinded <> $
+      {
+         DeleteTimer(ptBlinded);
+         ptBlinded = $;
+      }
+		
+      if ptHeld <> $
+      {
+         DeleteTimer(ptHeld);
+         ptHeld = $;
+      }
+		
+      if ptDenialDeathTimer <> $
+      {
+         DeleteTimer(ptDenialDeathTimer);
+         ptDenialDeathTimer = $;
+      }
+		
       Send(self,@CancelRescue);
 
       if ptAttackTimer <> $
@@ -1962,11 +1991,6 @@ messages:
          Send(Send(self,@GetGuild),@SendUserMOTD,#who=self);
       }
 
-      if piPoisonStrength > 0
-      {
-         ptPoison = CreateTimer(self,@PoisonTimer,10000);
-      }
-
       % Send(self,@RefigureSchoolsLists,#informlore=TRUE);
 
       oSnoop = Send(SYS,@GetInvestigator);
@@ -2757,7 +2781,7 @@ messages:
       return;
    }
 
-   HealthTimer()
+   HealthGainTimer()
    {
       ptHealth = $;
 
@@ -2777,6 +2801,15 @@ messages:
       {
          Send(self,@NewHealth);
       }         
+
+      return;
+   }
+	
+   HealthLossTimer()
+   {
+      ptHealth = $;
+
+		Send(self,@LoseHealth,#amount=1,#decay=TRUE);
 
       return;
    }
@@ -5933,29 +5966,49 @@ messages:
       return $;
    }
 
-   CalculateHealthTime()
-   "Calculate # of milliseconds until user will gain a health point"
-   {
-      local iTime, iMaxHealth, lRadiusState;
-      
-      % Faster regen with higher vigor
-      iTime = ((200-piVigor)*(200-piVigor))/6 + 1000;
-      
-      iTime = ((125-Send(self,@GetStamina)) * iTime)/100;
-      iMaxHealth = bound(piMax_health,40,100);
-      iTime = (iTime *100)/iMaxHealth;
+	CalculateHealthPerTick()
+	{
+      local iHealthPerTick, lRadiusState;
+		
+		% HealthPerTick starts out as 1000. Faction adds up to 500.
+		iHealthPerTick = (piVigor * 5) + Send(Send(SYS,@GetParliament),@GetFactionRegenBonus,#who=self,#hpregen=TRUE);
 
-      iTime = iTime - Send(Send(SYS,@GetParliament),@GetFactionRegenBonus,
-                           #who=self,#hpregen=TRUE);
-      
+		% Restorate can add another 500.
       if Send(self,@IsAffectedByRadiusEnchantment,#byClass=&Restorate)
       {
          lRadiusState = Send(self,@GetMostPowerfulRadiusEnchantmentState,#byClass=&Restorate);
-         iTime = Send(Nth(lRadiusState,1),@AdjustHealthTime,#time=iTime,#lRadiusState=lRadiusState);
-         return bound(iTime,500,60000);
+         iHealthPerTick = iHealthPerTick + Send(Nth(lRadiusState,1),@AdjustRegeneration,#lRadiusState=lRadiusState);
       }
-
-      return bound(iTime,1000,60000);
+		
+		% If we have a poison on us, it reduces our health gained per tick, possibly turning it negative.
+		iHealthPerTick = iHealthPerTick - piPoisonStrength/10;
+		
+		return iHealthPerTick;
+	}
+	
+   CalculateHealthTime()
+   "Calculate # of milliseconds until user will gain a health point"
+   {
+      local iHealthPerTick, iTime;
+		
+		iHealthPerTick = Send(Self,@CalculateHealthPerTick);
+		
+		% Let's set reasonable limits for how small the minimum health gained per tick can be.
+		% If it is greater than 0.01 per second, let's calculate the time it takes to gain one hp.
+		if abs(iHealthPerTick) > 10
+		{
+			iTime = 1000000 / iHealthPerTick;
+			
+			% We scale the result with HPs. This naturally scales poison strength with player strength.
+			iTime = iTime * 150 / piMax_health;
+		}
+		% If it is smaller, return a nil, so that NewHealth knows not to start a timer.
+		else
+		{
+			iTime = $;
+		}
+	
+      return iTime;
    }
 
    CalculateManaTime()
@@ -6090,6 +6143,10 @@ messages:
   
    NewHealth()
    {
+		local iTime;
+		
+		iTime = Send(self,@CalculateHealthTime);
+		
       if piHealth < 0
       {
          piHealth = 0;
@@ -6102,22 +6159,45 @@ messages:
          piHealth = piBase_Max_health;
       }
 
-      if ptHealth = $
-      {
-         if piHealth <> piMax_health
-            AND piHealth > 0
-         {
-            ptHealth = CreateTimer(self,@HealthTimer,Send(self,@CalculateHealthTime));
-         }
-      }
-      else
-      {
-         if piHealth = piMax_health
-         {
-            DeleteTimer(ptHealth);
-            ptHealth = $;
-         }
-      }
+		if iTime <> $
+		{
+			if iTime > 0
+			{
+				if ptHealth = $
+				{
+					if piHealth <> piMax_health
+						AND piHealth > 0
+					{
+						ptHealth = CreateTimer(self,@HealthGainTimer,iTime);
+					}
+				}
+				else
+				{
+					if piHealth = piMax_health
+					{
+						DeleteTimer(ptHealth);
+						ptHealth = $;
+					}
+				}
+			}
+			else
+			{
+				iTime = -iTime;
+				
+				if ptHealth = $
+				{
+					ptHealth = CreateTimer(self,@HealthLossTimer,iTime);
+				}
+				else
+				{
+					if piHealth = 0
+					{
+						DeleteTimer(ptHealth);
+						ptHealth = $;
+					}
+				}
+			}
+		}
       
       Send(self,@DrawHealth);
       
@@ -10180,11 +10260,6 @@ messages:
 
    AddPoison(strength = 0, bVigorLoss = TRUE)
    {
-      if ptPoison = $
-      {    
-         ptPoison = CreateTimer(self,@PoisonTimer,10000);
-      }
-      
       piPoisonStrength = piPoisonStrength + strength;
 
       if bVigorLoss
@@ -10192,6 +10267,14 @@ messages:
          piVigor = piVigor - 20;
          Send(self,@NewVigor);
       }
+		
+		if ptHealth <> $
+		{
+			DeleteTimer(ptHealth);
+			ptHealth = $;
+		}
+		
+		Send(self,@NewHealth);
       
       return;
    }
@@ -10199,43 +10282,14 @@ messages:
    RemovePoison(strength = 0)
    {
       piPoisonStrength = piPoisonStrength - strength;
-      
-      return;
-   }
-
-   PoisonTimer()
-   {
-      ptPoison = $;
-
-      % for safety's sake
-      if piPoisonStrength <= 0
-      {
-         piPoisonStrength = 0;
-
-         return;
-      }
-      
-      if poOwner <> $
-      {  
-         ptPoison = CreateTimer( self, @PoisonTimer, 10000 );
-      }
-
-      if poOwner = $
-      {
-         return;
-      }
-
-      if NOT Send(poOwner,@SafePlayerAttack) OR Send(poOwner,@IsValidTarget,#who=self)
-      {
-         % Poison only hurts you in the arena if you are a combatant.
-         piHealth = piHealth - piPoisonStrength / 1000;
-         if piHealth < 1
-         {
-            piHealth = 1;
-         }
-
-         Send(self,@NewHealth);
-      }
+		
+		if ptHealth <> $
+		{
+			DeleteTimer(ptHealth);
+			ptHealth = $;
+		}
+		
+		Send(self,@NewHealth);
       
       return;
    }
