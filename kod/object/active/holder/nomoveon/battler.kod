@@ -1078,6 +1078,62 @@ messages:
 	{
 		return 0;
 	}
+	
+	% Nothing but dummies for DoTs and HoTs.
+	SetOverTimeEffect(i=$,amount=$)
+	{
+		return;
+	}	
+
+	GetDamageOverTime()
+	{
+		return;
+	}
+	
+   AddDamageOverTime(strength=0,duration=0,what=$,who=$)
+   {
+      return;
+   }
+	
+	CreateDoTTimer(duration=$)
+	{
+		return;
+	}
+
+   RemoveDamageOverTime()
+   {
+      return;
+   }
+	
+	DeleteDamageOverTime(what=$,who=$)
+	{
+		return;
+	}
+	
+	GetHealOverTime()
+	{
+		return;
+	}
+	
+   AddHealOverTime(strength=0,duration=0,what=$,who=$)
+   {
+      return;
+   }
+	
+	CreateHoTTimer(duration=$)
+	{
+		return;
+	}
+
+   RemoveHealOverTime()
+   {
+      return;
+   }
+	
+	DeleteHealOverTime(what=$,who=$)
+	{
+		return;
+	}
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

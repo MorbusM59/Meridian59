@@ -123,6 +123,11 @@ messages:
             }
          }
       }
+		
+      if Send(target,@GetDamageOverTime) <> $
+      {
+         bHasEnchantment = TRUE;
+      }
 
       if NOT bHasEnchantment
       {
@@ -179,70 +184,113 @@ messages:
          }
       }
 
-      send(self,@DoPurify,#who=oTarget,#iChance=iSpellPower);
+      send(self,@DoPurify,#who=oTarget,#spellpower=iSpellPower);
 
       propagate;
    }
 
-   DoPurify(who=$, iChance=$)
-   "Remove negative enchantments on who with a given chance to remove each one."
+   DoPurify(who=$, spellpower=$)
+   "If DM cast, removes all Debuffs. If player cast, removes up to 50 points from the debuff's SP and duration, or 5 damage per tick from a DoT."
    {
-      local iNumEnchantments, lEnchantments, iModifiedChance, oEnchantment, oSpell,
-            lList, bRemovedSomething;
+		local i, iAmount, lEnchantments, oTimer, iTime, oSpell, iState, iNewState, bRemovedSomething, lEffect;
 
-      if who = $
+      		if who = $
       {
          return FALSE;
       }
+		
+		bRemovedSomething = FALSE;
+
+      lEnchantments = send(who,@GetEnchantmentList);
 
       % Chance of $ means that we want to remove it all.
-      if iChance = $
+      if spellpower = $
       {
-         Send(who,@RemoveAllPersonalEnchantments);
-         
-         return TRUE;
+
+			for i in lEnchantments
+			{
+				oSpell = Nth(i,2);
+				
+				if Send(oSpell,@CanBeRemovedByPlayer) AND Send(oSpell,@IsHarmful)
+				{
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE);
+					bRemovedSomething = TRUE;
+				}
+			}
+		
+			for i in Send(who,@GetDamageOverTime)
+			{
+				send(who,@DeleteDamageOverTime,#what=First(i));
+				bRemovedSomething = TRUE;
+			}
+			
+         return bRemovedSomething;
       }
 
-      bRemovedSomething = FALSE;
-      lEnchantments = $;
-      lList = send(who,@GetEnchantmentList);
+		for i in lEnchantments
+		{
+			oSpell = Nth(i,2);
 
-      for oEnchantment in lList
-      {
-         oSpell = Nth(oEnchantment,2);
+			if Send(oSpell,@CanBeRemovedByPlayer) AND Send(oSpell,@IsHarmful)
+			{				
+				% Get the current state of the enchantment.
+				oTimer = Nth(i,1);
+				iTime = GetTimeRemaining(oTimer);
+				iState = Nth(i,3);
+				
+				% Calculate the new state and time of the enchantment.
+				iNewState = iState - spellpower;
+				iTime = iTime * iNewState / iState;
+				
+				% Start the new enchantment with the time left and the new state,
+				% but only if iNewState is greater than 0.
+				if iNewState > 0
+				{
+					% Remove the current enchantment, but don't report.
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=FALSE);
+					% Extra effects like added stat points are handled in GetStateValue, so we have to call it here.
+					Send(oSpell,@GetStateValue,#who=who,#iSpellPower=iNewState,#target=who);
+					Send(who,@StartEnchantment,#what=oSpell,#state=iNewState,#time=iTime,#lastcall=send(oSpell,@GetLastCall),#addicon=send(oSpell,@GetAddicon));
+				}
+				else
+				{
+					% Remove the current enchantment and report.
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE);
+					bRemovedSomething = TRUE;
+				}
+			}
+		}
+		
+		for i in Send(who,@GetDamageOverTime)
+		{
+			iState = Nth(i,7);
+			iNewState = bound(Nth(i,7) - spellpower,0,$);
+			iAmount = Nth(i,2)*iNewState/iState;
+			
+			% This is the portion of the DoT that we have removed. We pass that on to DoTWearingOff.
+			lEffect = [First(i),iAmount,Nth(i,3),GetTickCount()-Nth(i,3),Nth(i,5),Nth(i,6),spellpower];
+			
+			Send(who,@SetOverTimeEffect,#i=i,#amount=iAmount,#state=iNewState);
 
-         if Send(oSpell,@IsPersonalEnchantment)
-            AND send(oSpell,@CanBeRemovedByPlayer)
-            AND send(oSpell,@IsHarmful)
-         {
-            lEnchantments = cons(oSpell,lEnchantments);
-         }
-      }
-      
-      iNumEnchantments = length(lEnchantments);
-
-      % Anti-clumpy code: If there is at least two enchantments in the room and the chance to
-      %  dispell is greater than 60%, then auto-remove one enchantment.
-      if iNumEnchantments >= MIN_ENCHANTMENTS_FOR_AUTOREMOVE
-         AND iChance >= MIN_CHANCE_FOR_AUTOREMOVE
-      {
-         oEnchantment = Nth(lEnchantments,random(1,iNumEnchantments));
-         Send(who,@RemoveEnchantment,#what=oEnchantment);
-         lEnchantments = DelListElem(lEnchantments,oEnchantment);
-         iNumEnchantments = iNumEnchantments - 1;
-         bRemovedSomething = TRUE;
-      }
-
-      for oEnchantment in lEnchantments
-      {
-         iModifiedChance = iChance;
-
-         if iChance = $ OR iModifiedChance > random(1,100)
-         {
-            Send(who,@RemoveEnchantment,#what=oEnchantment);
-            bRemovedSomething = TRUE;
-         }
-      }
+			oSpell = First(i);
+			
+			if oSpell <> $
+			{
+				if iAmount > 0
+				{
+					% The spell hasn't been entirely removed. Let's feed the DoTWearingOff message the portion of the dot
+					% that has been removed.
+					send(oSpell,@DoTWearingOff,#who=who,#overtimeeffect=lEffect,#report=FALSE,#delayed=FALSE);
+					send(who,@MsgSendUser,#message_rsc=curepoison_abates,#parm1=Send(oSpell,@GetName));
+				}
+				else
+				{
+					send(who,@MsgSendUser,#message_rsc=curepoison_removed,#parm1=Send(oSpell,@GetName));
+				}
+			}
+		}
+		
+		send(who,@RemoveDamageOverTime);
       
       return bRemovedSomething;
    }

@@ -1,0 +1,198 @@
+% Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+% All rights reserved.
+%
+% This software is distributed under a license that is described in
+% the LICENSE file that accompanies it.
+%
+% Meridian is a registered trademark.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+MarkOfDishonor is AttackSpell
+
+constants:
+
+   include blakston.khd
+
+resources:
+
+   MarkOfDishonor_name_rsc = "equilibirum"
+   MarkOfDishonor_icon_rsc = imarkdis.bgf
+   MarkOfDishonor_desc_rsc = \
+      "Restores the balance between you and your target."
+      "Requires an emerald to cast."
+
+   MarkOfDishonor_sound = smarkdis.wav
+
+	MarkOfDishonor_no_player = "Shal'ille is not interested in your battle with a mindless beast."
+   MarkOfDishonor_success = "The eyes of Shal'ille turn towards %s%s."
+   MarkOfDishonor_fair = "Shal'ille refuses to take sides in this battle."
+   MarkOfDishonor_on = "You shudder as you feel the weight of Shal'ille judging gaze upon you."
+   MarkOfDishonor_already_cast = "%s%s is already under Shal'ille's scrutiny."
+   MarkOfDishonor_dot_wearing_off = "You are relieved as Shal'ille's punishing gaze leaves you to turn her attention to more pressing matters."
+   MarkOfDishonor_hot_wearing_off = "Shal'ille's supportive presence leaves you to finish this battle on your own."
+	
+
+
+classvars:
+   vrName = MarkOfDishonor_name_rsc
+   vrIcon = MarkOfDishonor_icon_rsc
+   vrDesc = MarkOfDishonor_desc_rsc
+
+   viSchool = SS_SHALILLE
+   viSpell_num = SID_MARK_OF_DISHONOR
+
+   viSpell_level = 4
+	viMana = 10
+   viSpellExertion = 4
+
+   viAttack_spell = ATCK_SPELL_ALL + ATCK_SPELL_HOLY
+
+   vrSucceed_wav = MarkOfDishonor_sound
+
+   % In seconds, since it works off GetTime().
+   viPostCast_time = 1
+   
+   viChance_To_Increase = 5
+
+properties:
+
+   piRange = 20
+	pbAbsolute = TRUE
+   
+messages:
+
+   ResetReagents()
+   {
+      plReagents = $;
+      plReagents = Cons([&Emerald,1],plReagents);
+
+      return;
+   }
+
+   CanPayCosts(who = $, lTargets = $, bItemCast = FALSE)
+   {
+		local i, oTarget;
+		
+      oTarget = First(lTargets);
+		
+		if IsClass(oTarget,&Player)
+		{
+			for i in send(oTarget,@GetDamageOverTime)
+			{
+				if First(i) = self AND Nth(i,5) = who
+				{
+					Send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_already_cast,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName));
+					return FALSE;
+				}
+			}
+			for i in send(oTarget,@GetHealOverTime)
+			{
+				if First(i) = self AND Nth(i,5) = who
+				{
+					Send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_already_cast,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName));
+					return FALSE;
+				}
+			}	
+		}
+		else
+		{
+			Send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_no_player);
+			return FALSE;
+		}
+
+      propagate;
+   }
+	
+   CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
+   {
+      local iDamage, iCasterPercent, iTargetPercent, iDifference, iDuration, oRoom, oTarget;
+
+      oTarget = First(lTargets);
+      oRoom = Send(who,@GetOwner);
+		
+		iDamage = 1000 - (Send(oTarget,@GetKarma) - 100) * 10;
+		iCasterPercent = 100 * Send(who,@GetHealth) / Send(who,@GetMaxHealth);
+		iTargetPercent = 100 * Send(oTarget,@GetHealth) / Send(oTarget,@GetMaxHealth);
+		iDifference = (iTargetPercent - iCasterPercent)*3/4;
+		iDuration = abs(iDifference) * 1000000 / iDamage;
+		
+		if iDifference = 0
+		{
+			Send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_fair);
+			
+			return;
+		}
+		
+		if iDifference < 0
+		{
+			if Send(oTarget,@GetKarma) > 0
+			{
+				Send(who,@AddDamageOverTime,#strength=iDamage,#duration=iDuration,#what=self,#who=who);
+				Send(oTarget,@AddHealOverTime,#strength=iDamage,#duration=iDuration,#what=self,#who=who);
+			}
+			else
+			{
+				Send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_fair);
+				
+				return;
+			}
+		}
+		else
+		{
+			Send(oTarget,@AddDamageOverTime,#strength=iDamage,#duration=iDuration,#what=self,#who=who);
+			Send(who,@AddHealOverTime,#strength=iDamage,#duration=iDuration,#what=self,#who=who);
+		}
+
+		Send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_success,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName));
+		Send(oTarget,@MsgSendUser,#message_rsc=MarkOfDishonor_on);
+		
+      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
+      Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
+
+		Send(who,@SetKillTarget,#target=oTarget);
+		Send(who,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
+
+		if NOT bItemCast
+		{
+			% Do the sound, and the third person animation.
+			piCast_successes = piCast_successes + 1 ;
+			Send(who,@DoCast);      %% window overlay
+
+		}
+
+      Send(oRoom,@SomethingAttacked,#what=who,#victim=oTarget,#use_weapon=self);
+		
+      if not bItemCast
+      {
+         Send(self,@ImproveAbility,#who=who,#target=oTarget);
+      }
+
+      % DON'T PROPAGATE!  This way, events will be handled in the proper
+      %  order.
+
+      return;
+   }
+	
+   DoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+   {
+		if report
+		{
+			send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_dot_wearing_off);
+		}
+      
+      return;
+   }
+	
+   HoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+   {
+		if report
+		{
+			send(who,@MsgSendUser,#message_rsc=MarkOfDishonor_hot_wearing_off);
+		}
+      
+      return;
+   }
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

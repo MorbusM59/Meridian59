@@ -3403,8 +3403,7 @@ messages:
             AND Send(self,@ReqSomethingAttack,#what=who,#victim=each_obj)
             AND Send(who,@AllowPlayerAttack,#victim=each_obj)
          {
-            Send(each_obj,@DispelIllusionEnchantments,#report=report,
-                 #iChance=iChance);
+            Send(each_obj,@DispelIllusionEnchantments,#report=report,#iChance=iChance);
          }
       }
 

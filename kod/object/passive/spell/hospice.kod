@@ -24,10 +24,9 @@ resources:
       "another good soul.  "
       "Requires herbs to cast."
 
-   hospice_cast_rsc = "%s%s's spell rejuvenates you, restoring ~g~B%i~B~n hitpoints."
-   hospice_cast_self = "Shal'ille's holy magic rejuvenates you, restoring ~g~B%i~B~n hitpoints."
-   hospice_cast_on_other = "You heal %s%s for ~g~B%i~B~n hitpoints."
-   hospice_unnecessary_rsc = "%s%s is perfectly healthy."
+   hospice_on = "Shal'ille's aura engulfs you, gradually restoring ~g~B%i~B~n hitpoints."
+   hospice_on_other = "Shal'ille's aura engulfs %s%s, gradually restoring ~g~B%i~B~n hitpoints."
+	hospice_wearing_off = "Shal'ille's healing aura leaves you ."
 
 classvars:
 
@@ -86,54 +85,48 @@ messages:
          return FALSE;
       }
 
-      if Send(target,@GetHealth) >= Send(target,@GetMaxHealth)
-      {
-         if NOT bItemCast
-         {
-            Send(who, @MsgSendUser, #message_rsc=hospice_unnecessary_rsc,
-              #parm1=Send(target,@GetCapDef), #parm2=Send(target,@GetName));
-         }
-         
-         return FALSE;
-      }
-
       propagate;
    }
 
    CastSpell(who = $, lTargets = $, iSpellPower = 0)
    {
-      local iHeal, oTarget;
+      local iHeal, iTrueHeal, oTarget, i;
 
       oTarget = First(lTargets);
           
-      iHeal = random(-3,3) + iSpellPower/5 + Send(oTarget,@GetKarma)/10;
-      iheal = bound(iHeal,0,25);
+      iHeal = iSpellPower/2 + Send(oTarget,@GetKarma)/10;
+      iHeal = bound(iHeal,0,50);
+		iTrueHeal = iHeal * Send(oTarget,@GetMaxHealth) / 150;
+		iHeal = iHeal * 100;
+		
+		for i in send(oTarget,@GetHealOverTime)
+		{
+			if First(i) = self AND Nth(i,5) = who
+			{
+				send(oTarget,@DeleteHealOverTime,#what=First(i),#who=who);
+			}
+		}
 
+      send(oTarget,@AddHealOverTime,#strength=iHeal,#duration=10000,#what=self,#who=who);
+		
+      Send(oTarget,@MsgSendUser,#message_rsc=hospice_on,#parm1=iTrueHeal);
+		
       if who <> oTarget 
       {
-         Send(who,@MsgSendUser,#message_rsc=hospice_cast_on_other,
-              #parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName),#parm3=iHeal);
-              
-         Send(oTarget,@MsgSendUser,#message_rsc=hospice_cast_rsc,
-              #parm1=Send(who,@GetCapDef),#parm2=Send(who,@GetName),#parm3=iHeal);
-
-         % Give them a little boost if they help someone of higher Karma.
-         if send(who,@GetKarma) < send(oTarget,@GetKarma)
-         {
-            send(who,@AddKarma,#amount = send(who,@CalculateKarmaChangeFromAct,
-                 #karma_doer=send(who,@GetKarma),#karma_act=send(oTarget,@GetKarma),
-                 #Swing_factor=2));
-         }
-      }       
-
-      else
-      {
-         Send(who,@MsgSendUser,#message_rsc=hospice_cast_self,#parm1=iHeal);
-      }
-
-      Send(oTarget,@GainHealthNormal,#amount=iHeal);
+         Send(who,@MsgSendUser,#message_rsc=hospice_on_other,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName),#parm3=iTrueHeal);
+      }   
 
       propagate;
+   }
+	
+   HoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+   {
+		if report
+		{
+			send(who,@MsgSendUser,#message_rsc=hospice_wearing_off);
+		}
+      
+      return;
    }
 
 

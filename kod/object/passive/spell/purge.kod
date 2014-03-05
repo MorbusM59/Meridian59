@@ -92,7 +92,7 @@ messages:
          return FALSE;
       }
 
-      % The target must have an enchantment
+      % The target must have an enchantment or heal over time.
       lEnchantment = Send(target,@GetEnchantmentList);
       bHasEnchantment = IsClass(who,&DM);
 
@@ -110,6 +110,11 @@ messages:
                break;
             }
          }
+      }
+		
+      if Send(target,@GetHealOverTime) <> $
+      {
+         bHasEnchantment = TRUE;
       }
 
       if NOT bHasEnchantment
@@ -175,8 +180,7 @@ messages:
    DoPurge(who=$, spellpower=$)
    "Remove positive enchantments on who with a given chance to remove each one."
    {
-		local i, lEnchantments, oTimer, iTime, oSpell, iState, iNewState, bRemovedSomething;
-		
+		local i, iAmount, iState, iNewState, lEnchantments, oTimer, iTime, oSpell, bRemovedSomething;
 		
       % Can't do this to nobody or to non-players.
       if who = $ OR NOT IsClass(who,&Player)
@@ -190,6 +194,11 @@ messages:
       if spellpower = $
       {
          Send(who,@RemoveAllPersonalEnchantments);
+			
+			for i in Send(who,@GetHealOverTime)
+			{
+				send(who,@DeleteHealOverTime,#what=First(i));
+			}
 			
 			bRemovedSomething = TRUE;
          
@@ -233,7 +242,22 @@ messages:
 				}
 			}
 		}
-      
+		
+		for i in Send(who,@GetHealOverTime)
+		{
+			iState = Nth(i,7);
+			iNewState = bound(Nth(i,7) - spellpower/2,0,$);
+			iAmount = Nth(i,2)*iNewState/iState;
+			Send(who,@SetOverTimeEffect,#i=i,#amount=iAmount,#state=iNewState);
+
+			if iAmount = 0
+			{
+				bRemovedSomething = TRUE;
+			}
+		}
+		
+		send(who,@RemoveHealOverTime);
+
       return bRemovedSomething;
    }
 

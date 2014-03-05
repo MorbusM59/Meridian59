@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Poison is Sickness
+Poison is Debuff
 
 constants:
 
@@ -17,7 +17,7 @@ constants:
 resources:
 
    poison_start = "Fresh poison courses through your veins like fire."
-   poison_stop  = "The poison abates somewhat."
+   poison_stop  = "The poison has run its course."
    poison_icon = iposoned.bgf
    poison_name = "poison"
 
@@ -66,21 +66,19 @@ messages:
          }
       }
 
-      send(who,@AddPoison,#strength=lossrate);
-      send(who,@StartEnchantment,#what=self,#time=duration,#state=lossrate);
+      send(who,@AddDamageOverTime,#strength=lossrate,#duration=duration,#what=self);
       send(who,@MsgSendUser,#message_rsc=poison_start);
       Send(who,@WaveSendUser,#wave_rsc=poison_sound);
       
       return;
    }
 
-   EndEnchantment( who = $, state = 0, report = TRUE )
+   DoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
    {
-      send(who,@RemovePoison,#strength=state);
-      if report
-      {
-         send(who,@MsgSendUser,#message_rsc=poison_stop);
-      }
+		if report
+		{
+			send(who,@MsgSendUser,#message_rsc=poison_stop);
+		}
       
       return;
    }

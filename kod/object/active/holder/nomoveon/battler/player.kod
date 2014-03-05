@@ -860,9 +860,12 @@ properties:
    ptAdvancement = $
    ptRest = $
 
-   % Poison info
-   piPoisonStrength = 0
-
+	% Keeps track of damage over time effects.
+	plDoT = $
+   
+   % Keeps track of heal over time effects.
+	plHoT = $
+	
    % List of objects adding overlays to us.
    plOverlays = $
 
@@ -1959,6 +1962,7 @@ messages:
       % Restart Health and Mana timers
       Send(self,@NewHealth);
       Send(self,@NewMana);
+		Send(self,@NewOverTimeEffect);
       
       Send(self,@SendUserAllWindowOverlays);
 
@@ -2797,10 +2801,6 @@ messages:
             Send(self,@LoseHealth,#amount=1,#decay=TRUE);
          }
       }
-      else
-      {
-         Send(self,@NewHealth);
-      }         
 
       return;
    }
@@ -2810,7 +2810,7 @@ messages:
       ptHealth = $;
 
 		Send(self,@LoseHealth,#amount=1,#decay=TRUE);
-
+		
       return;
    }
 
@@ -3111,7 +3111,7 @@ messages:
 
    DispelIllusionEnchantments(report = TRUE, iChance = 100)
    {
-      local i, oSpell, each_obj;
+      local i, iState, iNewState, lEffect, oSpell, each_obj, iAmount;
 
       for i in plEnchantments 
       {                       
@@ -3122,6 +3122,31 @@ messages:
             Send(self,@RemoveEnchantment,#what=Nth(i,2),#report=report);
          }
       }
+		
+		for i in Send(self,@GetDamageOverTime)
+		{
+			oSpell = First(i);
+			
+			if IsClass(oSpell,&IllusionaryWounds)
+			{
+				iState = Nth(i,7);
+				iNewState = bound(Nth(i,7) - iChance,0,$);
+				iAmount = Nth(i,2)*iNewState/iState;
+				
+				% This is the portion of the DoT that we have removed. We pass that on to DoTWearingOff.
+				lEffect = [First(i),iAmount,Nth(i,3),GetTickCount()-Nth(i,3),Nth(i,5),Nth(i,6),Nth(i,7)];
+				
+				Send(self,@SetOverTimeEffect,#i=i,#amount=iAmount,#state=iNewState);
+
+				if iAmount > 0
+				{
+					% The spell hasn't been entirely removed. Let's feed the DoTWearingOff message the portion of the dot
+					% that has been removed.
+					send(oSpell,@DoTWearingOff,#who=self,#overtimeeffect=lEffect,#report=FALSE,#delayed=FALSE);
+				}
+			}
+
+		}
       
       % Kludgy, but oh well.  Not like any other code from this era is
       %  exactly well-engineered or even "good", really.
@@ -3238,7 +3263,21 @@ messages:
             Send(self,@ShowAddEnchantment,#what=each_obj,#type=ENCHANTMENT_PLAYER);
          }
       }
-      
+		
+      for i in plDoT
+      {
+         each_obj = First(i);
+
+         Send(self,@ShowAddEnchantment,#what=each_obj,#type=ENCHANTMENT_PLAYER);
+      }
+		
+      for i in plHoT
+      {
+         each_obj = First(i);
+
+         Send(self,@ShowAddEnchantment,#what=each_obj,#type=ENCHANTMENT_PLAYER);
+      }
+		
       return;
    }
 
@@ -5968,7 +6007,10 @@ messages:
 
 	CalculateHealthPerTick()
 	{
-      local iHealthPerTick, lRadiusState;
+      local i, iDoT, iHoT, iHealthPerTick, lRadiusState;
+		
+		iDoT = 0;
+		iHoT = 0;
 		
 		% HealthPerTick starts out as 1000. Faction adds up to 500.
 		iHealthPerTick = (piVigor * 5) + Send(Send(SYS,@GetParliament),@GetFactionRegenBonus,#who=self,#hpregen=TRUE);
@@ -5980,8 +6022,26 @@ messages:
          iHealthPerTick = iHealthPerTick + Send(Nth(lRadiusState,1),@AdjustRegeneration,#lRadiusState=lRadiusState);
       }
 		
-		% If we have a poison on us, it reduces our health gained per tick, possibly turning it negative.
-		iHealthPerTick = iHealthPerTick - piPoisonStrength/10;
+		% Double health gain if we are resting.
+		if Send(self,@IsResting)
+		{
+			iHealthPerTick = iHealthPerTick * 2;
+		}
+		
+		% Run through our list of damage over time effects and add the damage values (3rd element of each entry).
+		for i in plDoT
+		{
+			iDoT = iDoT + Nth(i,2);
+		}
+		
+		% Run through our list of heal over time effects and add the heal values (3rd element of each entry).
+		for i in plHoT
+		{
+			iHoT = iHoT + Nth(i,2);
+		}
+		
+		% Damage over time effects may slow down or reverse our HP regeneration, while heal over times will speed it up.
+		iHealthPerTick = iHealthPerTick - iDoT + iHoT;
 		
 		return iHealthPerTick;
 	}
@@ -6166,7 +6226,6 @@ messages:
 				if ptHealth = $
 				{
 					if piHealth <> piMax_health
-						AND piHealth > 0
 					{
 						ptHealth = CreateTimer(self,@HealthGainTimer,iTime);
 					}
@@ -6200,7 +6259,7 @@ messages:
 		}
       
       Send(self,@DrawHealth);
-      
+		
       return;
    }
    
@@ -8308,6 +8367,17 @@ messages:
 			Send(self,@EffectSendUser,#effect=EFFECT_PARALYZE_OFF);	
 		}
 		
+		% Remove any possible HoTs or DoTs we may have on us.
+		for i in plDoT
+		{
+			plDoT = DelListElem(plDoT,i);
+		}
+		
+		for i in plHoT
+		{
+			plHoT = DelListElem(plHoT,i);
+		}
+		
       if Send(self,@GetOwner) <> $
          AND Send(Send(self,@GetOwner),@GetRoomNum) = RID_UNDERWORLD
       {
@@ -8602,6 +8672,11 @@ messages:
 
       propagate;
    }
+	
+	GetLastDeath()
+	{
+		return piLastDeathTime;
+	}
 
    ApplyDeathPenalties()
    {
@@ -10257,16 +10332,99 @@ messages:
 
       return player_was_hit;
    }
+	
+	
+	% The following messages handle DoTs and HoTs. We keep them separate since we don't want spells that remove
+	% one to also remove the other. A few more lines of code but a lot simpler and cleaner.
+	NewOverTimeEffect()
+	{
+		% Check for changed hit point regeneration every second.
+      CreateTimer(self,@NewOverTimeEffect,1000);
+		send(self,@RemoveDamageOverTime);
+		send(self,@RemoveHealOverTime);
+		
+		return;
+	}
+	
+	
+	SetOverTimeEffect(i=$,amount=$,state=$)
+	{
+		setnth(i,2,amount);
+		setnth(i,7,state);
+		return;
+	}	
 
-   AddPoison(strength = 0, bVigorLoss = TRUE)
+	GetDamageOverTime()
+	{
+		return plDoT;
+	}
+	
+   AddDamageOverTime(strength=0,duration=0,what=$,who=$,removable=TRUE,state=100,showicon=TRUE)
    {
-      piPoisonStrength = piPoisonStrength + strength;
+		local tTimer;
+		
+		plDoT = cons([what,strength,GetTickCount(),duration,who,removable,state],plDoT);
+		
+		if what <> $ AND showicon
+		{
+			Send(self,@ShowAddEnchantment,#what=what,#type=ENCHANTMENT_PLAYER);
+		}
 
-      if bVigorLoss
-      {
-         piVigor = piVigor - 20;
-         Send(self,@NewVigor);
-      }
+		if ptHealth <> $
+		{
+			DeleteTimer(ptHealth);
+			ptHealth = $;
+		}
+		
+		Send(self,@NewHealth);
+		
+		% Post this so the list of DoTs is set before the timer starts.
+		% DoTs are automatically checked every second, this here simply improves accuracy.
+		Post(self,@RemoveDamageOverTimeTimer,#duration=duration);
+      
+      return;
+   }
+	
+	RemoveDamageOverTimeTimer(duration=0)
+	{
+		return CreateTimer(self,@RemoveDamageOverTime,duration);	
+	}
+	
+   RemoveDamageOverTime()
+   {
+		local i;
+		
+		for i in plDoT
+		{
+			if Nth(i,6) AND ((Nth(i,2) = 0) OR (abs(GetTickCount() - Nth(i,3)) >= Nth(i,4)))
+			{
+				if First(i) <> $
+				{
+					Send(self,@ShowRemoveEnchantment,#what=First(i),#type=ENCHANTMENT_PLAYER);
+					Send(First(i),@DoTWearingOff,#who=self,#overtimeeffect=i);
+				}
+				plDoT = DelListElem(plDoT,i);
+			}
+		}
+		
+		Send(self,@NewHealth);
+      
+      return;
+   }
+	
+	DeleteDamageOverTime(what=$,who=$)
+	{
+		local i;
+		
+		for i in plDoT
+		{
+			if First(i) = what AND (who = $ OR who = Nth(i,5))
+			{
+				Send(self,@ShowRemoveEnchantment,#what=First(i),#type=ENCHANTMENT_PLAYER);
+				Send(First(i),@DoTWearingOff,#who=self,#overtimeeffect=i);
+				plDoT = DelListElem(plDoT,i);
+			}
+		}
 		
 		if ptHealth <> $
 		{
@@ -10277,11 +10435,77 @@ messages:
 		Send(self,@NewHealth);
       
       return;
-   }
-
-   RemovePoison(strength = 0)
+	}
+	
+	GetHealOverTime()
+	{
+		return plHoT;
+	}
+	
+   AddHealOverTime(strength=0,duration=0,what=$,who=$,removable=TRUE,state=100,showicon=TRUE)
    {
-      piPoisonStrength = piPoisonStrength - strength;
+		plHoT = cons([what,strength,GetTickCount(),duration,who,removable,state],plHoT);
+		
+		if what <> $ AND showicon
+		{
+			Send(self,@ShowAddEnchantment,#what=what,#type=ENCHANTMENT_PLAYER);
+		}
+
+		if ptHealth <> $
+		{
+			DeleteTimer(ptHealth);
+			ptHealth = $;
+		}
+		
+		Send(self,@NewHealth);
+		
+		% Post this so the list of DoTs is set before the timer starts.
+		% HoTs are automatically checked every second, this here simply improves accuracy.
+		Post(self,@RemoveHealOverTimeTimer,#duration=duration);
+      
+      return;
+   }
+	
+	RemoveHealOverTimeTimer(duration=0)
+	{
+		return CreateTimer(self,@RemoveHealOverTime,duration);	
+	}
+
+   RemoveHealOverTime()
+   {
+		local i;
+		
+		for i in plHoT
+		{
+			if Nth(i,6) AND ((Nth(i,2) = 0) OR (abs(GetTickCount() - Nth(i,3)) >= Nth(i,4)))
+			{
+				if First(i) <> $
+				{
+					Send(self,@ShowRemoveEnchantment,#what=First(i),#type=ENCHANTMENT_PLAYER);
+					Send(First(i),@HoTWearingOff,#who=self,#overtimeeffect=i);
+				}
+				plHoT = DelListElem(plHoT,i);
+			}
+		}
+			
+		Send(self,@NewHealth);
+      
+      return;
+   }
+	
+	DeleteHealOverTime(what=$,who=$)
+	{
+		local i;
+		
+		for i in plHoT
+		{
+			if First(i) = what AND (who = $ OR who = Nth(i,5))
+			{
+				Send(self,@ShowRemoveEnchantment,#what=First(i),#type=ENCHANTMENT_PLAYER);
+				Send(First(i),@HoTWearingOff,#who=self,#overtimeeffect=i);
+				plHoT = DelListElem(plHoT,i);
+			}
+		}
 		
 		if ptHealth <> $
 		{
@@ -10292,7 +10516,7 @@ messages:
 		Send(self,@NewHealth);
       
       return;
-   }
+	}
 
    AddMight(points = 0, bAbsolute = TRUE)
    "Returns signed change to might (negative means decrease)"
@@ -10419,6 +10643,8 @@ messages:
       Send(self,@BreakTrance,#event=EVENT_REST);
       ptRest = CreateTimer(self,@RestTimer,Send(self,@GetRestTime));
       Send(self,@ResetPlayerFlagList);
+		
+		Send(self,@NewHealth);
 
       return;
    }
@@ -10472,6 +10698,8 @@ messages:
       }
 
       Send(self,@ResetPlayerFlagList);
+		
+		Send(self,@NewHealth);
       
       return;
    }
@@ -13445,6 +13673,7 @@ messages:
 	StartDenialDeathTimer()
 	{
 		ptDenialDeathTimer = CreateTimer(self,@CutTheThread,10000);
+      Send(self,@AddDamageOverTime,#strength=2000,#duration=10000,#removable=FALSE);
 		
 		return;
 	}

@@ -54,10 +54,9 @@ messages:
 
    Constructor(caster = $, duration = 75, MaxDamage = 0, illusionary = FALSE)
    {
-      piMaxDamage = MaxDamage;
-
-      % Note, if illusionary, piMaxDamage is spellpower, not the true max damage.
-      viIllusion = illusionary;
+      % MaxDamage needs to be converted to damage per tick.
+		piMaxDamage = MaxDamage * 1000;
+		viIllusion = illusionary;
 
       propagate;
    }
@@ -75,59 +74,36 @@ messages:
 
    DoEffect(what = $)
    {
-      local iDamage, oIllusWounds, iDuration, rMessage;
+      local i, iDamage, iResistance, oSpell, rMessage;
 
-      iDamage = 0;
+      iDamage = random(0,piMaxDamage);
+		
+		iResistance = Send(what,@ResistanceCheck,#atype=0,#aspell=ATCK_SPELL_ALL+ATCK_SPELL_FIRE);
+
+		for i in send(what,@GetRadiusEnchantments)
+		{
+			iResistance = Send(Nth(i,1),@ModifyResistance,#attacker=what,#atype=ATCK_SPELL_ALL+ATCK_SPELL_FIRE,#iPower=Nth(i,2),#caster=Nth(i,3),#resistance=iResistance);
+		}
+		
+		iDamage = bound(Send(what,@GetDamageFromResistance,#what=iDamage,#value=iResistance),0,$);
       
-      if viIllusion
-      {
-         if (piMaxDamage < 35)
-         {
-            return;
-         }
+		if iDamage > 0
+		{
+			if viIllusion
+			{
+				oSpell = Send(SYS,@FindSpellByNum,#num=SID_ILLUSIONARY_WOUNDS);
 
-         oIllusWounds = Send(SYS,@FindSpellByNum,#num=SID_ILLUSIONARY_WOUNDS);
-         iDuration = Send(oIllusWounds,@GetDuration,#iSpellPower=piMaxDamage);
-         iDamage = Send(oIllusWounds,@GetHPLoss,#who=poCaster,#victim=what,#iSpellPower=piMaxDamage);
-
-         if iDamage > 0
-         {
-            % We technically don't have a damage type, but we count as spell damage.
-            %  Also, don't lower damage based on resistances.
-            iDamage = Send(what,@AssessDamage,#what=poCaster,#damage=Random(0,iDamage),
-                           #aspell=ATCK_SPELL_ALL,#absolute=TRUE,#report=FALSE,
-                           #report_resistance=FALSE);
-            Send(what,@StartEnchantment,#what=oIllusWounds,#time=iDuration,#lastcall=TRUE,
-                 #state=iDamage,#addicon=FALSE);
-         }
-      }
-      else
-      {
-         iDamage = Send(what,@AssessDamage,#what=poCaster,#damage=Random(0,piMaxDamage),
-                        #aspell=ATCK_SPELL_ALL+ATCK_SPELL_FIRE,#report=FALSE,#report_resistance=FALSE);
-      }
-
-      if iDamage = $
-      {
-         Send(poCaster,@KilledSomething,#what=what,#use_weapon=self);
-      }
-
-      if IsClass(poCaster,&Player)
-      {
-         if iDamage = $
-         {
-            Send(poCaster,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
-            
-            return;
-         }
-         else
-         {
-            if piMaxDamage > 0
-            {
-               Send(poCaster,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
-            }
-         }
-      }
+				% Since the damage is dealt over two seconds, we only deal half of the total damage per tick.
+				send(oSpell,@DealIllusionaryDamage,#who=poCaster,#target=what,#damage=iDamage/2,#duration=2000,#showicon=FALSE);
+			}
+			else
+			{
+				oSpell = Send(SYS,@FindSpellByNum,#num=SID_FIREWALL);
+				
+				% Since the damage is dealt over two seconds, we only deal half of the total damage per tick.
+				send(what,@AddDamageOverTime,#strength=iDamage/2,#duration=2000,#what=oSpell,#who=poCaster,#showicon=FALSE);
+			}
+		}
 
       if IsClass(what,&Player)
       {
@@ -140,19 +116,19 @@ messages:
             % Damage is greater than 0
             Send(what,@WaveSendUser,#wave_rsc=firewall_burn_snd);
 
-            if iDamage < 5
+            if iDamage < 5000
             {
                rMessage = firewall_damage5;
             }
             else
             {
-               if iDamage < 10
+               if iDamage < 10000
                {
                   rMessage = firewall_damage10;
                }
                else
                {
-                  if iDamage < 15
+                  if iDamage < 15000
                   {
                      rMessage = firewall_damage15;
                   }

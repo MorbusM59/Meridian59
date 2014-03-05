@@ -14,8 +14,9 @@ constants:
 
    include blakston.khd
 
-   PALSY_MIGHT_LOSS = 15
-   PALSY_DURATION = 600000        % 10 minutes
+	% This here is the emulated spellpower. With 100 SP, the resulting might loss is 20.
+   PALSY_MIGHT_LOSS = 100
+   PALSY_DURATION = 60000        % 1 minute
 
 resources:
 
@@ -36,8 +37,6 @@ classvars:
 
 properties:
 
-   poStrength_spell = $
-
 messages:
 
    GetSpellNum()
@@ -47,19 +46,10 @@ messages:
 
    MakeSick(who = $,iDuration = PALSY_DURATION,iAmount = PALSY_MIGHT_LOSS, report = TRUE)
    {
-      local iMightChange;
-      
-      if poStrength_spell = $ 
-      { poStrength_spell = Send(SYS,@FindSpellByNum,#num=SID_SUPERSTRENGTH); }
-
-      %%% all super strength spells are now dispelled before palsy begins!
-      Send(who,@RemoveEnchantment,#what=poStrength_spell);
-
       if IsClass(who,&Player)
       {
-         iMightChange = send(who,@AddMight,#points=-iAmount);
-         send(who,@StartEnchantment,#what=self,
-              #time=iDuration,#state=[-iMightChange]);
+			Send(who,@StartEnchantment,#what=self,#state=send(self,@GetStateValue,#iSpellpower=iAmount,#target=who),#time=iDuration);
+				
          if report
          {
             send(who,@MsgSendUser,#message_rsc=palsy_start);
@@ -74,12 +64,28 @@ messages:
       
       return;
    }
+	
+   GetStateValue(who = $, iSpellPower = 0, target = $)
+   {
+      if IsClass(target,&Player)
+      {
+			send(target,@AddMight,#points=-iSpellPower/5);
+      }
+      else
+      {
+         %%% class is &Monster
+         Send(target,@StartPalsy);
+         Send(target,@StartEnchantment,#what=self,#time=PALSY_DURATION);
+      }
 
+      return iSpellPower;
+   }
+	
    EndEnchantment(who = $,state = 0,report = TRUE)
    {
       if IsClass(who,&Player)
       {
-         send(who,@AddMight,#points=first(state));
+			send(who,@AddMight,#points=state/5);
          if report
          {
             send(who,@MsgSendUser,#message_rsc=palsy_stop);

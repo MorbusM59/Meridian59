@@ -99,14 +99,12 @@ messages:
       }
 
       oIllusion = Nth(Send(SYS,@GetMonsterTemplates),iIllusion_type);
-      Send(victim,@MsgSendUser,#message_rsc=illusionaryform_on,
-           #parm1=Send(oIllusion,@GetIndef),#parm2=Send(oIllusion,@GetName));
+      Send(victim,@MsgSendUser,#message_rsc=illusionaryform_on,#parm1=Send(oIllusion,@GetIndef),#parm2=Send(oIllusion,@GetName));
 
       iTime = 1000*(90 + 2*iSpellPower); 
       iTime = random(iTime/2,iTime);
 
-      Send(victim,@StartEnchantment,#what=self,#time=iTime,
-           #state=iIllusion_type);
+      Send(victim,@StartEnchantment,#what=self,#time=iTime,#state=iIllusion_type);
       Send(victim,@SetPlayerIllusion,#what=self);
       
       return;

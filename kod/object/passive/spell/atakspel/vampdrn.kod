@@ -15,7 +15,6 @@ constants:
    include blakston.khd
 
    % How much health does the caster get back?
-   DAMAGE_FACTOR_TO_HEAL = 2
 
 resources:
 
@@ -25,8 +24,11 @@ resources:
       "Draws out the very life force of the target and converts the energy into "
       "life for the caster.  Reagents unknown."
 
-   VampiricDrain_death = "You drain the last bit of %s%s's life force."
-   VampiricDrain_health_gain = "You siphon your victim's life force, gaining ~g~B%i~B~n health."
+   VampiricDrain_already_cast = "You are already tapping %s%s's life force."
+   VampiricDrain_health_gain = "You begin draining %s%s's life force for ~k~B%i~B~n health, gradually converting it into ~g~B%i~B~n of your own."
+	VampiricDrain_on = "%s%s begins draining your life force for ~r~B%i~B~n health, gradually converting it into ~k~B%i~B~n of his own."
+	VampiricDrain_damage_wearing_off = "You take a deep breath and feel great relief as the vampiric link is broken."
+	VampiricDrain_heal_wearing_off = "The vampiric link is broken and leaves you yearning for more."
 
    VampiricDrain_sound = qvtouch.wav
 
@@ -48,19 +50,14 @@ classvars:
    vrSucceed_wav = VampiricDrain_sound
 
    % In seconds, since it works off GetTime().
-   viPostCast_time = 2
+   viPostCast_time = 1
    
    viChance_To_Increase = 5
 
 properties:
 
-   piDamageMin = 12
-   piDamageMax = 18
-
-   piRange = 4
-
-   % No bonus from Mana Focus
-   piManaFocusBonus = 0
+   piRange = 20
+	pbAbsolute = TRUE
 
 messages:
 
@@ -71,37 +68,107 @@ messages:
       
       return;
    }
-
-   % The chance to do something in addition to normal damage.
-   DoSideEffect(who=$,victim=$,damage=0)
+	
+   CanPayCosts(who = $, lTargets = $, bItemCast = FALSE)
    {
-      local iToHeal;
-      
-      if who = $ OR victim = $
-      {
-         propagate;
-      }
-
-      % Take some of that damage and add it to our health!
-      if damage <> $
-      {
-         % Add half of the damage done.
-         iToHeal = bound(damage/DAMAGE_FACTOR_TO_HEAL,1,$);
-      }
-      else
-      {
-         % Ah!  We killed someone.  Give them a large bonus based on max damage.
-         iToHeal = bound(piDamageMax/DAMAGE_FACTOR_TO_HEAL,1,$);
-         Post(who,@MsgSendUser,#message_rsc=VampiricDrain_death,
-              #parm1=Send(victim,@GetDef),#parm2=Send(victim,@GetName));
-      }
-
-      Send(who,@MsgSendUser,#message_rsc=VampiricDrain_health_gain,#parm1=iToHeal);
-      Send(who,@GainHealth,#amount=iToHeal);
+		local i, oTarget;
+		
+      oTarget = First(lTargets);
+		
+		if IsClass(oTarget,&Player)
+		{
+			for i in send(oTarget,@GetDamageOverTime)
+			{
+				if First(i) = self AND Nth(i,5) = who
+				{
+					Send(who,@MsgSendUser,#message_rsc=VampiricDrain_already_cast,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName));
+					return FALSE;
+				}
+			}	
+		}
 
       propagate;
    }
+	
+   CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
+   {
+      local iDamage, iTrueDamage, iTrueHeal, oRoom, oTarget;
 
+      oTarget = First(lTargets);
+      oRoom = Send(who,@GetOwner);
+		
+		iDamage = iSpellpower*30;
+		iTrueDamage = iDamage * Send(oTarget,@GetMaxHealth) / 15000;
+		iTrueHeal = iDamage * Send(who,@GetMaxHealth) / 15000;
+
+      Send(oTarget,@AddDamageOverTime,#strength=iDamage,#duration=10000,#what=self,#who=who);
+		
+		if IsClass(oTarget,&Player)
+		{
+			Send(oTarget,@MsgSendUser,#message_rsc=VampiricDrain_on,#parm1=Send(who,@GetCapDef),#parm2=Send(who,@GetName),#parm3=iTrueDamage,#parm4=iTrueHeal);
+		}
+		else
+		{
+			iTrueDamage = iTrueDamage / 2;
+			iTrueDamage = Send(oTarget,@AssessDamage,#what=who,#damage=iTrueDamage,#atype=Send(self,@GetAttackType),#aspell=Send(self,@GetAttackSpell),#absolute=pbAbsolute);
+
+			Send(who,@AssessHit,#what=oTarget,#damage=iTrueDamage,#use_weapon=self);
+
+			if iTrueDamage = $
+			{
+				Send(who,@KilledSomething,#what=oTarget,#use_weapon=self);
+			} 
+		}
+		
+		Send(who,@AddHealOverTime,#strength=iDamage,#duration=10000,#what=self,#who=who);
+		Send(who,@MsgSendUser,#message_rsc=VampiricDrain_health_gain,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName),#parm3=iTrueDamage,#parm4=iTrueHeal);
+		
+      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
+      Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
+
+		Send(who,@SetKillTarget,#target=oTarget);
+		Send(who,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
+
+		if NOT bItemCast
+		{
+			% Do the sound, and the third person animation.
+			piCast_successes = piCast_successes + 1 ;
+			Send(who,@DoCast);      %% window overlay
+
+		}
+
+      Send(oRoom,@SomethingAttacked,#what=who,#victim=oTarget,#use_weapon=self);
+		
+      if not bItemCast
+      {
+         Send(self,@ImproveAbility,#who=who,#target=oTarget);
+      }
+
+      % DON'T PROPAGATE!  This way, events will be handled in the proper
+      %  order.
+
+      return;
+   }
+	
+   DoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+   {
+		if report
+		{
+			send(who,@MsgSendUser,#message_rsc=VampiricDrain_damage_wearing_off);
+		}
+      
+      return;
+   }
+	
+   HoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+   {
+		if report
+		{
+			send(who,@MsgSendUser,#message_rsc=VampiricDrain_heal_wearing_off);
+		}
+      
+      return;
+   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

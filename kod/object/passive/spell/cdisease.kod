@@ -62,71 +62,7 @@ messages:
    {
       return 1;
    }
-
-   CastSpell(who = $, lTargets = $, iSpellpower = 0)
-   {
-      local oTarget, oDisease, iRandom, iOrigStatLoss, iNewStatLoss, lState;
-
-      iRandom = Random(1,100);
-      oTarget = First(lTargets);
-
-      Send(oTarget,@MsgSendUser,#message_rsc=curedisease_on);
-      Send(who,@MsgSendUser,#message_rsc=spell_cast_on_target,
-         #parm1=Send(self,@GetName),#parm2=Send(oTarget,@GetDef),#parm3=Send(oTarget,@GetName));
-     
-      if iRandom < iSpellpower
-      {
-         Send(oTarget,@RemoveEnchantmentClass,#class=&Disease);
-      }
-      else
-      {
-         % Reduce the amount you affect the player by.  Restore what you reduce, and store
-         %  the new value in the disease state.
-
-         oDisease = send(SYS,@FindSpellByNum,#num=SID_PALSY);
-      
-         if send(oTarget,@IsEnchanted,#what=oDisease)
-         {
-            lState = send(otarget,@GetEnchantedState,#what=oDisease);
-            iOrigStatLoss = Nth(lState,1);
-            iNewStatLoss = iOrigStatLoss - ((iOrigStatLoss*iSpellpower)/100);
-
-            if iNewStatLoss > MAX_PENALTY_TO_ELIMINATE
-            {
-               send(oTarget,@MsgSendUser,#message_rsc=curedisease_abates);
-               send(oTarget,@AddMight,#points=(iOrigStatLoss-iNewStatLoss));
-               SetNth(lState,1,iNewStatLoss);
-            }
-            else
-            {
-               send(oTarget,@RemoveEnchantment,#what=oDisease,#Report=TRUE);
-            }
-         }
-
-         oDisease = send(SYS,@FindSpellByNum,#num=SID_DEMENTIA);
-      
-         if send(oTarget,@IsEnchanted,#what=oDisease)
-         {
-            lState = send(otarget,@GetEnchantedState,#what=oDisease);
-            iOrigStatLoss = Nth(lState,1);
-            iNewStatLoss = iOrigStatLoss - ((iOrigStatLoss*iSpellpower)/100);
-
-            if iNewStatLoss > MAX_PENALTY_TO_ELIMINATE
-            {
-               send(oTarget,@MsgSendUser,#message_rsc=curedisease_abates);
-               send(oTarget,@AddIntellect,#points=(iOrigStatLoss-iNewStatLoss));
-               SetNth(lState,1,iNewStatLoss);
-            }
-            else
-            {
-               send(oTarget,@RemoveEnchantment,#what=oDisease,#Report=TRUE);
-            }
-         }
-      }
-      propagate;
-   }
-
-
+	
    CanPayCosts(who = $, lTargets = $)
    {
       local target, i;
@@ -134,18 +70,122 @@ messages:
       % Can cast spell if the 1 target item is a user
       if Length(lTargets) <> 1
       {
-         return False;
+         return FALSE;
       }
 
       target = First(lTargets);
+		
       if not IsClass(target, &User) or not send(target,@IsEnchanted,#byClass=&Disease)
       {
-         Send(who, @MsgSendUser, #message_rsc=spell_bad_target, 
-              #parm1=vrName,#parm2=Send(target,@GetDef),#parm3=Send(target,@GetName));
-         return False;
+         Send(who, @MsgSendUser, #message_rsc=spell_bad_target,#parm1=vrName,#parm2=Send(target,@GetDef),#parm3=Send(target,@GetName));
+			
+         return FALSE;
       }
 
       propagate;   % Check other things higher up
+   }
+
+   CastSpell(who = $, lTargets = $, iSpellPower = 0)
+   {
+      local oTarget, lInfo, oSpell, lList, lEnchantmentList;
+
+      oTarget = First(lTargets);
+		
+      if oTarget <> who
+      {
+         Send(who,@MsgSendUser,#message_rsc=spell_cast_on_target,#parm1=Send(self,@GetName),#parm2=Send(oTarget,@GetDef),#parm3=Send(oTarget,@GetName));
+      }
+      
+      Send(oTarget,@MsgSendUser,#message_rsc=curedisease_on);
+
+      % keep tabs on guides/bards, but not admins.
+      if IsClass(who, &DM)
+      {
+         if GetClass(who) = &DM
+            AND who <> oTarget
+         {
+            debug(send(who,@GetTrueName)," cast cure disease on ",send(oTarget,@GetName));
+         }
+
+         if send(who,@PlayerIsImmortal)
+         {
+            % If they're immortal, let them clear everything.
+            iSpellPower = $;
+         }
+      }
+
+      send(self,@RemoveDiseases,#who=oTarget,#spellpower=iSpellPower);
+
+      propagate;
+   }
+
+   RemoveDiseases(who=$, spellpower=$)
+   "If DM cast, removes all Diseases. If player cast, removes up to 50 points from the disease's SP and duration."
+   {
+		local i, lEnchantments, oTimer, iTime, oSpell, iState, iNewState, bRemovedSomething;
+
+		if who = $
+      {
+         return FALSE;
+      }
+		
+		bRemovedSomething = FALSE;
+
+      lEnchantments = send(who,@GetEnchantmentList);
+
+      % Chance of $ means that we want to remove it all.
+      if spellpower = $
+      {
+
+			for i in lEnchantments
+			{
+				oSpell = Nth(i,2);
+				
+				if IsClass(oSpell,&Disease)
+				{
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE);
+					bRemovedSomething = TRUE;
+				}
+			}
+		
+         return bRemovedSomething;
+      }
+
+		for i in lEnchantments
+		{
+			oSpell = Nth(i,2);
+
+			if IsClass(oSpell,&Disease)
+			{				
+				% Get the current state of the enchantment.
+				oTimer = Nth(i,1);
+				iTime = GetTimeRemaining(oTimer);
+				iState = Nth(i,3);
+				
+				% Calculate the new state and time of the enchantment.
+				iNewState = iState - spellpower;
+				iTime = iTime * iNewState / iState;
+				
+				% Start the new enchantment with the time left and the new state,
+				% but only if iNewState is greater than 0.
+				if iNewState > 0
+				{
+					% Remove the current enchantment, but don't report.
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=FALSE);
+					% Extra effects like added stat points are handled in GetStateValue, so we have to call it here.
+					Send(oSpell,@GetStateValue,#who=who,#iSpellPower=iNewState,#target=who);
+					Send(who,@StartEnchantment,#what=oSpell,#state=iNewState,#time=iTime,#lastcall=TRUE,#addicon=TRUE);
+				}
+				else
+				{
+					% Remove the current enchantment and report.
+					Send(who,@RemoveEnchantment,#what=oSpell,#report=TRUE);
+					bRemovedSomething = TRUE;
+				}
+			}
+		}
+		
+      return bRemovedSomething;
    }
 
    GetPotionClass()

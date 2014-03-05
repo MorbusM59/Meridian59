@@ -15,16 +15,17 @@ constants:
 
 resources:
 
-   illusionarywounds_name_rsc = "illusionary wounds"
+   illusionarywounds_name_rsc = "illusionary decay"
    illusionarywounds_icon_rsc = iilluwou.bgf
    illusionarywounds_desc_rsc = \
       "Causes the victim to see imagined wounds, but imagination "
       "always gives in to one's right mind, assuming one lives so long.  "
       "Requires solagh and firesand."
 
-   illusionarywounds_cast = "Your illusion takes the form of %s."
-
-   illusionarywounds_off = "Hey!  Some of those wounds were illusionary!"
+   illusionarywounds_cast = "You put on a wicked smile as %s%s stares at %s hands and starts shivering uncontrollably. %s is losing ~k~B%i~B~n health."
+	illusionarywounds_already_cast = "%s%s is already suffering from illusionary decay."
+	illusionarywounds_on = "%s%s smiles and to your horror, you notice your skin beginning to blister and rot, wounds cracking open and bleeding profusely. You are losing ~r~B%i~B~n health."
+   illusionarywounds_wearing_off = "Hey!  Some of those wounds were illusionary! You regain ~g~B%i~B~n health."
    illusionarywounds_sound = riija.wav
 
 classvars:
@@ -45,21 +46,14 @@ classvars:
    viHarmful = TRUE
    viOutlaw = TRUE
    viNoNewbieOffense = TRUE
+	
+   % In seconds, since it works off GetTime().
+   viPostCast_time = 1
 
 properties:
 
-   piRange = 4
-
-   piManaFocusBonus = 0
-
-   % This is NOT affected by resistances, even though it has a damage type.
-   pbAbsolute = TRUE
-
-   % This is the spell we are simulating.
-   poRandomSpell = $
-
-   % This is the list of spells we can choose from.
-   plRandomSpells = $
+   piRange = 20
+	pbAbsolute = TRUE
 
 messages:
 
@@ -72,162 +66,106 @@ messages:
       return;
    }
 
+   CanPayCosts(who = $, lTargets = $, bItemCast = FALSE)
+   {
+		local i, oTarget;
+		
+      oTarget = First(lTargets);
+		
+		if IsClass(oTarget,&Player)
+		{
+			for i in send(oTarget,@GetDamageOverTime)
+			{
+				if First(i) = self AND Nth(i,5) = who
+				{
+					Send(who,@MsgSendUser,#message_rsc=illusionarywounds_already_cast,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName));
+					return FALSE;
+				}
+			}
+		}
+
+      propagate;
+   }
+	
    CastSpell(who = $, lTargets = $, iSpellPower = 0, bItemCast = FALSE)
    {
-      local iDamage, iManaFocus, oRoom, oTarget, iDuration;
-
-      % Do this now when the spell is being cast.  If we do it in the Constructor,
-      %   these spells may not be available
-      if plRandomSpells = $
-      {
-         plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_BLAST_OF_FIRE),plRandomSpells);
-         plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_SHOCKING_FURY),plRandomSpells);
-         plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_EXPLOSIVE_FROST),plRandomSpells);
-         plRandomSpells = Cons(Send(SYS,@FindSpellByNum,#num=SID_SPLASH_OF_ACID),plRandomSpells);
-      }
+      local iDamage, iTrueDamage, iTrueHeal, oRoom, oTarget;
 
       oTarget = First(lTargets);
-
       oRoom = Send(who,@GetOwner);
+		
+		iDamage = iSpellpower * 60;
+		iTrueDamage = iDamage * Send(oTarget,@GetMaxHealth) / 15000;
+
+		Send(oTarget,@MsgSendUser,#message_rsc=illusionarywounds_on,#parm1=Send(who,@GetCapDef),#parm2=Send(who,@GetName),#parm3=iTrueDamage);
+		
+		Send(who,@MsgSendUser,#message_rsc=illusionarywounds_cast,#parm1=Send(oTarget,@GetDef),#parm2=Send(oTarget,@GetName),#parm3=Send(oTarget,@GetHisHer),#parm4=Send(oTarget,@GetHeShe,#cap=TRUE),#parm5=iTrueDamage);
+		
+      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(self,@GetSpellSound));
       Send(oRoom,@SpellCast,#who=who,#oSpell=self,#lItems=lTargets);
 
-      % Only switch damage rarely so we get a clumpy effect
-      if random(1,100) < 50 OR poRandomSpell = $
-      {
-         % Okay, pick our damage type here.  Due to the miracles of single-threading,
-         %  this will allow us to key the right damage type and spell name for
-         %  illusionary wounds.
-         poRandomSpell = Nth(plRandomSpells,random(1,length(plRandomSpells)));
-      }
+		Send(who,@SetKillTarget,#target=oTarget);
+		Send(who,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
 
-      Send(oRoom,@SomethingWaveRoom,#what=who,#wave_rsc=Send(poRandomSpell,@GetSpellSound));
-      Send(who,@MsgSendUser,#message_rsc=illusionarywounds_cast,
-           #parm1=Send(poRandomSpell,@GetName));
-      
-      iDuration = Send(self,@GetDuration,#iSpellPower=iSpellPower);
-      iDamage = Send(self,@GetHPLoss,#who=who,#victim=first(lTargets),
-                     #iSpellPower=iSpellPower);
+		if NOT bItemCast
+		{
+			% Do the sound, and the third person animation.
+			piCast_successes = piCast_successes + 1 ;
+			Send(who,@DoCast);      %% window overlay
 
-      if IsClass(who,&Player)
-      {
-         Send(who,@SetKillTarget,#target=oTarget);
-         Send(who,@SetPlayerFlag,#flag=PFLAG_DID_DAMAGE,#value=TRUE);
-
-         if NOT bItemCast
-         {
-            % Do the sound, and the third person animation.
-            piCast_successes = piCast_successes + 1;
-            % Do this for the window overlay.
-            Send(who,@DoCast);
-         }
-      }
-
-      % After figuring damage, do an AssessDamage.  This will handle the necessary
-      %  attack messages.
-      iDamage = Send(oTarget,@AssessDamage,#what=who,#damage=iDamage,#atype=viAttack_type,
-                     #aspell=viAttack_spell,#absolute=pbAbsolute);
-
-      Send(who,@AssessHit,#what=oTarget,#damage=iDamage,#use_weapon=self);
-
-      if iDamage = $
-      {
-         Send(who,@KilledSomething,#what=oTarget,#use_weapon=self);
-      }
-      else
-      {
-         Send(oTarget,@StartEnchantment,#what=self,#time=Send(self,@GetDuration,#iSpellPower=iSpellPower),
-              #lastcall=TRUE,#state=iDamage,#addicon=FALSE);
-      }
+		}
 
       Send(oRoom,@SomethingAttacked,#what=who,#victim=oTarget,#use_weapon=self);
-
-      Send(self,@DoSideEffect,#who=who,#victim=oTarget,#damage=iDamage);
-
+		
       if not bItemCast
       {
          Send(self,@ImproveAbility,#who=who,#target=oTarget);
       }
 
-      % DON'T PROPAGATE!  This way, events will be handled in the proper order.
+		send(self,@DealIllusionaryDamage,#who=who,#target=oTarget,#damage=iDamage,#duration=10000);
+		
       return;
    }
-
-   GetAttackSpell()
+	
+	DealIllusionaryDamage(who=$,target=$,damage=0,duration=0,showicon=TRUE)
    {
-      if poRandomSpell = $
-      {
-         return $;
-      }
-      
-      return Send(poRandomSpell,@GetAttackSpell);
+		send(target,@AddDamageOverTime,#strength=damage,#duration=duration,#what=self,#who=who,#showicon=showicon);
+		
+      return;
    }
-
-   % This is for the attack message infrastructure.
-   GetAttackName()
+		
+	
+   DoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=TRUE)
    {
-      if poRandomSpell = $
-      {
-         return vrName;
-      }
+		local iDamage, iDuration;
+		
+		if delayed
+		{
+			% Delayed means that it is wearing of regularly. We take the duration and strength of the DoT to see how much health
+			% we have lost. We will restore the health once the enchantment has worn off, which will happen after SP * 100 ms.
+			iDuration = Nth(overtimeeffect,7)*100;
+			
+			% Keep the order to avoid hitting the max value for integers, which could happen for long durations and high damage.
+			iDamage = Send(who,@GetMaxHealth) * Nth(overtimeeffect,2) / 1000 * (Nth(overtimeeffect,4)) / 150000;
+			
+			Send(who,@StartEnchantment,#what=self,#time=iDuration,#lastcall=TRUE,#state=iDamage,#addicon=FALSE);
+		}
+		else
+		{
+			% Not delayed means that the illusion was weakened or removed one way or another. We take the state the effect 
+			% had before it was weakend and restore health immediately, based on the time the illusion has been running and 
+			% the strength it had up to this point.
+			iDuration = GetTickCount() - Nth(overtimeeffect,3);
+			
+			send(who,@GainHealthNormal,#amount=iDamage);
+			send(who,@MsgSendUser,#message_rsc=illusionarywounds_wearing_off,#parm1=iDamage);
+		}
       
-      return Send(poRandomSpell,@GetAttackName);
+      return;
    }
-
-   % iFactor is the factor to divide damage by.
-   GetHPLoss(who=$,victim=$,iSpellPower=0,iFactor=1)
-   {
-      local iBaseDamage, iHPLoss, iMaxHPs;
-   
-      if IsClass(victim,&Player)
-      {
-         iBaseDamage = 17 + (50 - Send(victim,@GetIntellect))/10;
-         iMaxHPs = Send(victim,@GetMaxHealth);
-      }
-      else
-      {
-         iBaseDamage = 30 - bound(Send(victim,@GetDifficulty)*2,1,20);
-         iMaxHPs = Send(victim,@ReturnMaxHitPoints);
-      }
-
-      % Intellect boosts base damage
-      iBaseDamage = Send(self,@DamageFactors,#damage=iBaseDamage,#who=who,#victim=victim);
-
-      iHPLoss = (iBaseDamage * (iSpellPower+1)) / 100;
-
-      % Always leaves 1 HP behind, no more than 1/3 damage.
-      iHPLoss = bound(iHPLoss,0,(iMaxHps/3));
-      iHPLoss = bound(iHPLoss,0,Send(victim,@GetHealth)-1);
-
-      if iFactor > 1
-      {
-         iHPLoss = iHPLoss / iFactor;
-      }
-      
-      return iHPLoss;
-   }
-
-   DamageFactors(damage = 0, who = $)
-   {
-      local iDamage, iIntellect;
-
-      % Get int damage bonus.
-      iIntellect = Send(who,@GetIntellect);
-      iDamage = ((100+bound(iIntellect-25,0,40))*damage)/100;
-
-      return iDamage;
-   }
-
-   GetDuration(iSpellPower = 0)
-   {
-      local iDuration;
-      
-      iDuration = 20000 + (iSpellPower * 750); 
-      iDuration = bound(iDuration,20000,80000);
-      
-      return iDuration;      
-   }
-
-   EndEnchantment(who = $, state=$, report = TRUE)
+	
+	
+   EndEnchantment(who=$,state=$,report=TRUE)
    {
       post(self,@EndEnchantmentEffects,#who=who,#state=state,#report=report);
 
@@ -239,10 +177,10 @@ messages:
       if (Send(who,@GetHealth) > 0)
       {
          Send(who,@GainHealthNormal,#amount=state);
-         if IsClass(who,&Player)
-            AND report
+			
+         if IsClass(who,&Player) 
          {
-            Send(who,@MsgSendUser,#message_rsc=illusionarywounds_off);
+				send(who,@MsgSendUser,#message_rsc=illusionarywounds_wearing_off,#parm1=state);
          }
       }
       

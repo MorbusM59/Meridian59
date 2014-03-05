@@ -25,6 +25,10 @@ resources:
    FireWall_failed_rsc = \
       "There is too much summoning magic focused here to create a wall of "
       "fire." 
+		
+	FireWall_death = "The blazing heat of %s%s's fire wall consumes you!"
+	FireWall_death_caster = "The blazing heat of your fire wall consumes %s%s!"
+	
    FireWall_sound = farenwala822m.wav
 
 classvars:
@@ -271,6 +275,35 @@ messages:
       propagate;
    }
 
+   DoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+   {
+		local oKiller;
+		
+		if send(who,@GetHealth) = 0 AND (GetTime() - send(who,@GetLastDeath)) > 2
+		{
+			oKiller = Nth(overtimeeffect,5);
+
+         Send(oKiller,@KilledSomething,#what=who,#use_weapon=self);
+			Send(oKiller,@MsgSendUser,#message_rsc=FireWall_death_caster,#parm1=send(who,@GetDef),#parm2=send(who,@GetName));
+			
+			if IsClass(who,&Player)
+			{
+				send(who,@MsgSendUser,#message_rsc=FireWall_death,#parm1=send(oKiller,@GetDef),#parm2=send(oKiller,@GetName));
+			}
+			
+			Send(who,@Killed,#what=oKiller);
+
+		}
+      
+      return;
+   }
+	
+   CanBeRemovedByPlayer()
+   "Returns if a spell can be removed by normal Purge/Purify"
+   {
+      % No removal of firewall damage.
+      return FALSE;
+   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

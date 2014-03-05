@@ -97,10 +97,8 @@ messages:
       }
 
       % check for enchantment already applied
-      if (IsClass(target,&Player)
-          AND Send(target,@IsEnchanted,#what=self))
-         OR (IsClass(target,&Monster)
-             AND send(target,@IsEnchanted,#what=send(SYS,@FindSpellBynum,#num=SID_PALSY)))
+      if (IsClass(target,&Player) AND Send(target,@IsEnchanted,#what=self))
+         OR (IsClass(target,&Monster) AND send(target,@IsEnchanted,#what=send(SYS,@FindSpellBynum,#num=SID_PALSY)))
       {
          Send(who,@MsgSendUser,#message_rsc=Vertigo_already_enchanted,
               #parm1=Send(target,@GetCapDef),#parm2=Send(target,@GetName));
@@ -113,41 +111,37 @@ messages:
 
    CastSpell(who = $, lTargets = $, iSpellPower = 0)
    {
-      local oTarget,iAmount,iDuration,iAgil,iStr,iAim,oPalsy;
+      local oTarget,iDuration,iAgil,iStr,iAim,oPalsy;
 
       oTarget = First(lTargets);
       iDuration = send(self,@GetDuration,#iSpellPower=iSpellPower);
-      iAmount = send(self,@GetAmount,#iSpellPower=iSpellPower);
       oPalsy = send(SYS,@FindSpellBynum,#num=SID_PALSY);
       
-      Send(who,@MsgSendUser,#message_rsc=Vertigo_caster,
-           #parm1=Send(oTarget,@GetCapDef),#parm2=Send(oTarget,@GetName));
+      Send(who,@MsgSendUser,#message_rsc=Vertigo_caster,#parm1=Send(oTarget,@GetCapDef),#parm2=Send(oTarget,@GetName));
 
       % spell effects
       if IsClass(oTarget,&Player)
       {
          Send(oTarget,@MsgSendUser,#message_rsc=Vertigo_on);
          Send(oTarget,@EffectSendUserDuration,#effect=EFFECT_WAVER,#duration=iDuration);
-         iAgil = send(oTarget,@AddAgility,#points=-iAmount);
-         iStr = send(oTarget,@AddMight,#points=-iAmount);
-         iAim = send(oTarget,@AddAim,#points=-iAmount);
-         Send(oTarget,@StartEnchantment,#what=self,#time=iDuration,#state=[-iAgil,-iStr,-iAim]);
+			Send(oTarget,@StartEnchantment,#what=self,#state=send(self,@GetStateValue,#iSpellpower=iSpellPower,#target=oTarget),
+				#time=iDuration,#lastcall=TRUE,#addicon=send(self,@GetAddicon));
       }
       else
       {
-         Send(oPalsy,@MakeSick,#who=oTarget,#iAmount=(iSpellPower/3+1),
-              #iDuration=send(self,@GetDuration,#iSpellPower=iSpellPower));
+         Send(oPalsy,@MakeSick,#who=oTarget,#iAmount=(iSpellPower/3+1),#iDuration=iDuration);
       }
     
       propagate;
    }
 
-   GetAmount(iSpellPower=0)
+   GetStateValue(who = $, iSpellPower = 0, target = $)
    {
-      local iAmount;
+		send(target,@AddAgility,#points=-iSpellPower/5);
+		send(target,@AddMight,#points=-iSpellPower/5);
+		send(target,@AddAim,#points=-iSpellPower/5);
 
-      iAmount = 15+(ispellpower/10);
-      return iAmount;
+      return iSpellPower;
    }
 
    GetDuration(iSpellPower=0)
@@ -166,9 +160,9 @@ messages:
          Send(who,@MsgSendUser,#message_rsc=Vertigo_off);
       }
 
-      send(who,@AddAgility,#points=nth(state,1));
-      send(who,@AddMight,#points=nth(state,2));
-      send(who,@AddAim,#points=nth(state,3));
+		send(who,@AddAgility,#points=state/5);
+		send(who,@AddMight,#points=state/5);
+		send(who,@AddAim,#points=state/5);
      
       return;
    }
@@ -177,15 +171,6 @@ messages:
    {
       return;
    }
-
-   RestartEnchantmentEffect(who=$,state=$)
-   {
-      Send(who,@MsgSendUser,#message_rsc=Vertigo_on);
-      Send(who,@EffectSendUserDuration,#effect=EFFECT_WAVER,#duration=15000);
-
-      return;
-   }
-
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

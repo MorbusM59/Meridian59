@@ -2434,6 +2434,18 @@ messages:
 
       return 1;
    }
+	
+	% This just catches DoT or HoT effects that don't have a wear off message.
+   DoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+	{
+		return;
+	}
+	
+	% This just catches DoT or HoT effects that don't have a wear off message.
+	HoTWearingOff(who=$,overtimeeffect=$,report=TRUE,delayed=FALSE)
+	{
+		return;
+	}
 
 
 end

@@ -16,18 +16,20 @@ constants:
 
 resources:
 
-   curepoison_name_rsc = "cure poison"
+   curepoison_name_rsc = "remove corruption"
    curepoison_icon_rsc = icurpoi.bgf
    curepoison_desc_rsc = \
-      "Pure, healing energy fights the effects of poison in the target.  "
+      "Pure, healing energy fights the effects of lingering corruption in the target.  "
 	   "Requires herbs and elderberries to cast."
    
-   curepoison_on = "The power of Shal'ille fights the effects of poison in your blood."
+   curepoison_on = "The power of Shal'ille tries to purge the corruption from within you."
 
-   curepoison_unnecessary = "%s%s is not suffering from poison."
-   curepoison_abates = "You feel the poison grow weaker."
+   curepoison_unnecessary = "%s%s does not seem to be suffering from the effects of corruption."
+   curepoison_abates = "The effects of the %s are fading."
+   curepoison_removed = "The effects of the %s no longer plague you!"
 
-   curepoison_spell_intro = "Shal'ille Lv. 2: Fights the effects of any poisons which may flow through the target's body."
+   curepoison_spell_intro = "Shal'ille Lv. 2: Pure, healing energy fights the effects of lingering corruption in the target."
+	
 classvars:
 
    vrName = curepoison_name_rsc
@@ -64,7 +66,7 @@ messages:
 
    CanPayCosts(who = $, lTargets = $)
    {
-      local target, i, oPoison;
+      local target, i;
       
       % Can cast spell if the 1 target item is a user
       if Length(lTargets) <> 1
@@ -81,8 +83,7 @@ messages:
       }
 
       %% make sure target is indeed poisoned
-      oPoison = Send(SYS,@FindSpellByNum,#num=SID_POISON);
-      if not Send(target,@IsEnchanted,#what=oPoison) 
+      if Send(target,@GetDamageOverTime) = $
       {
 	      Send(who, @MsgSendUser, #message_rsc=curepoison_unnecessary,
            #parm1=Send(target,@GetCapDef),#parm2=Send(target,@GetName)); 
@@ -94,7 +95,7 @@ messages:
 
    CastSpell(who = $, lTargets = $, iSpellpower = $)
    {
-      local oTarget, oPoison, lPoisonEnchantment, iRandom, iLossRate, iLossRateAfter, iDuration;
+      local i, iState, iNewState, oTarget, iAmount, oSpell, lEffect;
       
       oTarget = First(lTargets);
       
@@ -103,39 +104,36 @@ messages:
 	        #parm1=Send(self,@GetName),#parm2=Send(oTarget,@GetDef),
 	        #parm3=Send(oTarget,@GetName));
 	        
-      oPoison = Send(SYS,@FindSpellByNum,#num=SID_POISON);
+		for i in Send(who,@GetDamageOverTime)
+		{
+			iState = Nth(i,7);
+			iNewState = bound(Nth(i,7) - iSpellpower,0,$);
+			iAmount = Nth(i,2)*iNewState/iState;
+			
+			% This is the portion of the DoT that we have removed. We pass that on to DoTWearingOff.
+			lEffect = [First(i),iAmount,Nth(i,3),GetTickCount()-Nth(i,3),Nth(i,5),Nth(i,6),Nth(i,7)];
+			
+			Send(who,@SetOverTimeEffect,#i=i,#amount=iAmount,#state=iNewState);
 
-      % Take the first item, could return a list of poison enchantments.
-      % Format of individual enchantment info: [ timer, spell object, state ]
-      lPoisonEnchantment = first(send(oTarget,@GetEnchantmentsByClass,#enchClass=&Poison));
-      
-      iLossRate = nth(lPoisonEnchantment,3);
-      iLossRateAfter = iLossrate - ((iLossRate * iSpellpower) / 100);
+			oSpell = First(i);
+			
+			if oSpell <> $
+			{
+				if iAmount > 0
+				{
+					% The spell hasn't been entirely removed. Let's feed the DoTWearingOff message the portion of the dot
+					% that has been removed.
+					send(oSpell,@DoTWearingOff,#who=who,#overtimeeffect=lEffect,#report=FALSE,#delayed=FALSE);
+					send(who,@MsgSendUser,#message_rsc=curepoison_abates,#parm1=Send(oSpell,@GetName));
+				}
+				else
+				{
+					send(who,@MsgSendUser,#message_rsc=curepoison_removed,#parm1=Send(oSpell,@GetName));
+				}
+			}
+		}
 
-      iRandom = Random(1,100);
-
-      % It has an iSpellPower percent chance to be removed
-      %  Also removed if the loss rate is already really low
-      %  Also removed if the remaining lossrate is really low
-      if iRandom < iSpellpower
-         OR iLossRate <= 100
-         OR iLossRateAfter < iLossRate/10
-         OR iLossRateAfter < 100
-      {
-         Send(oTarget,@RemoveEnchantment,#what=oPoison);
-      }
-      else
-      {
-         % Remove the old enchantment and put a new one on with the new strength.
-         iDuration = GetTimeRemaining(first(lPoisonEnchantment));
-         send(oTarget,@RemoveEnchantment,#what=oPoison,#Report=FALSE);
-         send(otarget,@StartEnchantment,#what=oPoison,#state=iLossRateAfter,#time=iDuration,#report=FALSE);
-
-         % Tell the player we've added back only part of the poison.            
-         send(oTarget,@AddPoison,#strength=iLossRateAfter,#bVigorLoss=FALSE);
-
-         send(oTarget,@MsgSendUser,#message_rsc=curepoison_abates);
-      }
+		send(who,@RemoveDamageOverTime);
       
       propagate;
    } 

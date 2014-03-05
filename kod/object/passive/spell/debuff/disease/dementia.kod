@@ -14,8 +14,8 @@ constants:
 
    include blakston.khd
 
-   DEMENTIA_INTELLECT_LOSS = 15
-   DEMENTIA_DURATION = 600000        % 10 minutes
+   DEMENTIA_INTELLECT_LOSS = 100
+   DEMENTIA_DURATION = 60000        % 10 minutes
 
 resources:
 
@@ -32,7 +32,7 @@ classvars:
    vrIcon = dementia_icon_rsc
    vrDesc = dementia_desc_rsc
 	
-    viShow_enchantment_icon = 0x02
+	viShow_enchantment_icon = 0x02
 
 properties:
 
@@ -43,40 +43,56 @@ messages:
       return SID_DEMENTIA;
    }
 
-   MakeSick(who = $,iAmount = DEMENTIA_INTELLECT_LOSS,iDuration = DEMENTIA_DURATION,report = TRUE)
+   MakeSick(who = $,iDuration = DEMENTIA_DURATION,iAmount = DEMENTIA_INTELLECT_LOSS, report = TRUE)
    {
-      local iIntellectChange;
-
       if IsClass(who,&Player)
       {
-         iIntellectChange = send(who,@AddIntellect,#points=-iAmount);
-         send(who,@StartEnchantment,#what=self,
-              #time=iDuration,#state=[-iIntellectChange]);
+			Send(who,@StartEnchantment,#what=self,#state=send(self,@GetStateValue,#iSpellpower=iAmount,#target=who),#time=iDuration);
+				
          if report
          {
             send(who,@MsgSendUser,#message_rsc=dementia_start);
          }
       }
-      else %%% class is monster
+      else
       {
-         Send(who,@StartDementia);
+         %%% class is &Monster
+         Send(who,@StartPalsy);
          Send(who,@StartEnchantment,#what=self,#time=iDuration);
       }
+      
       return;
    }
+	
+   GetStateValue(who = $, iSpellPower = 0, target = $)
+   {
+      if IsClass(target,&Player)
+      {
+			send(target,@AddIntellect,#points=-iSpellPower/5);
+      }
+      else
+      {
+         %%% class is &Monster
+         Send(target,@StartDementia);
+         Send(target,@StartEnchantment,#what=self,#time=DEMENTIA_DURATION);
+      }
 
-   EndEnchantment( who = $, state = 0, report = TRUE )
+      return iSpellPower;
+   }
+	
+   EndEnchantment(who = $,state = 0,report = TRUE)
    {
       if IsClass(who,&Player)
       {
-         send(who,@AddIntellect,#points=first(state));
+			send(who,@AddIntellect,#points=state/5);
          if report
          {
             send(who,@MsgSendUser,#message_rsc=dementia_stop);
          }
       }
-      else  %%% class is monster
+      else
       {
+         %%% class is &Monster
          Send(who,@EndDementia);
       }
       

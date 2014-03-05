@@ -338,6 +338,9 @@ properties:
    piDefense = $
    piMinDamage = $
    piMaxDamage = $
+	
+	plDoT = $
+	plHoT = $
 
 messages:
 
@@ -4080,6 +4083,14 @@ messages:
 
       return ((120 * viLevel) / 100);
    }
+	
+	GetMaxHealth()
+	{
+		% Just a dummy to bridge the different message names between player and monster.
+		% Should get rid of GetMaxHitPoints eventually.
+		
+		return Send(self,@GetMaxHitPoints);
+	}
    
    ReturnMaxHitPoints()
    {
@@ -5894,6 +5905,98 @@ messages:
 	  
 	  return;
   }
+  
+	% The following messages handle DoTs and HoTs. We keep them separate since we don't want spells that remove
+	% one to also remove the other. A few more lines of code but a lot simpler and cleaner.
+	SetOverTimeEffect(i=$,amount=$)
+	{
+		setnth(i,2,amount);
+		return;
+	}	
+
+	GetDamageOverTime()
+	{
+		return plDoT;
+	}
+	
+   AddDamageOverTime(strength=0,duration=0,what=$,who=$)
+   {
+		plDoT = cons([what,strength,GetTickCount(),duration,who],plDoT);
+		
+      return;
+   }
+	
+   RemoveDamageOverTime()
+   {
+		local i;
+		
+		for i in plDoT
+		{
+			if (Nth(i,2) = 0) OR (abs(GetTickCount() - Nth(i,3)) + 1 >= Nth(i,4))
+			{
+				plDoT = DelListElem(plDoT,i);
+			}
+		}
+     
+      return;
+   }
+	
+	DeleteDamageOverTime(what=$,who=$)
+	{
+		local i;
+		
+		for i in plDoT
+		{
+			if First(i) = what AND (who = $ OR who = Nth(i,5))
+			{
+				plDoT = DelListElem(plDoT,i);
+			}
+		}
+		
+		return;
+	}
+	
+	GetHealOverTime()
+	{
+		return plHoT;
+	}
+	
+   AddHealOverTime(strength=0,duration=0,what=$,who=$)
+   {
+		plHoT = cons([what,strength,GetTickCount(),duration,who],plHoT);
+		
+      return;
+   }
+	
+   RemoveHealOverTime()
+   {
+		local i;
+		
+		for i in plHoT
+		{
+			if (Nth(i,2) = 0) OR (abs(GetTickCount() - Nth(i,3)) + 1 >= Nth(i,4))
+			{
+				plHoT = DelListElem(plHoT,i);
+			}
+		}
+		
+      return;
+   }
+	
+	DeleteHealOverTime(what=$,who=$)
+	{
+		local i;
+		
+		for i in plHoT
+		{
+			if First(i) = what AND (who = $ OR who = Nth(i,5))
+			{
+				plHoT = DelListElem(plHoT,i);
+			}
+		}
+		
+		return;
+	}
 
 
 end
