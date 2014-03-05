@@ -148,17 +148,25 @@ messages:
 			% Keep the order to avoid hitting the max value for integers, which could happen for long durations and high damage.
 			iDamage = Send(who,@GetMaxHealth) * Nth(overtimeeffect,2) / 1000 * (Nth(overtimeeffect,4)) / 150000;
 			
-			Send(who,@StartEnchantment,#what=self,#time=iDuration,#lastcall=TRUE,#state=iDamage,#addicon=FALSE);
+			if iDamage > 0
+			{
+				Send(who,@StartEnchantment,#what=self,#time=iDuration,#lastcall=TRUE,#state=iDamage,#addicon=FALSE);
+			}
 		}
 		else
 		{
 			% Not delayed means that the illusion was weakened or removed one way or another. We take the state the effect 
 			% had before it was weakend and restore health immediately, based on the time the illusion has been running and 
-			% the strength it had up to this point.
-			iDuration = GetTickCount() - Nth(overtimeeffect,3);
+			% the strength it had up to this point. The spell that removed the DoT feeds us the correct overtimeeffect already.
 			
-			send(who,@GainHealthNormal,#amount=iDamage);
-			send(who,@MsgSendUser,#message_rsc=illusionarywounds_wearing_off,#parm1=iDamage);
+			% Keep the order to avoid hitting the max value for integers, which could happen for long durations and high damage.
+			iDamage = Send(who,@GetMaxHealth) * Nth(overtimeeffect,2) / 1000 * (Nth(overtimeeffect,4)) / 150000;
+			
+			if iDamage > 0
+			{
+				send(who,@GainHealthNormal,#amount=iDamage+1);
+				send(who,@MsgSendUser,#message_rsc=illusionarywounds_wearing_off,#parm1=iDamage+1);
+			}
 		}
       
       return;
@@ -176,11 +184,11 @@ messages:
    {
       if (Send(who,@GetHealth) > 0)
       {
-         Send(who,@GainHealthNormal,#amount=state);
+         Send(who,@GainHealthNormal,#amount=state+1);
 			
          if IsClass(who,&Player) 
          {
-				send(who,@MsgSendUser,#message_rsc=illusionarywounds_wearing_off,#parm1=state);
+				send(who,@MsgSendUser,#message_rsc=illusionarywounds_wearing_off,#parm1=state+1);
          }
       }
       

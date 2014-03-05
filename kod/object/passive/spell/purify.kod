@@ -270,8 +270,6 @@ messages:
 			% This is the portion of the DoT that we have removed. We pass that on to DoTWearingOff.
 			lEffect = [First(i),iAmount,Nth(i,3),GetTickCount()-Nth(i,3),Nth(i,5),Nth(i,6),spellpower];
 			
-			Send(who,@SetOverTimeEffect,#i=i,#amount=iAmount,#state=iNewState);
-
 			oSpell = First(i);
 			
 			if oSpell <> $
@@ -288,6 +286,8 @@ messages:
 					send(who,@MsgSendUser,#message_rsc=curepoison_removed,#parm1=Send(oSpell,@GetName));
 				}
 			}
+			
+			Send(who,@SetOverTimeEffect,#i=i,#amount=iAmount,#state=iNewState);
 		}
 		
 		send(who,@RemoveDamageOverTime);

@@ -298,12 +298,5 @@ messages:
       return;
    }
 	
-   CanBeRemovedByPlayer()
-   "Returns if a spell can be removed by normal Purge/Purify"
-   {
-      % No removal of firewall damage.
-      return FALSE;
-   }
-
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
