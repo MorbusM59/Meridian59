@@ -4875,6 +4875,10 @@ messages:
       {
          return;
       }
+		
+		Send(self,@StartAttackTimer);
+		
+		Send(self,@StartCastTimer);
 
       if action = UA_WAVE
       {
