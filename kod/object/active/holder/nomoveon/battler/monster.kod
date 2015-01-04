@@ -201,15 +201,20 @@ resources:
 
    autolooted_all = "You loot the corpse clean, and find %d shillings."
    autolooted_all_no_money = "You loot the corpse clean."
-   autolooted_some = "You loot some of the items from your fallen kill, and find %d shillings."
+   autolooted_some = "You loot some of the items from your fallen kill, and "
+      "find %d shillings."
    autolooted_some_no_money = "You loot some of the items from your fallen enemy."
-   autolooted_only_money = "You find nothing easily lootable on your slain enemy other than %d shillings."
+   autolooted_only_money = "You find nothing easily lootable on your slain "
+      "enemy other than %d shillings."
    autolooted_none = "You find nothing easily lootable on your slain enemy."
      
    autoloot_too_far_away = "You're too far away to loot your fallen enemy!"
-   autoloot_got_some_but_full_now = "You pick up some of your slain enemy's loot, but find yourself too encumbered to get it all."
-   autoloot_got_nothing_because_full= "You can't carry any more, so you loot nothing from your fallen enemy."
-   autoloot_got_only_shillings_because_full = "You can't carry any more, so you loot nothing from your fallen enemy, but you do find %d shillings."
+   autoloot_got_some_but_full_now = "You pick up some of your slain enemy's "
+      "loot, but find yourself too encumbered to get it all."
+   autoloot_got_nothing_because_full= "You can't carry any more, so you loot "
+      "nothing from your fallen enemy."
+   autoloot_got_only_shillings_because_full = "You can't carry any more, so you "
+      "loot nothing from your fallen enemy, but you do find %d shillings."
 
 classvars:
 
@@ -1850,17 +1855,18 @@ messages:
       return FALSE;
    }
 
-   % Handles damage done to player
-   % IMPORTANT NOTE: AssessDamage handles both legacy damage calculations and high 
-   % precision damage calculation which avoid truncation. If you feed AssessDamage 
-   % with a high precision damage number such as 941 for 9.41 points of damage, you 
-   % need to notify AssessDamage by passing it a #precision=TRUE. If you don't, 
-   % AssessDamage will assume that you are passing a legacy damage value and multiply 
-   % it by 100 for further calculations. Most notably, damage from attackspells and 
-   % melee is now handled with high precision. Eventually, all damage calculations 
-   % should be handled in high precision mode.
-   AssessDamage(what = $,damage = $,atype = 0, aspell = 0, bonus = 0, scalefactor = 1000, 
-      absolute = FALSE, precision = FALSE)
+   % Handles damage done to monster
+   % IMPORTANT NOTE: AssessDamage handles both legacy damage calculations and 
+   % high precision damage calculation which avoid truncation. If you feed 
+   % AssessDamage with a high precision damage number such as 941 for 9.41 
+   % points of damage, you need to notify AssessDamage by passing it a 
+   % #precision=TRUE. If you don't, AssessDamage will assume that you are 
+   % passing a legacy damage value and multiply it by 100 for further 
+   % calculations. Most notably, damage from attackspells and melee is now 
+   % handled with high precision. Eventually, all damage calculations should 
+   % be handled in high precision mode.
+   AssessDamage(what=$,damage=$,atype=0,aspell=0,bonus=0,scalefactor=1000,
+      absolute=FALSE,precision=FALSE)
    {
       local iDamage,iResist,iPercentClass,i,each_obj;
 
@@ -1880,7 +1886,8 @@ messages:
 
       if NOT absolute
       {
-         iDamage = Send(self,@ArmorCheck,#what=what,#bonus=bonus,#atype=atype,#aspell=aspell,#damage=damage);
+         iDamage = Send(self,@ArmorCheck,#what=what,#bonus=bonus,#atype=atype,
+            #aspell=aspell,#damage=damage);
          iResist = Send(self,@ResistanceCheck,#atype=atype,#aspell=aspell);
          iDamage = Send(self,@GetDamageFromResistance,#what=iDamage,#value=iResist);
          iDamage = iDamage + bonus;
@@ -1945,15 +1952,17 @@ messages:
       
       return iDamage;
    }
-   
+
+   % Allows monsters to have armor not related to specific equipped items. 
+   % Based on piArmor.
    ArmorCheck(what=$,damage=0,atype=0,aspell=0,bonus=0)
-   "Allows monsters to have armor not related to specific equipped items. Based on piArmor."
    {
       local iDamageReduce, oAttribute;
 
       for oAttribute in plObject_attributes
       {
-         damage = Send(oAttribute,@ModifyDefenseDamage,#who=self,#what=what,#damage=damage,#atype=atype,#aspell=aspell);
+         damage = Send(oAttribute,@ModifyDefenseDamage,#who=self,#what=what,
+            #damage=damage,#atype=atype,#aspell=aspell);
       }
 
       iDamageReduce = 0;
@@ -4959,8 +4968,9 @@ messages:
 
          % finally we reduce the timer a bit (right now it's exact at ms)
          % why? the client should get a new position before the last destination
-         % is reached. This prevents cases of stuttering if our message was a bit late in transmission.
-         % the client has a dynamic playout which will compensate this.
+         % is reached. This prevents cases of stuttering if our message was a 
+         % bit late in transmission. the client has a dynamic playout which 
+         % will compensate this.
          iTime = iTime - 5;
 		 
 		 % make sure timer interval does not get negative
@@ -5560,9 +5570,10 @@ messages:
 
    CreateTreasure(who=$,corpse=$)
    {
-      local i, j, oReagent, iNumberItems, oTreasure, oTreasure_type, tokengen, iSafetyCntr,
-            lTreasureItems, iNumberOfItemsDropped, iNumberOfItemsLooted, iRandomCashAmount, oMoney,
-            iGetResult, bCapacityFailure, bRangeFailure;
+      local i,j,oReagent,iNumberItems,oTreasure,oTreasure_type,tokengen,
+            iSafetyCntr,lTreasureItems,iNumberOfItemsDropped,
+            iNumberOfItemsLooted,iRandomCashAmount,oMoney,iGetResult,
+            bCapacityFailure,bRangeFailure;
 
       % Apparitions, etc, provide no treasure
       if pbIllusion
@@ -5667,7 +5678,8 @@ messages:
          lTreasureItems = cons(oMoney,lTreasureItems);
       }
 
-      % Add one set of spell reagents to the treasure for each type of spell that was cast on the monster.
+      % Add one set of spell reagents to the treasure for each type of spell 
+      % that was cast on the monster.
       for i in plSpellList
       {
          for j in send(i,@GetReagents)
@@ -5755,7 +5767,8 @@ messages:
             {
                if iRandomCashAmount > 0
                {
-                  Send(who,@MsgSendUser,#message_rsc=autoloot_got_only_shillings_because_full,#parm1=Send(oMoney,@GetNumber));
+                  Send(who,@MsgSendUser,#message_rsc=autoloot_got_only_shillings_because_full,
+                     #parm1=Send(oMoney,@GetNumber));
                }
                else
                {
@@ -5770,7 +5783,8 @@ messages:
          {
             if iRandomCashAmount > 0
             {
-               Send(who,@MsgSendUser,#message_rsc=autolooted_all,#parm1=Send(oMoney,@GetNumber));
+               Send(who,@MsgSendUser,#message_rsc=autolooted_all,
+                  #parm1=Send(oMoney,@GetNumber));
             }
             else
             {
@@ -5783,7 +5797,8 @@ messages:
          {
             if iRandomCashAmount > 0
             {
-               Send(who,@MsgSendUser,#message_rsc=autolooted_some,#parm1=Send(oMoney,@GetNumber));
+               Send(who,@MsgSendUser,#message_rsc=autolooted_some,
+                  #parm1=Send(oMoney,@GetNumber));
             }
             else
             {
@@ -5794,7 +5809,8 @@ messages:
          if iNumberOfItemsLooted = 0
             AND iRandomCashAmount > 0
          {
-            Send(who,@MsgSendUser,#message_rsc=autolooted_only_money,#parm1=Send(oMoney,@GetNumber));
+            Send(who,@MsgSendUser,#message_rsc=autolooted_only_money,
+               #parm1=Send(oMoney,@GetNumber));
          }
          
          if iNumberOfItemsLooted = 0

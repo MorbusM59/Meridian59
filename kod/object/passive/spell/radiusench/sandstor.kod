@@ -161,8 +161,9 @@ messages:
                bExhaustedMultiple = 3;
             }
 
-            if Send(oBattler,@AssessDamage,#what=source,#report=FALSE,#damage=(((iPower+1)*4)*bExhaustedMultiple),
-            #atype=ATCK_WEAP_SLASH,#precision=TRUE) = $
+            if Send(oBattler,@AssessDamage,#what=source,
+               #report=FALSE,#damage=(((iPower+1)*4)*bExhaustedMultiple),
+               #atype=ATCK_WEAP_SLASH,#precision=TRUE) = $
             {
                If IsClass(source,&Battler)
                {

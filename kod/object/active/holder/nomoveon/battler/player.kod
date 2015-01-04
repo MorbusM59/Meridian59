@@ -823,7 +823,8 @@ properties:
    poKill_target = $
    piGain_chance = 0
 
-   % This keeps track of training points that players accumulate when killing mobs.
+   % This keeps track of training points that players accumulate when 
+   % killing mobs.
    piTraining_points = 0
    piInform = TRUE
 
@@ -1205,12 +1206,12 @@ messages:
             if Send(SYS,@IsPKAllowed)
             {
                Send(self,@ReceiveNestedMail,#from=player_angel,
-                    #dest_list=[self],#nest_list=[4,player_ready_to_kill,4,ccond]);
+                 #dest_list=[self],#nest_list=[4,player_ready_to_kill,4,ccond]);
             }
             else
             {
                Send(self,@ReceiveNestedMail,#from=player_angel,
-                    #dest_list=[self],#nest_list=[4,player_ready_to_guild,4,ccond]);
+                 #dest_list=[self],#nest_list=[4,player_ready_to_guild,4,ccond]);
             }
          }
       }
@@ -1738,7 +1739,8 @@ messages:
       if Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED)
          AND poIllusion_set <> $
       {
-         % Since piHealth is internally inflated by a factor of 100, this returns the percentage correctly.
+         % Since piHealth is internally inflated by a factor of 100, this 
+         % returns the percentage correctly.
          HitPoint_Percent = piHealth / piMax_Health;
          Send(poIllusion_set,@IllusionShowDesc,#who=self,
                #iHitPoint_Percent=HitPoint_Percent);
@@ -1961,7 +1963,8 @@ messages:
 %%% option turned off for review
 %      if not Send(self,@PlayerIsImmortal)
 %      {
-%         % (example) Known far and wide for mastery of Jala and Kraanan magics and weaponcraft skills.
+%         % (example) Known far and wide for mastery of Jala and Kraanan magics 
+%         % and weaponcraft skills.
 %
 %         j = FALSE;
 %
@@ -5139,16 +5142,18 @@ messages:
    }
 
    % Handles damage done to player
-   % IMPORTANT NOTE: AssessDamage handles both legacy damage calculations and high 
-   % precision damage calculation which avoid truncation. If you feed AssessDamage 
-   % with a high precision damage number such as 941 for 9.41 points of damage, you 
-   % need to notify AssessDamage by passing it a #precision=TRUE. If you don't, 
-   % AssessDamage will assume that you are passing a legacy damage value and multiply 
-   % it by 100 for further calculations. Most notably, damage from attackspells and 
-   % melee is now handled with high precision. Eventually, all damage calculations 
-   % should be handled in high precision mode.
-   AssessDamage(what=$,damage=$,atype=0,aspell=0,stroke_obj=$,bonus=0,scalefactor=1000,
-      report=TRUE,report_resistance=TRUE,absolute=FALSE, precision = FALSE)
+   % IMPORTANT NOTE: AssessDamage handles both legacy damage calculations and 
+   % high precision damage calculation which avoid truncation. If you feed 
+   % AssessDamage with a high precision damage number such as 941 for 9.41 
+   % points of damage, you need to notify AssessDamage by passing it a 
+   % #precision=TRUE. If you don't, AssessDamage will assume that you are 
+   % passing a legacy damage value and multiply it by 100 for further 
+   % calculations. Most notably, damage from attackspells and melee is now 
+   % handled with high precision. Eventually, all damage calculations should 
+   % be handled in high precision mode.
+   AssessDamage(what=$,damage=$,atype=0,aspell=0,stroke_obj=$,bonus=0,
+      scalefactor=1000,report=TRUE,report_resistance=TRUE,absolute=FALSE,
+      precision=FALSE)
    {
       local i, j, iResistance, oSoldierShield, gainchance, color_rsc,
             iDuration, oSpell, oGort,iLimit, origdamage, oWeapon, shrunken;
@@ -5727,7 +5732,8 @@ messages:
    {
       local iHealthFraction;
 
-      % Since piHealth is inflated by a factor of 100, this returns the correct fraction.
+      % Since piHealth is inflated by a factor of 100, 
+      % this returns the correct fraction.
       if piMax_health > 0
       {
          iHealthFraction = piHealth / piMax_health;
