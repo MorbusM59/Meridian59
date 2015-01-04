@@ -322,8 +322,9 @@ properties:
    ptRandom = $
    ptSpasm = $
 
-   % IMPORTANT NOTE: For higher accuracy, a battler's current health (and only current health) is inflated by a factor of
-   % 100. Doing so avoids truncation errors but is not revealed to users in any way.
+   % IMPORTANT NOTE: For higher accuracy, a battler's current health 
+   %(and only current health) is inflated by a factor of 100. Doing so 
+   % avoids truncation errors but is not revealed to users in any way.
    piHit_points = 1
    piMax_hit_points = 1
 
@@ -1849,13 +1850,17 @@ messages:
       return FALSE;
    }
 
-   % Handles damage done to monster
-   % IMPORTANT NOTE: AssessDamage handles both legacy damage calculations and high precision damage calculation which avoid truncation.
-   % If you feed AssessDamage with a high precision damage number such as 941 for 9.41 points of damage, you need to notify AssessDamage
-   % by passing it a #precision=TRUE. If you don't, AssessDamage will assume that you are passing a legacy damage value and multiply it
-   % by 100 for further calculations. Most notably, damage from attackspells and melee is now handled with high precision. Eventually,
-   % all damage calculations should be handled in high precision mode.
-   AssessDamage(what = $,damage = $,atype = 0, aspell = 0, bonus = 0, scalefactor = 1000, absolute = FALSE, precision = FALSE)
+   % Handles damage done to player
+   % IMPORTANT NOTE: AssessDamage handles both legacy damage calculations and high 
+   % precision damage calculation which avoid truncation. If you feed AssessDamage 
+   % with a high precision damage number such as 941 for 9.41 points of damage, you 
+   % need to notify AssessDamage by passing it a #precision=TRUE. If you don't, 
+   % AssessDamage will assume that you are passing a legacy damage value and multiply 
+   % it by 100 for further calculations. Most notably, damage from attackspells and 
+   % melee is now handled with high precision. Eventually, all damage calculations 
+   % should be handled in high precision mode.
+   AssessDamage(what = $,damage = $,atype = 0, aspell = 0, bonus = 0, scalefactor = 1000, 
+      absolute = FALSE, precision = FALSE)
    {
       local iDamage,iResist,iPercentClass,i,each_obj;
 
