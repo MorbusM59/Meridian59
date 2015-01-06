@@ -1815,7 +1815,7 @@ messages:
 
       if piMinDamage = $ and piMaxDamage = $
       {
-         iDamage = Send(Self,@Fuzzy,#num=viLevel/Random(10,15));
+         iDamage = Send(Self,@Fuzzy,#num=viLevel*100/Random(10,15));
       }
       else
       {
@@ -1827,7 +1827,7 @@ messages:
          {
             piMaxDamage = piMinDamage;
          }
-         iDamage = random(piMinDamage,piMaxDamage);
+         iDamage = random(piMinDamage*100,piMaxDamage*100);
       }
 
       if piEnch_flags & ENCH_PALSY
@@ -1835,7 +1835,7 @@ messages:
          iDamage = iDamage * 3 / 4 ;
       }
       
-      return Bound(iDamage,1,$);
+      return Bound(iDamage,0,$);
    }
 
    % This is the type of damage done.

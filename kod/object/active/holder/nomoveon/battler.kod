@@ -33,10 +33,10 @@ resources:
    % battler_attacker_hit - Your scimitar wounds Psychochild for (10) damage.
    % battler_attacker_slay - Your scimitar slays Psychochild.
    % battler_attacker_miss - Your attack is blocked by Psychochild.
-   % battler_attacker_fail - Your scimitar scrapes Psychochild, barely causing any harm.
+   % battler_attacker_fail - Your scimitar scrapes Psychochild, failing to cause any real harm.
    % battler_defender_hit - Psychochild's scimitar wounds you for (10) damage.
    % battler_defender_slay - Psychochild's scimitar slays you.
-   % battler_defender_miss - Psychochild's scimitar scrapes you, barely causing any harm.
+   % battler_defender_miss - Psychochild's scimitar scrapes you, failing to cause any real harm.
 
    battler_attacker_hit = "%sYour %s %s %s%s for ~k~B%i~B%s damage."
    battler_attacker_slay = "%sYour %s %s %s%s."
@@ -547,20 +547,35 @@ messages:
 
    %%% Combat functionality.
 
-   % This does one attack by the battler.
-   % For a monster, the stroke_obj is itself.
+   % All conditions have been checked at this point and the battler is eligible
+   % to attack his target. TryAttack figures out whether he hits the target
+   % based on his offense and the target's defense and passes this information
+   % on to AssessDamage, AssessHit/AssessMiss etc.
+   %
+   % NOTES on settings: piEqualChanceToHit, piBaseRating and piDamageScaling can
+   % be adjusted in settings.kod to tweak the calculations.
+   % piEqualChanceToHit: This is the chance for an attacker to hit his target if
+   % his defense equals the target's offense. A setting of 500 is equivalent to 
+   % a 50 percent chance to hit.
+   % piBaseRating: This is a flat number that serves as a base value for defense
+   % and offense, softening the effect of any modifiers and avoiding
+   % pathological ratios when one of the two battler's rating is extremely low.
+   % piDamageScaling: This allows damage to scale when chance to hit exceeds 100
+   % percent, allowing offense to be useful even when the target has very low
+   % defense and we hit with every attack. People are less and less likely to 
+   % run into this cap as piBaseRating is increased though.
+   %
+   % NOTE: For a monster, the stroke_obj is the monster itself for now.
    TryAttack(what = $,stroke_obj=$)
    {
       local iOffense, iDefense, iChanceToHit, iDamage, iScalefactor, oWeapon;
 
       oWeapon = Send(self,@GetWeapon);
 
-      % Derived class should have checked all specific restrictions by this point.
-
-      % These are the generic checks and the calculation of chance to hit and damage.
-
-      iOffense = Send(self,@GetOffense,#what=what,#stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
-      iDefense = Send(what,@GetDefense,#what=self,#stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
+      iOffense = Send(self,@GetOffense,#what=what,#stroke_obj=stroke_obj) 
+         + Send(Send(SYS,@GetSettings),@GetBaseRating);
+      iDefense = Send(what,@GetDefense,#what=self,#stroke_obj=stroke_obj) 
+         + Send(Send(SYS,@GetSettings),@GetBaseRating);
       iChanceToHit = iOffense * Send(Send(SYS,@GetSettings),@GetEqualChanceToHit) / iDefense;
       iChanceToHit = bound(iChanceToHit,125,2000);
       if iChanceToHit >= random(1,1000)
@@ -577,7 +592,7 @@ messages:
 
          iDamage = Send(what,@AssessDamage,#what=self,#damage=iDamage,
             #atype=Send(self,@GetDamageType),#aspell=Send(self,@GetSpellType),
-            #scalefactor=iScalefactor);
+            #scalefactor=iScalefactor,#precision=TRUE);
 
          Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#damage=iDamage);
 

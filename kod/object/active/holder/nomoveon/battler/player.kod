@@ -5050,6 +5050,9 @@ messages:
       iDamageBonus = iDamageBonus + Send(Send(SYS,@GetParliament),
                                           @GetFactionDamageBonus,#who=self);
 
+      % Convert to high precision. Super dirty, will be cleaned up shortly.
+      iDamageBonus = iDamageBonus*100;
+
       iDamage = iDamage + iDamageBonus;
 
       % The universal modifier.
