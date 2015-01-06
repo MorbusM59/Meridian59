@@ -166,11 +166,12 @@ messages:
          {
             Send(shalCaster,@MsgSendUser,#message_rsc=ShalilleBane_HurtCaster);
          }
-
-         iDamageAmt = random(iSpellPower*shalSpellLevel*3,iSpellPower*shalSpellLevel*4);
-
+         
+         % Conceptually: ((iSpellPower/15) * (shalSpellLevel/2) * random(8,12))/10
+         iDamageAmt = (iSpellPower * shalSpellLevel * random(8,12))/300;
+         
          if Send(shalCaster,@AssessDamage,#report=FALSE,#what=self,
-                 #damage=iDamageAmt,#aspell=ATCK_SPELL_UNHOLY,#precision=TRUE) = $
+                 #damage=iDamageAmt,#aspell=ATCK_SPELL_UNHOLY) = $
          {
             if IsClass(shalCaster,&Player)
             {
