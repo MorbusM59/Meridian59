@@ -247,9 +247,9 @@ messages:
 
    EndEnchantmentEffects(who=$, state=$, report = TRUE)
    {
-      if (Send(who,@GetHealth) > 0)
+      if (Send(who,@GetExactHealth) > 0)
       {
-         Send(who,@GainHealthNormal,#amount=state);
+         Send(who,@GainHealthNormal,#amount=state,#precision=TRUE);
          if IsClass(who,&Player)
             AND report
          {

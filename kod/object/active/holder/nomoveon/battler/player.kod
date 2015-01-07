@@ -7042,6 +7042,26 @@ messages:
       return piHealth;
    }
 
+   SetHealth(amount=$)
+   {
+      if amount <> $
+      {
+         piHealth = bound(amount*100,0,$);
+      }
+      
+      return;
+   }
+
+   SetExactHealth(amount=$)
+   {
+      if amount <> $
+      {
+         piHealth = bound(amount,0,$);
+      }
+      
+      return;
+   }
+
    GetMight()
    {
       return bound((piMight + piMightMod),1,MAXIMUM_STAT);
