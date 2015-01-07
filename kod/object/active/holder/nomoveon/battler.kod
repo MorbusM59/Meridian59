@@ -36,7 +36,8 @@ resources:
    % battler_attacker_fail - Your scimitar scrapes Psychochild, failing to cause any real harm.
    % battler_defender_hit - Psychochild's scimitar wounds you for (10) damage.
    % battler_defender_slay - Psychochild's scimitar slays you.
-   % battler_defender_miss - Psychochild's scimitar scrapes you, failing to cause any real harm.
+   % battler_defender_miss - Psychochild's attack is blocked by you.
+   % battler_defender_fail - Psychochild's scimitar scrapes you, failing to cause any real harm.
 
    battler_attacker_hit = "%sYour %s %s %s%s for ~k~B%i~B%s damage."
    battler_attacker_slay = "%sYour %s %s %s%s."
