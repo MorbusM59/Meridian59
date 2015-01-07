@@ -2936,7 +2936,7 @@ messages:
       }
       else
       {
-         Send(self,@LoseHealth,#amount=iDifference,#decay=TRUE,#precision=TRUE);
+         Send(self,@LoseHealth,#amount=-iDifference,#decay=TRUE,#precision=TRUE);
       }
 
       return;
