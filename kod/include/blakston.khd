@@ -1819,22 +1819,6 @@
    % For hunter swords
    ATCK_SPELL_HUNTERSWORD= 0x0100
 
-   % These are the ATTACK types sent by client.
-   STROKE_NORMAL = 1
-   STROKE_PUNCH = 2
-   STROKE_SLASH = 3
-   STROKE_THRUST = 4
-   STROKE_KICK = 5
-   STROKE_FIRE = 6
-
-   % Touch attack spells
-   STROKE_TOUCH_OF_FLAME = 20
-   STROKE_HOLY_TOUCH = 21
-   STROKE_VAMPIRIC_TOUCH = 22
-   STROKE_ZAP = 23
-   STROKE_ICY_FINGERS = 24
-   STROKE_ACID_TOUCH = 25
-
    %%% Unique skill constants
 
    SKID_DODGE = 401

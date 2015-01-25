@@ -60,7 +60,6 @@ classvars:
 
    viSchool = 0
    viSpell_num = 0
-   viStroke = 0
 
    viSpellExertion = 2
 

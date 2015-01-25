@@ -73,7 +73,6 @@ classvars:
    viRange = 2             %% touch spell range can vary, but are typically good     
 
    viSpellType = ATCK_SPELL_ACID + ATCK_SPELL_ALL
-   viStroke = STROKE_ACID_TOUCH
 
    vbAutomatic = FALSE
 

@@ -993,7 +993,7 @@ messages:
    "It is dynamically allocated each time (wasting list nodes)."
    {
       local liClient_cmd, oWhat, oWhere, oRoom, iRow, iCol, iSay_type,
-            sStr_said, sStr_mailed, lDest_mail, iAttack_type, iGroup, lItems,
+            sStr_said, sStr_mailed, lDest_mail, iGroup, lItems,
             lUsers, oApply_on, iNid, sTitle, iAngle, sBody, iNum, iSpeed,
             lTargets;
 
@@ -1200,11 +1200,14 @@ messages:
          return;
       }
       
+      % It should be noted that the client also passes an attack type as its 2nd
+      % list entry, however, this functionality is entirely obsolete and its
+      % remnants have been removed from the kod code for this reason. (Morbus
+      % 2015-1-25)
       if liClient_cmd = BP_REQ_ATTACK
       {
-         iAttack_type = Nth(client_msg,2);
          oWhat = Nth(client_msg,3);
-         Send(self,@UserAttack,#type=iAttack_type,#what=oWhat);
+         Send(self,@UserAttack,#what=oWhat);
          
          return;
       }
@@ -4970,7 +4973,7 @@ messages:
       return;
    }
 
-   UserAttack(type=STROKE_NORMAL,what=$)
+   UserAttack(what=$)
    {
       local i, use_weapon, stroke_id, stroke_obj, is_spell;
 
@@ -4995,42 +4998,17 @@ messages:
 
       % Get use_weapon
       use_weapon = Send(self,@GetWeapon);
-      
-      % Convert type over to a stroke here.
-      if type = STROKE_NORMAL
+
+      % Determine the stroke.
+      % Kludgeish (at least sloppy code): If we have a spell-weapon,
+      %  we just use punch to pass the checks below.
+      if (use_weapon = $) OR IsClass(use_weapon,&Spell)
       {
-         % Kludgeish (at least sloppy code): If we have a spell-weapon,
-         %  we just use punch to pass the checks below.
-         if (use_weapon = $) OR IsClass(use_weapon,&Spell)
-         {
-            stroke_id = SKID_PUNCH;
-         }
-         else
-         {
-            stroke_id = Send(use_weapon,@GetDefaultStrokeNumber);
-         }
+         stroke_id = SKID_PUNCH;
       }
       else
       {
-         Debug("Non-normal stroke received.");
-
-         return FALSE;
-      }
-
-      % except for punch and slash, a player cannot use an attack type he
-      % doesn't have.  This in to prevent hacking.
-      if stroke_id <> SKID_PUNCH
-         AND stroke_ID <> SKID_SLASH
-         AND stroke_ID <> SKID_FIRE 
-      {
-         if NOT Send(self,@HasSkill,#num=stroke_id)
-         {
-            stroke_obj = Send(SYS,@FindSkillByNum,#num=stroke_ID);
-            Send(self,@MsgSendUser,#message_rsc=user_doesnt_know_stroke,
-                 #parm1=Send(stroke_obj,@GetName));
-                 
-            return FALSE;
-         }
+         stroke_id = Send(use_weapon,@GetDefaultStrokeNumber);
       }
 
       % Get what's possible

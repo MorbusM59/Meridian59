@@ -76,7 +76,6 @@ classvars:
    viRange = 2
 
    viSpellType = ATCK_SPELL_HOLY+ATCK_SPELL_ALL
-   viStroke = STROKE_HOLY_TOUCH
 
    viDifficulty = 1
 
