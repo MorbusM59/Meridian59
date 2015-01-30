@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-UniqueWeapon is Weapon
+UniqueWeapon is MeleeWeapon
 
 constants:
 
@@ -81,7 +81,7 @@ messages:
       return random(viMin_damage,viMax_damage);
    }
 
-   ModifyHitRoll()
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       % Return a good bonus
       return 20;

@@ -112,7 +112,7 @@ messages:
       return damage;    %% No extra damage against monsters.
    }
 
-   ModifyHitRoll(hitroll=0,target=$,wielder=$,lData= $)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    "Wielder gets a hit bonus based on whether or not the target is a murderer or outlaw."
    {
       local iNum, iPower;

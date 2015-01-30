@@ -98,7 +98,7 @@ messages:
       return damage;
    }
 
-   ModifyHitRoll(hitroll=0,target=$,wielder=$,lData=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    "Wielder gets a bonus, equal to (proficiency/4) - 2."
    {
       local oWeapon, iProf, iPower;

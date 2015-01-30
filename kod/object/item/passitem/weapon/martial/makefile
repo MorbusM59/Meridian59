@@ -4,7 +4,7 @@
 
 !include $(TOPDIR)\common.mak
 
-DEPEND = ..\unarmed.bof
-BOFS = punch.bof kick.bof touch.bof
+DEPEND = ..\martial.bof
+BOFS = fist.bof palm.bof elbow.bof shin.bof heel.bof knee.bof
 
 !include $(KODDIR)\kod.mak

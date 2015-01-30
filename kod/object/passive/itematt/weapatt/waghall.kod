@@ -167,7 +167,7 @@ messages:
       return damage;
    }
 
-   ModifyHitRoll(hitroll=0,target=$,wielder=$,lData= $)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    "If wielder is in his own guild hall, which is also the chosen guild hall "
    "of the weapon, then wielder gets +power bonus."
    {

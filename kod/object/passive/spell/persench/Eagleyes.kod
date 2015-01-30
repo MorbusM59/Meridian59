@@ -163,7 +163,7 @@ messages:
 
    %%% Attack Modifier stuff
 
-   ModifyHitRoll(who=$,what=$,hit_roll=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       local iFactor, oWeapon;
 

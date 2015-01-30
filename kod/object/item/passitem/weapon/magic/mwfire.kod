@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-AttackModifier is PassiveItem
+MagicWeaponFire is MagicWeapon
 
 constants:
 
@@ -18,40 +18,11 @@ resources:
 
 classvars:
 
-
+   viProficiency_needed = SID_TOUCH_OF_FLAME
 
 properties:
 
 messages:
 
-   NewUsed(what = $)
-   {
-      Send(what,@AddAttackModifier,#what=self);
-
-      propagate;
-   }
-
-   NewUnused(what = $)
-   {
-      Send(what,@RemoveAttackModifier,#what=self);
-
-      propagate;
-   }
-
-   WeaponHitTarget()
-   {
-      return;
-   }
-
-   GetHitMod(who = $,what = $,hit_roll = $)
-   {
-      return hit_roll;
-   }
-   
-   ModifyDamage(who = $,what = $,damage = $)
-   {
-      return damage;
-   }
-   
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -129,10 +129,9 @@ messages:
 
       if (IsClass(oTarget,&Player)) and (Send(SYS,@IsPKAllowed) or Send(Send(who,@GetOwner),@IsArena))
       {
-         % Players will unwield weapon
-
-         oOppWeapon = Send(oTarget,@LookupPlayerWeapon);
-         if oOppWeapon = $
+         % Players will unwield weapon if they have a disarmable weapon.
+         oOppWeapon = Send(oTarget,@GetWeapon);
+         if NOT Send(oOppWeapon,@CanBeDisarmed)
          {
             return FALSE;
          }

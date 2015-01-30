@@ -3499,6 +3499,10 @@ messages:
 
        Send(self,@CreateOneSKillIfNew,#num=SKID_SECOND_WIND,#class=&SecondWind);
        Send(self,@CreateOneSKillIfNew,#num=SKID_DISARM,#class=&Disarm);
+       
+       Send(self,@CreateOneSKillIfNew,#num=SKID_TOUCH,#class=&Touch);
+       Send(self,@CreateOneSKillIfNew,#num=SKID_STRIKE,#class=&Strike);
+       Send(self,@CreateOneSKillIfNew,#num=SKID_STAB,#class=&Stab);
 
        return;
    }
@@ -5346,12 +5350,14 @@ messages:
       plItemTemplates = cons(create(&IceArrow),plItemTemplates);
 
       % Weapons
+      % Ranged
       plItemTemplates = cons(create(&MagicBow),plItemTemplates);
       plItemTemplates = cons(create(&NeruditeBow),plItemTemplates);
       plItemTemplates = cons(create(&Longbow),plItemTemplates);
       plItemTemplates = cons(create(&BattleBow),plItemTemplates);
       plItemTemplates = cons(create(&PracticeBow),plItemTemplates);   
 
+      % Melee
       plItemTemplates = cons(create(&TestSword),plItemTemplates);
       plItemTemplates = cons(create(&HunterSword),plItemTemplates);
       plItemTemplates = cons(create(&GoldSword),plItemTemplates);
@@ -5364,6 +5370,21 @@ messages:
       plItemTemplates = cons(create(&Axe),plItemTemplates);
       plItemTemplates = cons(create(&Hammer),plItemTemplates);
       plItemTemplates = cons(create(&Mace),plItemTemplates);
+
+      % Magic
+      plItemTemplates = cons(create(&MagicWeaponAcid),plItemTemplates);
+      plItemTemplates = cons(create(&MagicWeaponCold),plItemTemplates);
+      plItemTemplates = cons(create(&MagicWeaponFire),plItemTemplates);
+      plItemTemplates = cons(create(&MagicWeaponShock),plItemTemplates);
+      plItemTemplates = cons(create(&MagicWeaponHoly),plItemTemplates);
+
+      % Martial
+      plItemTemplates = cons(create(&Fist),plItemTemplates);
+      plItemTemplates = cons(create(&Palm),plItemTemplates);
+      plItemTemplates = cons(create(&Elbow),plItemTemplates);
+      plItemTemplates = cons(create(&Shin),plItemTemplates);
+      plItemTemplates = cons(create(&Heel),plItemTemplates);
+      plItemTemplates = cons(create(&Knee),plItemTemplates);
 
       return;
    }

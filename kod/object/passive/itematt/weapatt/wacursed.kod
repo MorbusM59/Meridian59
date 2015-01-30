@@ -88,7 +88,7 @@ messages:
       return (damage - (2*iPower));
    }
 
-   ModifyHitRoll(hitroll=0,target=$,wielder=$,lData=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    "Wielder gets a -2*bonus to damage."
    {
       local iPower;

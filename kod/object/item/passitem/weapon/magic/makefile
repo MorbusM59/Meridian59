@@ -4,7 +4,7 @@
 
 !include $(TOPDIR)\common.mak
 
-DEPEND = ..\unarmed.bof
-BOFS = punch.bof kick.bof touch.bof
+DEPEND = ..\magic.bof
+BOFS = mwcold.bof mwfire.bof mwshock.bof mwacid.bof mwholy.bof
 
 !include $(KODDIR)\kod.mak

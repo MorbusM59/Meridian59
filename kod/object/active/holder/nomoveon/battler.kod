@@ -565,24 +565,20 @@ messages:
    % percent, allowing offense to be useful even when the target has very low
    % defense and we hit with every attack. People are less and less likely to 
    % run into this cap as piBaseRating is increased though.
-   %
-   % NOTE: For a monster, the stroke_obj is the monster itself for now.
-   TryAttack(what = $,stroke_obj=$)
+   TryAttack(what=$,use_weapon=$,stroke_obj=$)
    {
-      local iOffense, iDefense, iChanceToHit, iDamage, iScalefactor, oWeapon;
+      local iOffense, iDefense, iChanceToHit, iDamage, iScalefactor;
 
-      oWeapon = Send(self,@GetWeapon);
-
-      iOffense = Send(self,@GetOffense,#what=what,#stroke_obj=stroke_obj) 
-         + Send(Send(SYS,@GetSettings),@GetBaseRating);
-      iDefense = Send(what,@GetDefense,#what=self,#stroke_obj=stroke_obj) 
-         + Send(Send(SYS,@GetSettings),@GetBaseRating);
+      iOffense = Send(self,@GetOffense,#what=what,#use_weapon=use_weapon,
+         #stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
+      iDefense = Send(what,@GetDefense,#what=self,#use_weapon=use_weapon,
+         #stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
       iChanceToHit = iOffense * Send(Send(SYS,@GetSettings),@GetEqualChanceToHit) / iDefense;
       iChanceToHit = bound(iChanceToHit,125,2000);
       if iChanceToHit >= random(1,1000)
       {
          % We hit!
-         iDamage = Send(self,@GetDamage,#what=what,#stroke_obj=stroke_obj);
+         iDamage = Send(self,@GetDamage,#what=what,#use_weapon=use_weapon,#stroke_obj=stroke_obj);
          iScalefactor = 1000;
          
          % Scale damage with chance to hit beyond 100 percent.
@@ -599,11 +595,11 @@ messages:
 
          if iDamage = $
          {
-            Send(self,@KilledSomething,#what=what,#use_weapon=oWeapon,#stroke_obj=stroke_obj);
+            Send(self,@KilledSomething,#what=what,#use_weapon=use_weapon,#stroke_obj=stroke_obj);
          }
          else
          {
-            Send(self,@DidDamage,#amount=iDamage,#what=what);
+            Send(self,@DidDamage,#amount=iDamage,#what=what,#use_weapon=use_weapon);
          }
       }
       else
@@ -615,7 +611,7 @@ messages:
       if poOwner <> $
       {
          Send(poOwner,@SomethingAttacked,#what=self,#victim=what,
-              #use_weapon=oWeapon);
+              #use_weapon=use_weapon);
       }
 
       return TRUE;
@@ -1152,27 +1148,9 @@ messages:
    "This does the fallout of a hit, gives appropriate message, etc.  "
    "Called on self when hit opponent."
    {
-      local rColor, oWeapon, rWeaponName, iDmg, rDamageDesc, iType;
+      local rColor, rWeaponName, iDmg, rDamageDesc, iType;
 
-      if use_weapon = $
-      {
-         oWeapon = Send(self,@GetWeapon);
-      }
-      else
-      {
-         oWeapon = use_weapon;
-      }
-
-      if oWeapon = $
-      {
-         rWeaponName = battler_punch;
-      }
-      else
-      {
-         % This returns the name of a melee weapon, the ammo of a ranged
-         %  weapon, or the attack name for a monster.
-         rWeaponName = Send(oWeapon,@GetAttackName);
-      }
+      rWeaponName = Send(use_weapon,@GetAttackName);
 
       % Spell types are usually represented by negative values, to
       %  differentiate between physical and spell damage.
@@ -1318,7 +1296,7 @@ messages:
               #parm3=Send(what,@GetDef),
               #parm4=Send(what,@GetName));
          Send(stroke_obj,@SendMissMessageToAttacker,#who=self,#victim=what,
-              #color_rsc=rColor,#weapon_used=Send(self,@LookupPlayerWeapon),
+              #color_rsc=rColor,#use_weapon=Send(self,@LookupPlayerWeapon),
               #bText=FALSE);
       }
 

@@ -232,7 +232,7 @@ messages:
       return damage;
    }
 
-   ModifyHitRoll(hitroll=0,target=$,wielder=$,lData=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    "If wielder is in the faction that matches the state of the weapon, "
    "and opponent is in a different faction (but not unfactioned), then "
    "do the damage bonus."

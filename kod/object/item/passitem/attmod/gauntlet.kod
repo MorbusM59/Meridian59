@@ -270,7 +270,7 @@ messages:
       return;
    }
 
-   ModifyHitRoll(who = $,what = $,hit_roll = $)
+   GetHitMod(who = $,what = $,hit_roll = $)
    {
       local oWeapon;
 

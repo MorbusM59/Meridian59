@@ -216,13 +216,13 @@ messages:
       return damage;
    }
 
-   ModifyHitRoll(hit_roll=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       local i;
 
       for i in plSocketed
       {
-         hit_roll = Send(i,@ModifyHitRoll,#hit_roll=hit_roll);
+         hit_roll = Send(i,@GetHitMod,#who=self,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon);
       }
 
       return hit_roll;

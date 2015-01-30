@@ -110,7 +110,7 @@ messages:
       return damage;
    }
    
-   ModifyHitRoll(hit_roll=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       return hit_roll;
    }

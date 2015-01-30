@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-AttackModifier is PassiveItem
+MeleeWeapon is Weapon
 
 constants:
 
@@ -16,42 +16,14 @@ constants:
 
 resources:
 
+   melee_name_rsc = "Melee Weapon"
+   hammer_desc_rsc = "This is a melee weapon."
+
 classvars:
-
-
 
 properties:
 
 messages:
 
-   NewUsed(what = $)
-   {
-      Send(what,@AddAttackModifier,#what=self);
-
-      propagate;
-   }
-
-   NewUnused(what = $)
-   {
-      Send(what,@RemoveAttackModifier,#what=self);
-
-      propagate;
-   }
-
-   WeaponHitTarget()
-   {
-      return;
-   }
-
-   GetHitMod(who = $,what = $,hit_roll = $)
-   {
-      return hit_roll;
-   }
-   
-   ModifyDamage(who = $,what = $,damage = $)
-   {
-      return damage;
-   }
-   
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

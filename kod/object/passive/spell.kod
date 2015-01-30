@@ -1746,8 +1746,8 @@ messages:
          return FALSE;
       }
 
-      % No advancing a spell you don't have.
-      if NOT Send(who,@HasSpell,#num=vispell_num)
+      % No advancing a spell that you don't have or that you have already maxed.
+      if NOT Send(who,@CanSpellAdvance,#num=vispell_num)
       {
          return FALSE;
       }
@@ -1768,12 +1768,6 @@ messages:
          return FALSE;
       }
 
-      iAbility = Send(who,@GetSpellAbility,#spell_num=viSpell_num);
-      if iAbility >= 99 or iAbility < 1
-      {
-         return FALSE;
-      }
- 
       % Start with the secondary chance to advance.
       increase_chance = Send(self,@GetSecondaryChance,#who=who,#target=target);
 

@@ -138,7 +138,7 @@ messages:
 
    % stuff we handle to be an attack modifier
 
-   ModifyHitRoll(who = $, what = $, hit_roll = $)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       local iSpellpower,iHitMod;
 

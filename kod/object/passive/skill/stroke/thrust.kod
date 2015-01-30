@@ -45,11 +45,11 @@ properties:
 
 messages:
 
-   GetAttackType(weapon_used=$)
+   GetAttackType(use_weapon=$)
    {
      local i;
 
-     i= send(weapon_used,@getAttackType);
+     i= send(use_weapon,@getAttackType);
 
      if (i & ATCK_WEAP_SLASH) and not (i & ATCK_WEAP_Thrust)
        {

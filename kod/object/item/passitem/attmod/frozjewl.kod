@@ -137,7 +137,7 @@ messages:
       propagate;
    }
 
-   ModifyHitRoll(who=$,what=$,hit_roll=$,stroke_obj=$)
+   GetHitMod(who=$,what=$,hit_roll=$,stroke_obj=$)
    {
       local iBonus, iScale;
 
@@ -226,7 +226,7 @@ messages:
       if poOwner <> $
          AND IsClass(poOwner,&Player)
       {
-         return Send(self,@ModifyHitRoll,#who=poOwner,#hit_roll=0);
+         return Send(self,@GetHitMod,#who=poOwner,#hit_roll=0);
       }
 
       return piAttack_bonus;

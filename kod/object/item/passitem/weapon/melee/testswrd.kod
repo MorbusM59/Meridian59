@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-TestSword is Weapon
+TestSword is MeleeWeapon
 
 constants:
 
@@ -179,7 +179,7 @@ messages:
       If IsClass(poOwner,&User)
       {
          oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#weapon_used=self)/100;
+         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
       }
       else
       {
@@ -198,7 +198,7 @@ messages:
       If IsClass(poOwner,&User)
       {
          oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#weapon_used=self)/100;
+         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
       }
       else
       {

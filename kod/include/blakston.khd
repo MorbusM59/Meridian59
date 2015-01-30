@@ -320,7 +320,15 @@
    PT_FRST_WHT2      = 0x0075		
    PT_FRST_WHT3      = 0x0076       % Frosted White = Grading white from normal to PT_ALLWHITE
    PT_FRST_WHT4      = 0x0077
-   
+
+   %%% Player Stats
+   STAT_MIGHT = 1
+   STAT_INTELLECT = 2
+   STAT_STAMINA = 3
+   STAT_AGILITY = 4
+   STAT_MYSTICISM = 5
+   STAT_AIM = 6
+
    %%% Sound constants
 
    SOUND_LOOP = 1
@@ -1832,9 +1840,14 @@
    SKID_DEFAULT = 420
    SKID_SLASH = 421
    SKID_THRUST = 422
+   SKID_STRIKE = 423
+   SKID_STAB = 424
 
    % Missile weapon strokes here.
    SKID_FIRE = 425
+
+   % Magic weapon strokes start here.
+   SKID_TOUCH = 426
 
    % Unarmed combat moves start here.
    SKID_PUNCH = 430

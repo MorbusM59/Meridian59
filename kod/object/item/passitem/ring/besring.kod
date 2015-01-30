@@ -79,7 +79,7 @@ messages:
       propagate;
    }
 
-   ModifyHitRoll(who = $, what = $, hit_roll = $)
+   GetHitMod(who = $, what = $, hit_roll = $)
    {
       piHits = piHits - 1;
       if piHits <= 0

@@ -7,7 +7,7 @@
 % Meridian is a registered trademark.
 
 
-HunterSword is Weapon
+HunterSword is MeleeWeapon
 
 %%%%%
 % messy!!  this is an active item, like its mirror the Necromancer Amulet,

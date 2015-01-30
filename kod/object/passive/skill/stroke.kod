@@ -60,8 +60,6 @@ classvars:
 
    vbAutomatic = FALSE
 
-   viMaxProficiencyDamage = 5     % What's the max damage the proficiency can add for this stroke?
-
 properties:
 
    plPrerequisites = $
@@ -118,8 +116,8 @@ messages:
    }
 
    SuccessChance()
-   "Always returns TRUE for combat strokes.  COmbat strokes are figured"
-   "differently than other skills - are figured in player.kod."
+   "Always returns TRUE for combat strokes since their missing or hitting is"
+   "determined in battler.kod, not here."
    {
       return TRUE;
    }
@@ -140,16 +138,6 @@ messages:
       propagate;
    }
 
-   GetAttackType(weapon_used=$)
-   {
-     return send(weapon_used,@getAttackType);
-   }
-
-   GetAttackSpell(weapon_used=$)
-   {
-     return send(weapon_used,@getAttackSpell);
-   }
-
    GetExertion()
    "Sword strokes vary in their vigor cost."
    {
@@ -157,60 +145,55 @@ messages:
       return viSkill_Exertion;
    }
 
-   CheckSpecial(who=$,victim=$)
-   "Checks to see if there are any special circumstances which prevents"
-   "the target player from performing this skill."
+   DoAnimation(who=$)
+   "Do the weapon's swing animation."
    {
-      return TRUE;
+      Send(who,@DoSwing);
+
+      return;
    }
 
-   CheckWeaponAndDoAnimation(who=$,weapon_used=$,victim=$)
-   "Can the user's weapon be used with this weapon stroke?  \n"
-   "Default is TRUE unless the player is unarmed."
-   "Animation was also put here, for backwards compatibility."
+   FindDamage(use_weapon=$, who=$, what=$)
    {
-      if weapon_used = $
-      {
-         send(who,@msgsenduser,#message_rsc=stroke_need_weapon_rsc);
-          
-         return FALSE;
-      }
+      local iDamage, iMin, iMax, iSkill, iBonus, iStat, iFactor, iPower,
+         iStrokeMod, iSpecialBonus;
 
-      % while you're here, be sure weapon is undamaged.
-      return send(weapon_used,@ReqWeaponAttack,#what=victim);
-   }
+      % Get base values from the weapon.
+      iMin = Send(use_weapon,@GetMinDamage,#who=who,#what=what);
+      iMax = Send(use_weapon,@GetMaxDamage,#who=who,#what=what);
 
-   ToHitImprovers(raw_hitroll=0)
-   "A weapon stroke may have IMPROVERS, which may boost the performance of  \n"
-   "the stroke.  Example, if a player has renweed, that may boost his thrust"
-   "Default, return the hitroll raw."
-   {
-      return Raw_hitroll; 
-   }
+      % Pick damage at random within the base values.
+      iDamage = random(iMin,iMax);
 
-   GetRange(weapon_used = $)
-   "May be tuned later on if we expand on the stroke system."
-   {
-      return send(weapon_used,@getrange);
-   }
-
-   FindDamage(weapon_used=$, who=$, victim=$)
-   "We put this here so that we can vary a stroke's damage per weapon."
-   {
-      local skill_ability, damage;
+      % Factor in proficiency with the weapon.
+      iSkill = Send(who,@GetSkillAbility,#Skill_num=Send(use_weapon,@GetProfNum));
+      iBonus = Send(use_weapon,@GetProficiencyBonus) * iSkill / 100;
+      iDamage = iDamage + iBonus;
       
-      % base weapon damage
-      damage = send(weapon_used,@GetDamage,#who=who,#target=victim);
-      
-      % convert to high precision
-      damage = damage*100;
-      
-      damage = send(self,@DamageFactors,#damage=damage,#who=who,#weapon_used=weapon_used);
+      % Allow the weapon to add a special effect based on its secondary stat. 
+      % This may include, but is not limited to extra damage.
+      iFactor = Send(use_weapon,@GetSecondaryScaling);
+      iStat = Send(who,@GetStat,#stat=Send(use_weapon,@GetSecondaryStat));
+      iPower = iFactor * iStat / 50 ;
+      iBonus = Send(use_weapon,@DoSpecialEffect,#who=who,#what=what,#stroke_obj=self,#power=iPower);
+      iDamage = iDamage + iBonus;
 
-      return bound(damage,0,$);
+      % Scale the whole thing with the weapon's primary stat.
+      iFactor = Send(use_weapon,@GetPrimaryScaling);
+      iStat = Send(who,@GetStat,#stat=Send(use_weapon,@GetPrimaryStat));
+      iPower = iFactor * iStat / 50 ;
+      iDamage = iDamage + iDamage * iPower / 100;
+
+      % Finally, scale damage with the stroke modifier the weapon carries,
+      % factoring in the player's expertise in the stroke.
+      iSkill = Send(use_weapon,@GetStrokeAbility,#who=who,#Skill_num=viSkill_num);
+      iStrokeMod = Send(use_weapon,@GetStrokeMod,#Skill_num=viSkill_num);
+      iDamage = iDamage * (50 + (iSkill/2)) * iStrokeMod / 10000;
+
+      return bound(iDamage,0,$);
    }
 
-   SendMissMessageToAttacker(who=$,victim=$,weapon_used = $,color_rsc = $,bText = TRUE)
+   SendMissMessageToAttacker(who=$,victim=$,use_weapon = $,color_rsc = $,bText = TRUE)
    {
       local iRoll;
 
@@ -222,7 +205,7 @@ messages:
       }
 
       %% 'miss' sound
-      if IsClass(victim,&Monster) or weapon_used = $
+      if IsClass(victim,&Monster) or use_weapon = $
       {
          iRoll = Random(1,3);
          
@@ -264,7 +247,7 @@ messages:
          {   
             Send(Send(who,@GetOwner),@SomethingWaveRoom,#what=who,
                  #wave_rsc=Send(victim,@GetSomethingMissedYouSound,#what=who,
-                 #weapon_used=weapon_used)); 
+                 #use_weapon=use_weapon)); 
          }
       }
       
@@ -323,40 +306,6 @@ messages:
            #parm1=send(attacker,@GetDef),#parm2=send(attacker,@GetName));
            
       return TRUE;
-   }
-
-   DamageFactors(damage=0, who=$, weapon_used = $)
-   "Different skills/strokes are affected by stats differently."
-   {
-      local iDamage, stat, weapProf, profAbility, bonusPercentage;
-
-      iDamage = damage;
-      if weapon_used <> $
-      {
-         weapProf = Send(SYS,@FindSkillByNum,#num=Send(weapon_used,@GetProfNumber));
-         profAbility = Send(weapon_used,@GetProf,#who=who)+1;
-      }
-      else
-      {
-         weapProf = Send(SYS,@FindSkillByNum,#num=SKID_BRAWLING);
-         profAbility = send(who,@GetSkillAbility,#skill_num=SKID_BRAWLING)+1;
-      }
-
-      % Add a portion of the proficiency damage based on skill level. 
-      % Proficiency damage is converted to high precision.
-      iDamage = iDamage + profAbility * viMaxProficiencyDamage;
-      
-      % Get the relevant amount of primary stat for our proficiency. This will 
-      % be our base bonus percentage.
-      stat = send(weapProf,@GetRequisiteStat,#who=who) - 25;
-      
-      % Scale down the bonus damage percentage if the user is not fully 
-      % proficient in the weapon.
-      bonusPercentage = 100 + bound(stat * profAbility / 100, 0, 40);
-
-      iDamage = iDamage * bonusPercentage / 100;
-      
-      return iDamage;
    }
 
    GetHitSound()

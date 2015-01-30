@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-BlackDagger is Weapon
+BlackDagger is MeleeWeapon
 
 constants:
 
@@ -297,7 +297,7 @@ messages:
       % Does the animations and overlays
       Send(self,@WeaponAttack);
       Send(Send(SYS,@findskillbynum,#num=SKID_SLASH),@SendMissMessageToAttacker,
-           #who=poOwner,#victim=target,#weapon_used=self,#bText=FALSE);
+           #who=poOwner,#victim=target,#use_weapon=self,#bText=FALSE);
 
       return;
    }
@@ -436,7 +436,7 @@ messages:
 
    % Here for compatibility.  Not used.
 
-   ModifyHitRoll(hit_roll = 0)
+   GetHitMod(hit_roll = 0)
    {
       return 0;
    }

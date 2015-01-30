@@ -239,7 +239,7 @@ messages:
       return damage;
    }
 
-   ModifyHitRoll(hitroll=0,target=$,wielder=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    "Item Attributes, in general, should only + or - damage."
    {
       return hitroll;

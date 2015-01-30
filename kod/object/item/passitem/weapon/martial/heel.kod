@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-AttackModifier is PassiveItem
+Heel is MartialWeapon
 
 constants:
 
@@ -18,40 +18,11 @@ resources:
 
 classvars:
 
-
+   viProficiency_needed = SKID_BRAWLING
 
 properties:
 
 messages:
 
-   NewUsed(what = $)
-   {
-      Send(what,@AddAttackModifier,#what=self);
-
-      propagate;
-   }
-
-   NewUnused(what = $)
-   {
-      Send(what,@RemoveAttackModifier,#what=self);
-
-      propagate;
-   }
-
-   WeaponHitTarget()
-   {
-      return;
-   }
-
-   GetHitMod(who = $,what = $,hit_roll = $)
-   {
-      return hit_roll;
-   }
-   
-   ModifyDamage(who = $,what = $,damage = $)
-   {
-      return damage;
-   }
-   
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

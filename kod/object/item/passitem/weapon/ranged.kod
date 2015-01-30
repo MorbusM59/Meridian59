@@ -40,7 +40,6 @@ classvars:
 
    viProficiency_Needed = SKID_PROFICIENCY_BOW
    viAmmo_type = AMMO_ARROW
-   viHit_roll_modifier = 0
    viSpell_modifier = -25
    viUse_Amount = 2
 
@@ -55,6 +54,11 @@ classvars:
 properties:
    
    piAttack_Type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_PIERCE
+
+   % The stats relevant for this weapon. Primary stat scales damage while
+   % secondary stat scales a bonus effect that varies with weapon class.
+   piPrimaryStat = STAT_AIM
+   piSecondaryStat = STAT_MIGHT
 
 messages:
 
@@ -145,39 +149,6 @@ messages:
       return iAttackType;
    }
 
-   ModifyHitRoll(hit_roll = 0, target = $)
-   "When someone attacks with this weapon, they send us their attack value "
-   "and we change it based on quality of weapon"
-   {
-      local iBaseHit, oWeapAtt, i, iWeapHit;
-
-      iBaseHit = hit_roll;
-
-      if viHit_roll_modifier < 0
-      {
-         hit_roll = hit_roll + (-viHit_Roll_modifier);
-      }
-      else
-      {
-         hit_roll = hit_roll + ((viHit_roll_modifier*piHits)/piHits_Init);
-      }
-      
-      iWeapHit = hit_roll;
-
-      for i in plItem_Attributes
-      {
-         oWeapAtt = send(SYS,@FindItemAttByNum,
-                         #num=send(self,@GetNumFromCompound,#compound=first(i)));
-         if isClass(oWeapAtt,&WeaponAttribute)
-         {
-            hit_roll = send(oWeapAtt,@ModifyHitRoll,#hitroll=hit_roll,#wielder=poOwner,
-                            #target=target,#lData=i);
-         }
-      }     
-      
-      return hit_roll;
-   }
-
    GetBaseDamage(who=$,target=$)
    {
       local iDamage, ammotype, i;
@@ -220,12 +191,7 @@ messages:
    {
       return ranged_ammo_name;      
    }
-     
-   GetHitBonus()
-   {
-      return viHit_roll_modifier + piHitBonus;
-   }
-   
+
    GetMinDamage()
    {
       local iDamage, ammotype, i;
@@ -324,7 +290,7 @@ messages:
       If IsClass(poOwner,&User)
       {
          oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#weapon_used=self)/100;
+         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
       }
       else
       {
@@ -367,7 +333,7 @@ messages:
       If IsClass(poOwner,&User)
       {
          oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#weapon_used=self)/100;
+         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
       }
       else
       {
@@ -416,7 +382,7 @@ messages:
       If IsClass(poOwner,&User)
       {
          oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#weapon_used=self)/100;
+         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
       }
       else
       {
@@ -465,7 +431,7 @@ messages:
       If IsClass(poOwner,&User)
       {
          oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#weapon_used=self)/100;
+         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
       }
       else
       {

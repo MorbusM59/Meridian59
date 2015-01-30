@@ -8,36 +8,37 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Slash is Stroke
+Stab is Stroke
 
 constants:
 
    include blakston.khd
 
 resources:
-   slash_name_rsc = "slash"
-   slash_icon_rsc = slashico.bgf
-   slash_desc_rsc = "A wide, slashing motion allows a warrior to assault targets "
-      "that are out of his immediate reach. Any melee weapon is suitable for slashing, "
-      "but some more so than others."
+   stab_name_rsc = "stab"
+   stab_icon_rsc = slashico.bgf
+   stab_desc_rsc = "Stabbing allows the wielder of a suitable weapon to sink "
+      "it right between the enemy's shoulder blades, provided that they are close "
+      "enough."
 
-   slash_skill_intro = "Weaponcraft Lv. 1: One of the most basic skills of armed "
-      "combat. A must for those who live by the blade."
+   stab_skill_intro = "Weaponcraft Lv. 2: An essential skill for muggers, "
+      "assassins and other likable folks that lurk in the shadows.  Works great "
+      "with small bladed weapons."
 
 classvars:
 
-   vrName = slash_name_rsc
-   vrIcon = slash_icon_rsc
-   vrDesc = slash_desc_rsc
+   vrName = stab_name_rsc
+   vrIcon = stab_icon_rsc
+   vrDesc = stab_desc_rsc
 
-   vrSkill_intro = slash_skill_intro
+   vrSkill_intro = stab_skill_intro
 
    viIndefinite = ARTICLE_NONE
    viDefinite = ARTICLE_NONE
 
    viSchool = SKS_FENCING
-   viSkill_Num = SKID_SLASH
-   viSkill_level = 1
+   viSkill_Num = SKID_STAB
+   viSkill_level = 2
    viChance_to_increase = 20
    viMeditate_ratio = 30
 

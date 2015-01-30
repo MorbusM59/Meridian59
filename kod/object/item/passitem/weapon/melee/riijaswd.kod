@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-RiijaSword is Weapon
+RiijaSword is MeleeWeapon
 
 constants:
 
@@ -131,7 +131,7 @@ messages:
       return FALSE;
    }
 
-   ModifyHitRoll(hit_roll = 0, target = $)
+   GetHitMod(who=$,what=$,stroke_obj=$)
    "Fairly worthless to hit with except for original quester."
    {
       if poOwner <> $

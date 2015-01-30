@@ -124,8 +124,7 @@ messages:
       propagate;
    }
 
-   % Stuff we handle to be an attack modifier
-   ModifyHitRoll(who=$,what=$,hit_roll=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       return hit_roll + 100 + (Send(who,@GetEnchantedState,#what=self)*2);
    }

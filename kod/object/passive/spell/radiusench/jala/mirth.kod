@@ -103,7 +103,7 @@ messages:
 
    % Stuff we handle to be an attack modifier.
 
-   ModifyHitRoll(who = $,what = $,hit_roll = $)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       if what = $
       {

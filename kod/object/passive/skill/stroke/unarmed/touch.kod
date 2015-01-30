@@ -1,0 +1,200 @@
+% Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+% All rights reserved.
+%
+% This software is distributed under a license that is described in
+% the LICENSE file that accompanies it.
+%
+% Meridian is a registered trademark.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Touch is Unarmed
+
+constants:
+
+   include blakston.khd
+
+resources:
+   touch_name_rsc = "touch"
+   touch_icon_rsc = light.bgf
+   touch_desc_rsc = "Touching a target allows a mage to transfer a charge of "
+      "magical energy. The results may vary wildly and depend largely upon the "
+      "type of magic that is used."
+
+   touch_skill_intro = "Weaponcraft Lv. 1: The most basic way to transfer "
+      "magical energy to a target."
+classvars:
+
+   vrName = touch_name_rsc
+   vrIcon = touch_icon_rsc
+   vrDesc = touch_desc_rsc
+
+   vrSkill_intro = touch_skill_intro
+
+   viIndefinite = ARTICLE_NONE
+   viDefinite = ARTICLE_NONE
+   viSchool = SKS_FENCING
+
+   viSkill_num = SKID_TOUCH
+   viSkillExertion = 3
+   vbCheck_exertion = FALSE
+
+   viSkill_level = 1
+
+   viMin_Damage = 2         % Damage_min here replaces a weapon    
+   viMax_Damage = 6         % Damage_max replaces the weapon's stats.
+
+   VbAutomatic = FALSE  %  If this is set to TRUE, then the effects of this
+                        %  skill happen automatically, and are not accessible
+                        %  via menu.
+
+   viAttack_Type = ATCK_WEAP_UNARMED+ATCK_WEAP_PUNCH
+
+properties:
+
+messages:
+
+   PlayerWasHitMsg(who=$,attacker=$,damage=$)
+   "The stroke may choose it's own damage give or recieve message.  Otherwise "
+   "player.kod will just choose a default - which is true for most weapon-"
+   "based combat strokes (but not true for most punch strokes or touch spells."
+   {
+      if vrPlayer_was_hit = $
+      {
+         return FALSE;
+      }
+
+      Send(who,@MsgSendUser,#message_rsc=vrPlayer_was_hit,
+           #parm1=Send(attacker,@GetCapDef),#parm2=Send(attacker,@GetName));
+           
+      return TRUE;
+   }
+
+   PlayerHitSomethingMsg(who=$,victim=$,damage=$,color_rsc=$)
+   "The stroke may choose it's own damage give or recieve message.  Otherwise "
+   "player.kod will just choose a default - which is true for most weapon-"
+   "based combat strokes (but not true for most punch strokes or touch spells."
+   {
+      if vrPlayer_hit_something = $
+      {
+         return FALSE;
+      }
+       
+      Send(who,@MsgSendUser,#message_rsc=vrPlayer_hit_something,
+           #parm1=color_rsc,#parm2=Send(victim,@GetDef),
+           #parm3=Send(victim,@GetName));
+          
+      return TRUE;
+   }
+
+   SendMissMessageToAttacker(who=$,victim=$,color_rsc=$)
+   {
+      local iRandom, rSound;
+      
+      % 'miss' sound
+      if vrMiss_Sound = $
+      {
+         % Play a random miss sound.
+         iRandom = random(1,3);
+         if iRandom = 1
+         {
+            rSound = TouchAttack_missed1_sound;
+         }
+         else
+         {
+            if iRandom = 2
+            {
+               rSound = TouchAttack_missed2_sound;
+            }
+            else
+            {
+               rSound = TouchAttack_missed3_sound;
+            }
+         }
+      }
+      else
+      {
+         rSound = vrMiss_Sound;
+      }
+      
+      Send(Send(who,@GetOwner),@SomethingWaveRoom,#what=who,#wave_rsc=rSound);
+      
+      % Text messages
+      if vrMissed_Message_Attacker <> $
+      {
+         Send(who,@MsgSendUser,#message_rsc=vrMissed_Message_Attacker,
+              #parm1=color_rsc,#parm2=vrName,#parm3=Send(victim,@GetDef),
+              #parm4=Send(victim,@GetName));
+              
+         return TRUE;
+      }
+      
+      return;
+   }
+
+   SendMissMessageToDefender(who=$,attacker=$)
+   {
+      if vrMissed_message_Defender <> $
+      {
+         Send(who,@MsgSendUser,#message_rsc=vrMissed_Message_Defender,
+              #parm1=Send(attacker,@GetCapDef),#parm2=Send(attacker,@GetName),
+              #parm3=vrName);
+              
+         return TRUE;
+      }
+
+      return;
+   }
+
+   PlayerKilledSomethingMsg(who=$,victim=$,damage=$)
+   "The stroke may choose it's own damage give or recieve message.  Otherwise"
+   "player.kod will offer the default 'You killed the whatever' message."
+   {
+       if vrPlayer_killed_Something = $
+       {
+         return FALSE ;
+       }
+       
+       Send(who,@MsgSendUser,#message_rsc=vrPlayer_killed_something,
+            #parm1=Send(victim,@GetCapDef),#parm2=Send(victim,@GetName));
+                
+       return TRUE;
+   }
+
+   PlayerWasKilledMsg(who=$,attacker=$,damage=$)
+   "The stroke may choose it's own damage give or recieve message.  Otherwise"
+   "player.kod will just choose a default - as it does for most strokes."
+   {
+       if vrPlayer_was_hit = $
+       {
+         return FALSE ;
+       }
+       
+       Send(who,@MsgSendUser,#message_rsc=vrPlayer_was_killed,
+            #parm1=Send(attacker,@GetDef),#parm2=Send(attacker,@GetName));
+            
+       return TRUE;
+   }
+   
+   DoAnimation(who=$)
+   "Do the cast animation."
+   {
+      Send(who,@DoCast);
+
+      return;
+   }
+   
+   GetHitsound()
+   {
+      return touchattack_hit_sound;
+   }
+
+   ImproveStroke(who=$,target=$)
+   {
+      Send(self,@ImproveAbility,#who=who,#target=target);
+      
+      return;
+   }
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
