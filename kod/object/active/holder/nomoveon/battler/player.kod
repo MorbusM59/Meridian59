@@ -1079,7 +1079,7 @@ messages:
       % Let the poor bastards eat something.
       piTimeLastStomachUpdate = GetTime();
       piReward_timestamp = GetTime();
-      Send(self,@CreateMartialWeapon);
+      Send(self,@CreateMartialWeapon,#cweapon=&Fist);
 
       propagate;
    }
@@ -5108,13 +5108,13 @@ messages:
    }
 
    % Functions dealing with a player's magic and martial weapons.
-   CreateMartialWeapon(lstats=$)
+   CreateMartialWeapon(cweapon=$,lstats=$)
    {
       if poMartial_weapon <> $
       {
          Send(poMartial_weapon,@Delete);
       }
-      poMartial_weapon = Create(&Fist,#lstats=lstats);
+      poMartial_weapon = Create(cweapon,#lstats=lstats,#ltypes=ltypes);
       
       return poMartial_weapon;
    }
@@ -5134,13 +5134,13 @@ messages:
       return;
    }
 
-   CreateMagicWeapon(lstats=$)
+   CreateMagicWeapon(cweapon=$,lstats=$,ltypes=$)
    {
       if poMagic_weapon <> $
       {
          Send(poMagic_weapon,@Delete);
       }
-      poMagic_weapon = Create(&Fist,#lstats=lstats);
+      poMagic_weapon = Create(cweapon,#lstats=lstats,#ltypes=ltypes);
       
       return poMagic_weapon;
    }
