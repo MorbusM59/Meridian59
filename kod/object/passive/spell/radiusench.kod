@@ -803,7 +803,7 @@ messages:
 
    GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
-      return hit_roll;
+      return 0;
    }
 
    ModifyDamage(who = $,what = $,damage = $)

@@ -173,10 +173,10 @@ messages:
 
       if oWeapon <> $ AND IsClass(oWeapon,&RangedWeapon)
       {
-         return hit_roll + iFactor;
+         return iFactor;
       }
 
-      return hit_roll;
+      return 0;
    }
 
    ModifyDamage(who=$,what=$,damage=$)

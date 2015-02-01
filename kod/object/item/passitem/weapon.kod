@@ -191,7 +191,16 @@ messages:
 
    GetHitMod(who=$,what=$,stroke_obj=$)
    {
-      return piHitMod;
+      local i, iBonus;
+      for i in plItem_Attributes
+      {
+         oWeapAtt = Send(SYS,@FindItemAttByNum,#num=Send(self,@GetNumFromCompound,#compound=First(i)));
+         if IsClass(oWeapAtt,&WeaponAttribute)
+         {
+            iBonus = Send(oWeapAtt,@GetHitMod,#who=poOwner,#what=what,#lData=i);
+         }
+      }
+      return piHitMod + iBonus;
    }
 
    GetBaseSpellModifier()

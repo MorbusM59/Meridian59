@@ -79,7 +79,7 @@ messages:
       propagate;
    }
 
-   GetHitMod(who = $, what = $, hit_roll = $)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       piHits = piHits - 1;
       if piHits <= 0
@@ -88,10 +88,10 @@ messages:
          Send(poOwner,@TryUnuseItem,#what=self);
          Send(self,@Delete);
 
-         return hit_roll;
+         return 0;
       }
       
-      return hit_roll - (Random(15,25) * 10);
+      return -Random(150,250);
    }
 
    ModifyDamage(who = $, what = $, damage = $)

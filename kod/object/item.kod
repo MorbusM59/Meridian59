@@ -172,21 +172,7 @@ messages:
 
          bFoundProperties = TRUE;
       }
-      
-      if Send(self,@GetHitBonus) <> 0
-      {
-         if NOT bFoundProperties
-         {
-            AppendTempString(special_properties_header);
-         }
 
-         AppendTempString(Send(self,@GetHitBonus));
-         AppendTempString(" offense rating bonus");
-         AppendTempString("\n");
-
-         bFoundProperties = TRUE;
-      }
-      
       if Send(self,@GetDamageReduction) <> 0
       {
          if NOT bFoundProperties

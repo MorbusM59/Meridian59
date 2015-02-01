@@ -137,13 +137,13 @@ messages:
       propagate;
    }
 
-   GetHitMod(who=$,what=$,hit_roll=$,stroke_obj=$)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       local iBonus, iScale;
 
       if piHits <= 0
       {
-         return hit_roll;
+         return 0;
       }
 
       if stroke_obj <> $
@@ -152,18 +152,18 @@ messages:
          Send(self,@DoFlash);
       }
 
-      % Option to scale hitroll bonus by hitpoints. Default on.
+      % Option to scale bonus by hitpoints. Default on.
       if pbScaleHitrollBonus
       {
          iScale = Send(who,@GetBaseMaxHealth) * 100
                         / (100 + Send(who,@GetRawStamina));
          iBonus = piAttack_bonus * iScale / 100;
 
-         return hit_roll + iBonus;
+         return iBonus;
       }
 
-      % If no scaling, just return the hitroll + full bonus.
-      return hit_roll + piAttack_bonus;
+      % If no scaling,return the full bonus.
+      return piAttack_bonus;
    }
 
    ModifyDamage(who=$,what=$,damage=$,stroke_obj=$)
@@ -220,17 +220,6 @@ messages:
    %
    % Item description code.
    %
-
-   GetHitBonus()
-   {
-      if poOwner <> $
-         AND IsClass(poOwner,&Player)
-      {
-         return Send(self,@GetHitMod,#who=poOwner,#hit_roll=0);
-      }
-
-      return piAttack_bonus;
-   }
 
    GetMinDamage()
    {

@@ -48,46 +48,7 @@ messages:
       
       propagate;
    }
-
-   GetDefaultStrokeNumber()
-   {
-      return SKID_TOUCH;
-   }
    
-   GetMinDamage(who=$)
-   {
-      local damage, iAbility;
-
-      damage = viMin_Damage;
-      iAbility = Send(who,@GetSpellAbility,#spell_num=viProficiency_needed);
-      damage = (damage * (iAbility+1));
-      damage = Send(self,@DamageFactors,#damage=damage,#who=who)/100;
-      
-      return bound(damage,0,$);
-   }
-   
-   GetMaxDamage(who=$)
-   {
-      local damage, iAbility;
-
-      damage = viMax_Damage;
-      iAbility = Send(who,@GetSpellAbility,#spell_num=viProficiency_needed);
-      damage = (damage * (iAbility+1));
-      damage = Send(self,@DamageFactors,#damage=damage,#who=who)/100;
-      
-      return bound(damage,0,$);
-   }
-
-   GetAttackType(use_weapon=$)
-   {
-      return viAttackType;
-   }
-
-   GetAttackSpell(use_weapon=$)
-   {
-      return viSpellType;
-   }
-
    GetParryAbility()
    {
       % Touch attacks have no parrying ability.

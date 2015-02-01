@@ -1186,16 +1186,6 @@ messages:
 
       if IsClass(self,&Player)
       {
-         if Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED) 
-         {
-            % Don't use "punch" if we're morphed, use a more generic term.
-            if oWeapon = $
-            {
-               rWeaponName = battler_attack;
-            }
-         }
-
-
          if IsClass(what,&Player) AND NOT Send(what,@CheckPlayerFlag,#flag=PFLAG_MORPHED) 
          {
             rColor = battler_plain_text;

@@ -145,7 +145,7 @@ messages:
       iSpellpower = send(send(who,@GetOwner),@GetEnchantmentState,#what=self);
       iHitMod = iSpellpower + 50;  %% 50 - 150
       
-      return hit_roll + iHitMod;
+      return iHitMod;
    }
    
    ModifyDamage(who = $, what = $, damage = $)

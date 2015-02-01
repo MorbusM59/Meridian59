@@ -270,18 +270,15 @@ messages:
       return;
    }
 
-   GetHitMod(who = $,what = $,hit_roll = $)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
-      local oWeapon;
-
-      oWeapon = Send(who,@GetWeapon);
-      if (oWeapon = $)
-         or (not IsClass(oWeapon,&RangedWeapon))
+      if NOT IsClass(use_weapon,&RangedWeapon) AND
+         NOT IsClass(use_weapon,&MagicWeapon)
       {
-         return hit_roll + piAttack_bonus;
+         return piAttack_bonus;
       }
 
-      return hit_roll;
+      return 0;
    }
 
    ModifyDamage(who = $,what = $,damage = $)
@@ -331,11 +328,6 @@ messages:
       }
 
       return TRUE;
-   }
-
-   GetHitBonus()
-   {
-      return piAttack_bonus;
    }
 
    GetDefenseBonus()

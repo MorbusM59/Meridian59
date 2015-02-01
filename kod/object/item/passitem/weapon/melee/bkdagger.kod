@@ -436,7 +436,7 @@ messages:
 
    % Here for compatibility.  Not used.
 
-   GetHitMod(hit_roll = 0)
+   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
       return 0;
    }

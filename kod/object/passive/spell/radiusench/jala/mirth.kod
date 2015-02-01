@@ -107,17 +107,17 @@ messages:
    {
       if what = $
       {
-         return hit_roll;
+         return 0;
       }
 
       % Only affect the evil ones...
       if Send(what,@GetKarma,#detect=TRUE) < 0
       {
          % Give a small bonus
-         return hit_roll + 100;
+         return 100;
       }
 
-      return hit_roll;
+      return 0;
    }
    
    ModifyDamage(who = $,what = $,damage = $)

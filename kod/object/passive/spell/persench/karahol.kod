@@ -126,7 +126,7 @@ messages:
 
    GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
-      return hit_roll + 100 + (Send(who,@GetEnchantedState,#what=self)*2);
+      return 100 + (Send(who,@GetEnchantedState,#what=self)*2);
    }
    
    ModifyDamage(who=$,what=$,damage=$)

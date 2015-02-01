@@ -218,14 +218,16 @@ messages:
 
    GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
    {
-      local i;
+      local i, iBonus;
 
+      iBonus = 0;
+      
       for i in plSocketed
       {
-         hit_roll = Send(i,@GetHitMod,#who=self,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon);
+         iBonus = iBonus + Send(i,@GetHitMod,#who=self,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon);
       }
 
-      return hit_roll;
+      return iBonus;
    }
 
    ModifyDefenseDamage(damage=$)
