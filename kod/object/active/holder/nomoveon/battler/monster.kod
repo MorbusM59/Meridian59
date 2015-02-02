@@ -1844,7 +1844,7 @@ messages:
    }
 
    % This is the type of damage done.
-   GetDamageType(what = $)
+   GetAttackType(what = $)
    {
       return viAttack_type;
    }

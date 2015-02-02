@@ -128,7 +128,6 @@ messages:
                Send(self,@GetMaxDamage),
                Send(self,@GetProficiencyBonus),
                0,
-               0,
                100,
                100,
                0,
@@ -136,9 +135,10 @@ messages:
                0,
                0,
                0,
+               100,
                0,
                0,
-               100]
+               0];
 
       return lstats;
    }
@@ -147,11 +147,11 @@ messages:
    {
       local lstats;
 
-      lstats = [viPrimaryStat,
+      lstats = [viRange,
+               viPrimaryStat,
                viSecondaryStat,
                viAttackType,
-               viSpellType,
-               viRange]
+               viSpellType];
 
       return lstats;
    }
@@ -198,22 +198,6 @@ messages:
    "Allow mages to switch elements despite antagonistic conditions."
    {
       return TRUE;
-   }
-
-   EffectDesc(who=$)
-   {
-      AppendTempString("\n\n");
-      AppendTempString("Your current ");
-      AppendTempString(Send(self,@GetName));
-      AppendTempString(" enchantment will deal ");
-      AppendTempString(Send(self,@FindMinDamage,#who=who));
-      AppendTempString("-");
-      AppendTempString(Send(self,@FindMaxDamage,#who=who));
-      AppendTempString(" base ");
-      AppendTempString(Send(SYS,@GetSpellDamageTypeName,#type=(viSpellType & ~ATCK_SPELL_ALL)));
-      AppendTempString(" damage.");
-
-      propagate;
    }
 
 end

@@ -60,22 +60,22 @@ messages:
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   ModifyDamage(damage=0,target=$,wielder=$,lData=$)
-   "Wielder has a 1% chance of blinding target with any hit."
+   ModifyDamage(who=$,what=$,stroke_obj=$,use_weapon=$,lData=$)
+   "Wielder has a piEffect_percent% chance of stealing health with any hit."
    {
       local oSpell;
       if Random(1,100) <= piEffect_percent
       {
-         Send(wielder,@GainHealth,#amount=Bound(damage,0,8));
-         Send(wielder,@MsgSendUser,#message_rsc=vamper_worked,
-               #parm1=send(target,@GetCapDef),#parm2=Send(target,@GetName),
-               #parm3=send(target,@GetHisHer));
-         Send(target,@MsgSendUser,#message_rsc=vamper_worked_target,
-               #parm1=Send(wielder,@GetCapDef),#parm2=Send(wielder,@GetName),
-               #parm3=Send(wielder,@GetHisHer));
+         Send(who,@GainHealth,#amount=random(6,10));
+         Send(who,@MsgSendUser,#message_rsc=vamper_worked,
+               #parm1=send(what,@GetCapDef),#parm2=Send(what,@GetName),
+               #parm3=send(what,@GetHisHer));
+         Send(what,@MsgSendUser,#message_rsc=vamper_worked_target,
+               #parm1=Send(who,@GetCapDef),#parm2=Send(who,@GetName),
+               #parm3=Send(who,@GetHisHer));
       }
 
-      return Damage;
+      return 0;
    }
 
 

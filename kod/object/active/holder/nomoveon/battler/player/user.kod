@@ -4990,7 +4990,7 @@ messages:
       % If our enemy is an actual player, we're adding a little fudge factor to 
       % account for lag drift, etc. but not for ranged weapons.
       if IsClass(what,&User) AND Send(what,@HasMovedRecently)
-         AND NOT IsClass(use_weapon,&RangedWeapon))
+         AND NOT IsClass(use_weapon,&RangedWeapon)
       {
          iReach = iReach + RANGE_MOVEMENT_BONUS;
       }

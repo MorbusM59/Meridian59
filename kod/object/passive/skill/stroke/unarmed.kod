@@ -71,7 +71,7 @@ messages:
      return viAttack_Type;
    }
 
-   GetAttackSpell(use_weapon=$)
+   GetSpellType(use_weapon=$)
    {
      return viSpell_type;
    }

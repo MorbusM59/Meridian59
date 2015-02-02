@@ -436,7 +436,7 @@ messages:
          bFoundProperties = TRUE;
       }
       
-      if Send(self,@GetAttackSpell) <> 0
+      if Send(self,@GetSpellType) <> 0
       {
          if NOT bFoundProperties
          {
@@ -445,7 +445,7 @@ messages:
          
          for i in Send(SYS,@GetSpellTypeList)
          {
-            if (Send(self,@GetAttackSpell) & i)
+            if (Send(self,@GetSpellType) & i)
             {
                AppendTempString("Deals ");
                AppendTempString(Send(SYS,@GetSpellDamageTypeName,#type=i));
@@ -621,7 +621,7 @@ messages:
       return 0;
    }
    
-   GetAttackSpell()
+   GetSpellType()
    {
       return 0;
    }

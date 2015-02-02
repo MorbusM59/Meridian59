@@ -159,8 +159,10 @@ messages:
          iStrokeMod, iSpecialBonus;
 
       % Get base values from the weapon.
-      iMin = Send(use_weapon,@GetMinDamage,#who=who,#what=what);
-      iMax = Send(use_weapon,@GetMaxDamage,#who=who,#what=what);
+      iMin = Send(use_weapon,@GetMinDamage,#who=who,#what=what,
+         #use_weapon=use_weapon,#stroke_obj=self);
+      iMax = Send(use_weapon,@GetMaxDamage,#who=who,#what=what,
+         #use_weapon=use_weapon,#stroke_obj=self);
 
       % Pick damage at random within the base values.
       iDamage = random(iMin,iMax);

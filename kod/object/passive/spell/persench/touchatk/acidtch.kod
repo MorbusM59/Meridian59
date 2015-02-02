@@ -89,7 +89,7 @@ messages:
    {
       % Create the appropriate magic weapon.
       Send(who,@CreateMagicWeapon,#cweapon=&MagicWeaponAcid,
-      #lstats=Send(self,@GetWeaponStats,#who=who,#spellpower=iSpellPower)
+      #lstats=Send(self,@GetWeaponStats,#who=who,#spellpower=iSpellPower),
       #ltypes=Send(self,@GetWeaponTypes));
       
       propagate;

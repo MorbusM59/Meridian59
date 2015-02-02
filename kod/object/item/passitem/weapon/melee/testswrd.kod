@@ -41,11 +41,6 @@ classvars:
    vrIcon = testsword_icon_rsc
    vrDesc = testsword_desc_rsc
 
-   % viWeaponType and viWeaponQuality still check hit roll in weapon.kod, everything else is overrided here.
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_NORMAL
-
-
    viValue_average = 800
    viWeight = 80
    viBulk = 60
@@ -59,73 +54,50 @@ classvars:
 
 properties:
 
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
-   piBaseDamage = 10
    piRange = 4
-   piDisarmBonus = 0
-   piSpellModifier = 0
-   viProficiency_Needed = SKID_PROFICIENCY_SWORD
+
+   % Damage values are using high precision.
+   piMinDamage = 1000
+   piMaxDamage = 1000
+   piProficiencyBonus = 500
+   piHitMod = 0
+   piSpellpowerMod = 0
+
+   piDisarmMod = 0
+   piParryMod = 0
    
+   piStab = 100
+   piStrike = 100
+   piSlash = 100
+   piThrust = 100
+   piFire = 100
+   piTouch = 100
+
+   % The stats relevant for this weapon. Primary stat scales damage while
+   % secondary stat scales a bonus effect that varies with weapon class.
+   piPrimaryStat = STAT_MIGHT
+   piSecondaryStat = STAT_MIGHT
+
+   % The percentage of effect that primary and secondary stats add at 50.
+   piPrimaryScaling = 100
+   piSecondaryScaling = 100
+
+   piQuality = 100
+
+   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
+   piAttack_spell = 0
+
+   % Overriding.
+   viProficiency_Needed = SKID_PROFICIENCY_SWORD
+
 messages:
 
-   GetBaseDamage(who=$,target=$)
-   {
-      return piBaseDamage;
-   }
-
-   GetDamage(target=$)
-   {
-      local iDamage, i, oWeapAtt;
-
-      % First, get base damage.
-      iDamage = send(self,@GetBaseDamage,#who=poOwner,#target=target);
-
-      % Then check weapon attributes
-      %  Weapon Attributes in general should only + or - damage - no multipliers!
-      for i in plItem_Attributes
-      {
-         oWeapAtt = send(SYS,@FindItemAttByNum,#num=send(self,@GetNumFromCompound,#compound=first(i)));
-         if isClass(oWeapAtt,&WeaponAttribute)
-         {
-            iDamage = send(oWeapAtt,@ModifyDamage,#damage=iDamage,#wielder=poOwner,
-                           #target=target,#lData=i);
-         }
-      }
-
-      iDamage = iDamage + piDamageBonus;
-
-      % send(send(poOwner,@getOwner),@SomeoneSaid,#what=self,#type=SAY_RESOURCE,
-      %      #string=weapon_do_damage,#parm1=iDamage,#parm2=baseDamage);
-
-      return iDamage;
-   }
-
-   GetRange()
-   {
-      return piRange;
-   }
-   
-   GetDisarmBonus()
-   {
-      return piDisarmBonus;
-   }
-
-   GetBaseSpellModifier()
-   {
-      return piSpellModifier;
-   }
-   
-   GetWeaponSkill()
-   {
-      return viProficiency_Needed;
-   }
-   
    ChangeWeaponSkill(what=SKID_PROFICIENCY_SWORD)
    {
       % Defaults to fencing
       
       viProficiency_Needed = what;
-	  return viProficiency_Needed;
+      return viProficiency_Needed;
    }
 
    SetWeaponDamageType(what=$)
@@ -156,63 +128,9 @@ messages:
       {
          piAttack_type = ATCK_WEAP_MAGIC+ATCK_WEAP_THRUST;
       }
-	  
+
       return piAttack_type;
    }
-  
-   GetMinDamage()
-   {
-      return Send(self,@GetDamage);
-   }
 
-   GetMaxDamage()
-   {
-      return Send(self,@GetDamage);
-   }
-   
-   GetMinDamageWithOwnerStats()
-   {
-      local iDamage, oSkill;
-
-      iDamage = Send(self,@GetMinDamage)*100;
-
-      If IsClass(poOwner,&User)
-      {
-         oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
-      }
-      else
-      {
-         return 0;
-      }
-      
-      return iDamage;
-   }
-   
-   GetMaxDamageWithOwnerStats()
-   {
-      local iDamage, oSkill;
-      
-      iDamage = Send(self,@GetMaxDamage)*100;
-      
-      If IsClass(poOwner,&User)
-      {
-         oSkill = Send(SYS,@FindSkillByNum,#num=Send(self,@GetDefaultStrokeNumber));
-         iDamage = Send(oSkill,@DamageFactors,#damage=iDamage,#who=poOwner,#use_weapon=self)/100;
-      }
-      else
-      {
-         return 0;
-      }
-      
-      return iDamage;
-   }
-   
-   GetAttackType()
-   {
-      return piAttack_type;
-   }
-	  
-	  
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

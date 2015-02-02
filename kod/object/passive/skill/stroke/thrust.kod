@@ -34,10 +34,12 @@ classvars:
 
    viSchool = SKS_FENCING
    viSkill_Num = SKID_THRUST
-   viSkill_level = 50
-   viChance_to_increase = 12
+   viSkill_level = 1
+   viChance_to_increase = 20
+   viMeditate_ratio = 30
 
-   viskillExertion = 500
+   viskillExertion = 2
+   vbCheck_exertion = FALSE
 
 properties:
 
@@ -45,19 +47,5 @@ properties:
 
 messages:
 
-   GetAttackType(use_weapon=$)
-   {
-     local i;
-
-     i= send(use_weapon,@getAttackType);
-
-     if (i & ATCK_WEAP_SLASH) and not (i & ATCK_WEAP_Thrust)
-       {
-          i = i & (~ATCK_WEAP_SLASH);
-          i = (i | ATCK_WEAP_Thrust);
-       }
-
-     return i;
-   }
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

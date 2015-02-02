@@ -78,7 +78,7 @@ messages:
 
       ptLongevity = CreateTimer(self,@WeaponExpires,iLongevity);
 
-      Send(self,@SetSpellFlag,#flag=ATCK_SPELL_HOLY,#value=TRUE);
+      Send(self,@SetSpellType,#flag=ATCK_SPELL_HOLY,#value=TRUE);
 
       propagate;
    }

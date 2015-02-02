@@ -588,10 +588,10 @@ messages:
          }
 
          iDamage = Send(what,@AssessDamage,#what=self,#damage=iDamage,
-            #atype=Send(self,@GetDamageType),#aspell=Send(self,@GetSpellType),
+            #atype=Send(use_weapon,@GetAttackType),#aspell=Send(use_weapon,@GetSpellType),
             #scalefactor=iScalefactor,#precision=TRUE);
 
-         Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#damage=iDamage);
+         Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,#use_weapon=use_weapon,#damage=iDamage);
 
          if iDamage = $
          {
@@ -640,7 +640,7 @@ messages:
       return 0;
    }
 
-   GetDamageType(what = $)
+   GetAttackType(what = $)
    "Returns the weapon type of damage done."
    {
       % Default type for the stub function.
@@ -1144,7 +1144,7 @@ messages:
       return 0;
    }
 
-   AssessHit(what = $, stroke_obj = $, damage = $, use_weapon=$)
+   AssessHit(what = $, stroke_obj = $, use_weapon=$, damage = $)
    "This does the fallout of a hit, gives appropriate message, etc.  "
    "Called on self when hit opponent."
    {
@@ -1154,13 +1154,13 @@ messages:
 
       % Spell types are usually represented by negative values, to
       %  differentiate between physical and spell damage.
-      iType = Send(self,@GetSpellType,#use_weapon=use_weapon);
+      iType = Send(use_weapon,@GetSpellType,#use_weapon=use_weapon);
 
       % We only want to use a unique word if the spell damage is NOT generic
       %  or Hunter sword damage.  Otherwise, use the physical damage type.
       if (iType & (~ATCK_SPELL_HUNTERSWORD | ~ATCK_SPELL_ALL)) = 0
       {
-         iType = Send(self,@GetDamageType,#use_weapon=use_weapon);
+         iType = Send(use_weapon,@GetAttackType);
       }
       else
       {

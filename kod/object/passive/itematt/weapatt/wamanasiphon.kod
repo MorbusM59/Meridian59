@@ -67,7 +67,7 @@ messages:
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   ModifyDamage(damage=0,target=$,wielder=$,lData=$)
+   ModifyDamage(who=$,what=$,stroke_obj=$,use_weapon=$,lData=$)
    {
       local oSpell,iAmountTaken,iAmountGiven,iProficiency;
 
@@ -76,19 +76,19 @@ messages:
          iAmountTaken = Random(piMinManaStolen,piMaxManaStolen);
          iAmountGiven = iAmountTaken * piSiphonFactor / 100;
       
-         Send(wielder,@GainMana,#amount=iAmountGiven,
+         Send(who,@GainMana,#amount=iAmountGiven,
                #bCapped=TRUE,#bRespectMax=TRUE);
-         Send(wielder,@MsgSendUser,#message_rsc=siphon_worked,
-               #parm1=send(target,@GetCapDef),#parm2=Send(target,@GetName),
-               #parm3=send(target,@GetHisHer));
+         Send(who,@MsgSendUser,#message_rsc=siphon_worked,
+               #parm1=send(what,@GetCapDef),#parm2=Send(what,@GetName),
+               #parm3=send(what,@GetHisHer));
 
-         Send(target,@LoseMana,#amount=iAmountTaken);
-         Send(target,@MsgSendUser,#message_rsc=siphon_worked_target,
-               #parm1=Send(wielder,@GetCapDef),#parm2=Send(wielder,@GetName),
-               #parm3=Send(wielder,@GetHisHer));
+         Send(what,@LoseMana,#amount=iAmountTaken);
+         Send(what,@MsgSendUser,#message_rsc=siphon_worked_target,
+               #parm1=Send(who,@GetCapDef),#parm2=Send(who,@GetName),
+               #parm3=Send(who,@GetHisHer));
       }
 
-      return damage;
+      return 0;
    }
 
    ItemReqUse(oItem=$,oPlayer=$)

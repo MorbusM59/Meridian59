@@ -240,7 +240,7 @@ messages:
                continue;
             }
             iDamage = Send(i,@AssessDamage,#what=who,#damage=iDamage,#atype=viAttack_type,
-                           #aspell=Send(self,@GetAttackSpell),#absolute=pbAbsolute,#precision=TRUE);
+                           #aspell=Send(self,@GetSpellType),#absolute=pbAbsolute,#precision=TRUE);
             if iDamage = $
             {
                if IsClass(who,&Room)
@@ -264,7 +264,7 @@ messages:
          else
          {
             iDamage = Send(i,@AssessDamage,#what=who,#damage=iDamage,
-                        #atype=viAttack_type,#aspell=Send(self,@GetAttackSpell),
+                        #atype=viAttack_type,#aspell=Send(self,@GetSpellType),
                         #absolute=pbAbsolute,#precision=TRUE);
          }
 
@@ -301,7 +301,7 @@ messages:
       return iDamage;
    }
 
-   GetAttackSpell()
+   GetSpellType()
    {
       return viAttack_spell;
    }

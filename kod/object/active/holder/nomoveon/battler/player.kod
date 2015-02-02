@@ -949,7 +949,7 @@ properties:
    % (8)SP, (9)[skillmods], (10)[spellmods]]
    % [skillmods] = [skillnum,skillmod]
    % [spellmods] = [spellnum,spellmod]
-   plCombat_mods = [0,0,0,0,0,0,0,0,$,$]
+   plCombat_mods = $
    
    % This dummy weapon represents the player's fists and allows us to treat
    % unarmed attacks like any other weapon attack.
@@ -1080,6 +1080,10 @@ messages:
       piTimeLastStomachUpdate = GetTime();
       piReward_timestamp = GetTime();
       Send(self,@CreateMartialWeapon,#cweapon=&Fist);
+      
+      % Initialize the character with a clean list of combatmods.
+      plCombat_mods = [0,0,0,0,0,0,0,0,$,$];
+      
 
       propagate;
    }
@@ -2570,6 +2574,9 @@ messages:
       % percent stomach is full
       piStomach = 0;
       piTimeLastStomachUpdate = 0;
+      
+      % Reset their combatmods.
+      plCombat_mods = [0,0,0,0,0,0,0,0,$,$];
 
       piKill_count = 0;
       piKill_count_decay = 0;
@@ -3437,78 +3444,6 @@ messages:
       {
          Send(self,@ShowAddEnchantment,#what=Send(SYS,@FindSpellByNum,
             #num=SID_CRYSTALIZE_MANA),#type=ENCHANTMENT_PLAYER);
-      }
-
-      return;
-   }
-
-   AddAttackModifier(what = $)
-   "Adds <what> to plAttack_modifiers, which can modify attack "
-   "strength and damage."
-   {
-      plAttack_modifiers = Cons(what,plAttack_modifiers);
-      Post(self,@DrawOffense);
-
-      return;
-   }
-
-   RemoveAttackModifier(what = $)
-   "Removes <what> from plAttack_modifiers."
-   {
-      local i;
-
-      for i in plAttack_modifiers
-      {
-         if i = what
-         {
-            plAttack_modifiers = DelListElem(plAttack_modifiers,i);
-            Post(self,@DrawOffense);
-
-            return;
-         }
-      }
-
-      % Karahol's Curse can get here, because it has to remove itself when
-      % done, because it doesn't know if it was a normal ending or a
-      % user-quit ending.
-
-      return;
-   }
-
-   AddDefenseModifier(what = $)
-   "Adds <what> to plDefense_modifiers, which can modify defense strength "
-   "and damage."
-   {
-      plDefense_modifiers = Cons(what,plDefense_modifiers);
-      Post(self,@DrawDefense);
-      Post(self,@DrawArmor);
-
-      return;
-   }
-
-   RemoveDefenseModifier(what = $)
-   "Removes <what> from plDefense_modifiers."
-   {
-      local i, bFound;
-
-      bFound = FALSE ;
-      for i in plDefense_modifiers
-      {
-         if i = what
-         {
-            plDefense_modifiers = DelListElem(plDefense_modifiers,i);
-            Post(self,@DrawDefense);
-            Post(self,@DrawArmor);
-            bFound = TRUE;
-
-            return;
-         }
-      }
-
-      if NOT bFound
-      {
-         Debug(self,"Tried to remove defense modifier",what,"but not in list",
-               plDefense_modifiers);
       }
 
       return;
@@ -4465,7 +4400,7 @@ messages:
       Send(self,@CommandMinionAttack,#oMaster=self,#oTarget=what);
 
       % Now that the formalities are out of the way, do the animation thing.
-      Send(stroke_obj,@DoAnimation,#who=self)
+      Send(stroke_obj,@DoAnimation,#who=self);
 
       % Switching targets?
       % Do this before paying skill costs, otherwise projectiles
@@ -4679,8 +4614,8 @@ messages:
       % If we're using a ranged weapon and don't have a clear line of sight,
       %  then half our offense.
       if what <> $
-         AND oWeapon <> $
-         AND IsClass(oWeapon,&RangedWeapon)
+         AND use_weapon <> $
+         AND IsClass(use_weapon,&RangedWeapon)
          AND NOT Send(poOwner,@LineOfSight,#obj1=self,#obj2=what)
          AND NOT (IsClass(self,&DM) AND Send(self,@PlayerIsImmortal))
       {
@@ -4693,7 +4628,7 @@ messages:
 
    GetDefense(what=$,stroke_obj=$,use_weapon=$)
    {
-      local i, oWeapon, oShield, iParry, iDodge, iBlock, iAgility,
+      local i, oShield, iParry, iDodge, iBlock, iAgility,
             iDefense, iHealth, oMonster;
 
       % Get our defensive abilities.
@@ -4726,7 +4661,7 @@ messages:
    % player for defense, used in battler for defense messages.
    GetParryAbility(stroke_obj=$)
    {
-      local oWeapon, oMonster;
+      local iMod, oMonster;
 
       % Morphed?
       oMonster = Send(self,@GetIllusionForm);
@@ -4735,16 +4670,15 @@ messages:
          return Send(oMonster,@GetParryAbility,#stroke_obj=stroke_obj);
       }
 
-      oWeapon = Send(self,@GetWeapon);
-      if oWeapon = $
-         OR NOT Send(Send(sys,@FindSkillByNum,#num=SKID_PARRY),
-                     @CanPayCosts,#who=self)
-         OR (stroke_obj <> $ AND NOT Send(stroke_obj,@CanParry))
+      if NOT Send(Send(sys,@FindSkillByNum,#num=SKID_PARRY),@CanPayCosts,#who=self)
+         OR NOT Send(stroke_obj,@CanParry)
       {
          return 0;
       }
 
-      return Send(oWeapon,@GetParryAbility,#who=self);
+      iMod = Send(Send(self,@GetWeapon),@GetParryMod);
+
+      return Send(self,@GetSkillAbility,#skill_num=SKID_PARRY)*(100+iMod)/100;
    }
 
    GetBlockAbility(stroke_obj=$)
@@ -4805,7 +4739,6 @@ messages:
       % Stroke sets damage
       iDamage = Send(stroke_obj,@FindDamage,#use_weapon=use_weapon,#who=self,#what=what); 
 
-
       % If we are morphed, we take the monster's damage instead.
       oMonster = Send(self,@GetIllusionForm);
       if oMonster <> $ AND Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED)
@@ -4822,17 +4755,17 @@ messages:
       iStrokeNum = Send(stroke_obj,@GetSkillNum);
       if iStrokeNum = SKID_FIRE
       {
-         iDamage = iDamage * Nth(plCombat_mods,6)/1000;
+         iDamage = iDamage + iDamage * Nth(plCombat_mods,6)/100;
       }
       
       if iStrokeNum = SKID_TOUCH
       {
-         iDamage = iDamage * Nth(plCombat_mods,7)/1000;
+         iDamage = iDamage + iDamage * Nth(plCombat_mods,7)/100;
       }
       
       if iStrokeNum <> SKID_FIRE AND iStrokeNum <> SKID_TOUCH
       {
-         iDamage = iDamage * Nth(plCombat_mods,5)/1000;
+         iDamage = iDamage + iDamage * Nth(plCombat_mods,5)/100;
       }
 
       iDamage = iDamage + Send(Send(SYS,@GetParliament),@GetFactionDamageBonus,#who=self);
@@ -4841,14 +4774,14 @@ messages:
    }
 
    % This is the type of damage done.
-   GetDamageType(what = $, use_weapon = $)
+   GetAttackType(what = $, use_weapon = $)
    {
-         return Send(oWeapon,@GetAttackType);
+         return Send(use_weapon,@GetAttackType);
    }
 
    GetSpellType(what = $, use_weapon = $)
    {
-      return Send(oWeapon,@GetAttackSpell);
+      return Send(use_weapon,@GetSpellType);
    }
 
    AssessHit(what = $, stroke_obj = $, damage = $)
@@ -4889,7 +4822,7 @@ messages:
       scalefactor=1000,report=TRUE,report_resistance=TRUE,absolute=FALSE,
       precision=FALSE)
    {
-      local i, j, iResistance, oSoldierShield, gainchance, color_rsc, iArmor
+      local i, j, iResistance, oSoldierShield, gainchance, color_rsc, iArmor,
             iDuration, oSpell, oGort,iLimit, origdamage, shrunken;
 
       if NOT precision
@@ -5060,7 +4993,7 @@ messages:
       if Send(self,@GetSkillAbility,#Skill_num=SKID_DISARM) > 0
       {
          Send(Send(SYS,@FindSkillByNum,#num=SKID_DISARM),@DoSkill,#who=self,
-            #oTarget=what,#oWeapon=use_weapon);
+            #what=what,#use_weapon=use_weapon);
       }
 
       if amount > 0
@@ -5081,7 +5014,7 @@ messages:
    % Returns weapon used.
    GetWeapon()
    {
-      local oWeapon;
+      local oWeapon, oMonster;
 
       oWeapon = Send(self,@LookupPlayerWeapon);
       
@@ -5108,7 +5041,7 @@ messages:
    }
 
    % Functions dealing with a player's magic and martial weapons.
-   CreateMartialWeapon(cweapon=$,lstats=$)
+   CreateMartialWeapon(cweapon=$,lstats=$,ltypes=$)
    {
       if poMartial_weapon <> $
       {
@@ -5165,20 +5098,9 @@ messages:
    % This keeps track of the weapon swings.
    SwingWeapon(times=1)
    {
-      local oWeapon, iProfNum;
+      local iProfNum;
 
-      oWeapon = Send(self,@LookupPlayerWeapon);
-
-      if oWeapon <> $
-      {
-         % Get weapon's numbers.
-         iProfNum = Send(oWeapon,@GetProfNumber,#who=self);
-      }
-      else
-      {
-         % Unarmed or touch attacks.
-         iProfNum = SKID_BRAWLING;
-      }
+      iProfNum = Send(Send(self,@GetWeapon),@GetProfNum);
 
       if iProfNum <> (piWeaponInfo MOD 1000)
       {
@@ -11013,31 +10935,9 @@ messages:
 
       Send(self,@EndCrystalizeManaSurge);
 
-      % All attack modifiers should be a room enchantment, a personal
-      % enchantment or something they are wearing. If one still exists,
-      % bug.  This is also true for defense modifiers and resistances.
-      if plAttack_modifiers <> $
-      {
-         for i in plAttack_modifiers
-         {
-            Debug("Recalibrating: player",Send(self,@GetTrueName),self,
-                  "still had attmod",Send(i,@GetName));
-         }
-
-         plAttack_modifiers = $;
-      }
-
-      if plDefense_modifiers <> $
-      {
-         for i in plDefense_modifiers
-         {
-            Debug("Recalibrating: player",Send(self,@GetTrueName),self,
-                  "still had defmods",Send(i,@GetName));
-         }
-         
-         plDefense_modifiers = $;
-      }
-
+      % Reset their combat mods.
+      plCombat_mods = [0,0,0,0,0,0,0,0,$,$];
+      
       if plResistances <> $
       {
          for i in plResistances
@@ -13823,24 +13723,7 @@ messages:
 
    SumDamageReduction()
    {
-      local iArmor, d;
-
-      iArmor = 0;
-
-      for d in plDefense_modifiers
-      {
-         if IsClass(d,&DefenseModifier)
-         {
-            iArmor = iArmor + Send(d,@GetDamageReduction);
-         }
-
-         if IsClass(d,&ArmorOfGort)
-         {
-            iArmor = iArmor + (Send(self,@GetEnchantedState,#what=d) / 25);
-         }
-      }
-
-      return iArmor;
+      return Nth(plCombat_mods,3);
    }
 
    CanEvilTwin()
