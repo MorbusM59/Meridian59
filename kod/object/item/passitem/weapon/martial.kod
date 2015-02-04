@@ -29,28 +29,6 @@ properties:
 
 messages:
 
-   GetProf(who=$)
-   {
-      Send(who,@FlipSkillAtrophyFlag,#SKID=viProficiency_needed);
-
-      return Send(who,@GetSkillAbility,#skill_num=viProficiency_needed);
-   }
-
-   GetProfNumber()
-   {
-      return viProficiency_needed;
-   }
-
-   GetStroke(who=$)
-   {
-      return Send(who,@GetSkillAbility,#skill_num=Send(self,@GetDefaultStrokeNumber));
-   }
-
-   GetDefaultStrokeNumber()
-   {
-      return SKID_PUNCH;
-   }
-
    % Fists don't break.
    WeaponHitTarget()
    {

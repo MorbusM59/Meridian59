@@ -71,7 +71,7 @@ classvars:
    
    viProficiencyBonus = 500
 
-   viRange = 2
+   viRange = 128
 
    viAttackType = ATCK_WEAP_UNARMED+ATCK_WEAP_PUNCH
    viSpellType = 0          

@@ -4975,28 +4975,34 @@ messages:
 
    UserAttack(what=$)
    {
-      local use_weapon, iReach, iSquaredDistance, stroke_obj;
+      local use_weapon, iRange, iSquaredDistance, stroke_obj;
 
       % Let's gather some basic information first:
       % What weapon do we want to attack with?
       use_weapon = Send(self,@GetWeapon);
 
-      % How far can our weapon reach?
-      iReach = Send(use_weapon,@GetRange);
+      iRange = Send(use_weapon,@GetRange);
 
-      % How far is our target away (squared)?
+      % For melee weapons, we determine the weapon stroke based on our distance
+      % to the target. For greater accuracy, we use fine grid. This means that
+      % we have to make sure we are reasonably close to our target first. If we
+      % are further than 5 units away, feed GetStrokeObject max melee distance
+      % instead.
       iSquaredDistance = Send(self,@SquaredDistanceTo,#what=what);
-
-      % If our enemy is an actual player, we're adding a little fudge factor to 
-      % account for lag drift, etc. but not for ranged weapons.
-      if IsClass(what,&User) AND Send(what,@HasMovedRecently)
-         AND NOT IsClass(use_weapon,&RangedWeapon)
+      
+      if iSquaredDistance < 25
       {
-         iReach = iReach + RANGE_MOVEMENT_BONUS;
+         iSquaredDistance = Send(self,@SquaredFineDistanceTo,#what=what);
+      }
+      else
+      {
+         iSquaredDistance = 102400;
       }
 
-      % Ask our weapon what stroke we are using based on the target's distance.
-      stroke_obj =  Send(use_weapon,@GetStrokeObject,#squareddistance=iSquaredDistance);
+      % Ask our weapon what stroke we are using based on the target's distance
+      % and the range of our weapon.
+      stroke_obj = Send(use_weapon,@GetStrokeObject,
+                     #squareddistance=iSquaredDistance,#range=iRange);
 
       % Now that that's out of the way, let's go through various checks to see
       % whether we are actually eligible to attack our target. Please answer the
@@ -5053,8 +5059,8 @@ messages:
          return FALSE;
       }
 
-      % Is our target close enough?
-      if NOT Send(self,@TargetWithinSightAndRange,#oTarget=what,#iRange=iReach,
+      % Can we even hit our target from here?
+      if NOT Send(self,@TargetWithinSightAndRange,#oTarget=what,#iRange=iRange,
                   #use_weapon=use_weapon,#stroke_obj=stroke_obj)
       {
          return FALSE;
@@ -7376,9 +7382,11 @@ messages:
    
    SendStatOffense()
    {
-      local iOffense_send;
-      
-      iOffense_send = Send(self,@GetOffense);
+      local iOffense_send, oWeapon;
+
+      oWeapon = Send(self,@GetWeapon);
+      iOffense_send = Send(self,@GetOffense,#use_weapon=oWeapon,
+         #stroke_obj=Send(oWeapon,@GetStrokeObject));
       
       AddPacket(1,10, 4,user_stat_offense, 1,STAT_VALUE, 1,STAT_INTEGER,
                 4,iOffense_send, 4,0, 4,1000, 4,iOffense_send);

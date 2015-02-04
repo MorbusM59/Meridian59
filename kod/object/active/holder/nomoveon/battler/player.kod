@@ -943,22 +943,6 @@ properties:
    % Default strength of light source at player is 5
    piLight = 5
 
-   % List of the items combat modifiers. The list has the following structure:
-   % [(1)Defense,(2)Offense,(3)Armor,(4)Warding,
-   % (5)MeleeDamage,(6)RangedDamage, (7)MagicDamage,
-   % (8)SP, (9)[skillmods], (10)[spellmods]]
-   % [skillmods] = [skillnum,skillmod]
-   % [spellmods] = [spellnum,spellmod]
-   plCombat_mods = $
-   
-   % This dummy weapon represents the player's fists and allows us to treat
-   % unarmed attacks like any other weapon attack.
-   poMartial_weapon = $
-   
-   % This dummy weapon represents the player's active touchattack and allows us
-   % to treat touchattacks like any other weapon attack.
-   poMagic_weapon = $
-
    % Gear preferences for 'set' and 'loadout'
    plLoadout_list = $
 
@@ -1080,10 +1064,6 @@ messages:
       piTimeLastStomachUpdate = GetTime();
       piReward_timestamp = GetTime();
       Send(self,@CreateMartialWeapon,#cweapon=&Fist);
-      
-      % Initialize the character with a clean list of combatmods.
-      plCombat_mods = [0,0,0,0,0,0,0,0,$,$];
-      
 
       propagate;
    }
@@ -2574,9 +2554,20 @@ messages:
       % percent stomach is full
       piStomach = 0;
       piTimeLastStomachUpdate = 0;
-      
-      % Reset their combatmods.
-      plCombat_mods = [0,0,0,0,0,0,0,0,$,$];
+
+      % Reset the various combat mods.
+      piCombatModDefense = 0;
+      piCombatModOffense = 0;
+      piCombatModMelee = 0;
+      piCombatModRanged = 0;
+      piCombatModMagic = 0;
+      piPhysicalReductionFactor = 0;
+      piMagicalReductionFactor = 0;
+      piPhysicalReductionFlat = 0;
+      piMagicalReductionFlat = 0;
+      piBaseSpellpowerMod = 0;
+      plSkillmods = $;
+      plSpellmods = $;
 
       piKill_count = 0;
       piKill_count_decay = 0;
@@ -4473,7 +4464,7 @@ messages:
    % iRange=$ means there's no range check.
    TargetWithinSightAndRange(oTarget=$,iRange=$,use_weapon=$,stroke_obj=$)
    {
-      local iSquareRange, iDist, oTargetOwner, oFinalTarget, iAngle,
+      local iDist, oTargetOwner, oFinalTarget, iAngle,
             iRow, iCol, iTargetRow, iTargetCol;
 
       oTargetOwner = Send(oTarget,@GetOwner);
@@ -4496,8 +4487,6 @@ messages:
          oTargetOwner = Send(oFinalTarget,@GetOwner);
       }
 
-      iDist = Send(self,@SquaredDistanceTo,#what=oFinalTarget);
-
       % If we don't share the same owner, then we're not in range.
       if poOwner <> oTargetOwner
       {
@@ -4507,10 +4496,38 @@ messages:
       % See if target is within range, if we provided a range.
       if iRange <> $
       {
-         iSquareRange = iRange;
-         iSquareRange = iSquareRange * iSquareRange;
+         % If the target's a player who has moved recently, add a little fudge
+         % factor to account for lag.
+         if IsClass(oTarget,&User) AND Send(oTarget,@HasMovedRecently)
+         {
+            iRange = iRange + RANGE_MOVEMENT_BONUS;
+         }
 
-         if iDist > iSquareRange
+         iDist = Send(self,@SquaredDistanceTo,#what=oFinalTarget);
+
+         % We can't use SquaredFineDistanceTo in all cases since it will return nil
+         % if we stand too far apart. Hence we limit its use to slightly extended
+         % melee distance. Since viRange in weapon.kod uses fine grain, we need to
+         % convert our range to low accuracy if we leave the melee zone. As ranged
+         % weapons aren't using fine grain, we assign them max distance in the melee
+         % zone instead.
+         if iDist < 25
+         {
+            iDist = Send(self,@SquaredFineDistanceTo,#what=oFinalTarget);
+            if IsClass(use_weapon,&RangedWeapon)
+            {
+               iRange = 320;
+            }
+         }
+         else
+         {
+            if NOT IsClass(use_weapon,&RangedWeapon)
+            {
+               iRange = iRange / 64;
+            }
+         }
+         
+         if iDist > iRange * iRange
          {
             Send(self,@SendAttackOutOfRangeMessage,#what=oFinalTarget,
                  #use_weapon=use_weapon,#stroke_obj=stroke_obj);
@@ -4587,7 +4604,7 @@ messages:
       local i, iStroke, iProficiency, iAim, iOffense, oMonster, lRadiusState;
 
       % Figure out the relevant skill levels.
-      iStroke = Send(self,@GetSkillAbility,#skill_num=Send(use_weapon,@GetStrokeNum));
+      iStroke = Send(stroke_obj,@GetAbility,#who=self);
       iProficiency = Send(self,@GetSkillAbility,#skill_num=Send(use_weapon,@GetProfNum));
       iAim = Send(self,@GetAim);
       
@@ -4605,9 +4622,8 @@ messages:
          iOffense = Send(oMonster,@GetOffense,#what=what);
       }
 
-      % Check for any modification to our offense rating. Offense is the 2nd 
-      % element of plCombat_mods.
-      iOffense = iOffense * Nth(plCombat_mods,2) / 1000;
+      % Check for any modification to our offense rating. 
+      iOffense = iOffense + iOffense * piCombatModOffense;
 
       iOffense = iOffense + Send(Send(SYS,@GetParliament),@GetFactionHitrollBonus,#who=self);
 
@@ -4647,9 +4663,8 @@ messages:
          iDefense = Send(oMonster,@GetDefense,#what=what,#stroke_obj=stroke_obj);
       }
 
-      % Check for any modification to our defense rating. Defense is the 1st 
-      % element of plCombat_mods.
-      iDefense = iDefense * First(plCombat_mods) / 1000;
+      % Check for any modification to our defense rating.
+      iDefense = iDefense + iDefense * piCombatModDefense;
 
       iDefense = iDefense + Send(Send(SYS,@GetParliament),@GetFactionDefenseBonus,#who=self);
 
@@ -4671,7 +4686,7 @@ messages:
       }
 
       if NOT Send(Send(sys,@FindSkillByNum,#num=SKID_PARRY),@CanPayCosts,#who=self)
-         OR NOT Send(stroke_obj,@CanParry)
+         OR ((stroke_obj <> $) AND NOT Send(stroke_obj,@CanParry))
       {
          return 0;
       }
@@ -4695,8 +4710,7 @@ messages:
 
       oShield = Send(self,@LookupPlayerShield);
       if oShield = $
-         OR NOT Send(Send(sys,@FindSkillByNum,#num=SKID_BLOCK),
-                     @CanPayCosts,#who=self)
+         OR NOT Send(Send(sys,@FindSkillByNum,#num=SKID_BLOCK),@CanPayCosts,#who=self)
          OR ((stroke_obj <> $) AND NOT Send(stroke_obj,@CanBlock))
       {
          return 0;
@@ -4735,9 +4749,8 @@ messages:
    {
       local iDamage, oMonster, iStrokeNum;
 
-      % Currently considers the damage of the weapon and player's might.
-      % Stroke sets damage
-      iDamage = Send(stroke_obj,@FindDamage,#use_weapon=use_weapon,#who=self,#what=what); 
+      % Ask the stroke, which asks the weapon, each modifying damage accordingly.
+      iDamage = Send(stroke_obj,@GetDamage,#use_weapon=use_weapon,#who=self,#what=what);
 
       % If we are morphed, we take the monster's damage instead.
       oMonster = Send(self,@GetIllusionForm);
@@ -4747,30 +4760,66 @@ messages:
       }
 
       % Check for damage modification. 
-      % Melee damage is the 5th element, ranged damage the 6th and magic damage
-      % the 7th element of plCombat_mods. We check the stroke to see which damage
-      % modification is applicable. Fire is modified by ranged damage while touch
-      % is modified by magic damage. All other strokes are modified by melee damage.
 
       iStrokeNum = Send(stroke_obj,@GetSkillNum);
       if iStrokeNum = SKID_FIRE
       {
-         iDamage = iDamage + iDamage * Nth(plCombat_mods,6)/100;
+         iDamage = iDamage + iDamage * piCombatModRanged;
       }
       
       if iStrokeNum = SKID_TOUCH
       {
-         iDamage = iDamage + iDamage * Nth(plCombat_mods,7)/100;
+         iDamage = iDamage + iDamage * piCombatModMagic;
       }
       
       if iStrokeNum <> SKID_FIRE AND iStrokeNum <> SKID_TOUCH
       {
-         iDamage = iDamage + iDamage * Nth(plCombat_mods,5)/100;
+         iDamage = iDamage + iDamage * piCombatModMelee;
       }
 
       iDamage = iDamage + Send(Send(SYS,@GetParliament),@GetFactionDamageBonus,#who=self);
 
       return iDamage;
+   }
+
+   GetDamageReduction(damage=0,atype=0,aspell=0)
+   {
+      local iRedFlat, iRedFactor, oGort, iGort;
+
+      % Armor of Gort may limit the initial damage.
+      oGort = Send(SYS,@FindSpellByNum,#Num=SID_ARMOR_OF_GORT);
+      if Send(self,@IsEnchanted,#what=oGort)
+      {
+         iGort = Send(oGort,@PriorityModifyDefenseDamage,
+            #damage=damage,#atype=atype,#aspell=aspell);
+      }
+      else
+      {
+         iGort = 0;
+      }
+
+      damage = damage - iGort;
+      
+      % Reduce damage based on our damage reduction values.
+      iRedFactor = 0;
+      iRedFlat = 0;
+      if aspell <> 0 AND atype <> 0 
+      {
+         iRedFactor = (piPhysicalReductionFactor + piMagicalReductionFactor) / 2;
+         iRedFlat = (piPhysicalReductionFlat + piMagicalReductionFlat) / 2;
+      }
+      if aspell <> 0 AND atype = 0 
+      {
+         iRedFactor = piMagicalReductionFactor;
+         iRedFlat = piMagicalReductionFlat;
+      }
+      if aspell = 0 AND atype <> 0 
+      {
+         iRedFactor = piPhysicalReductionFactor;
+         iRedFlat = piPhysicalReductionFlat;
+      }
+
+      return  bound(damage*iRedFactor/1000+iRedFlat+iGort,0,damage);
    }
 
    % This is the type of damage done.
@@ -4818,12 +4867,12 @@ messages:
    % calculations. Most notably, damage from attackspells and melee is now 
    % handled with high precision. Eventually, all damage calculations should 
    % be handled in high precision mode.
-   AssessDamage(what=$,damage=$,atype=0,aspell=0,stroke_obj=$,
+   AssessDamage(what=$,damage=0,reduction=$,atype=0,aspell=0,stroke_obj=$,
       scalefactor=1000,report=TRUE,report_resistance=TRUE,absolute=FALSE,
       precision=FALSE)
    {
-      local i, j, iResistance, oSoldierShield, gainchance, color_rsc, iArmor,
-            iDuration, oSpell, oGort,iLimit, origdamage, shrunken;
+      local origdamage, i, iResistance, oSoldierShield, color_rsc, iLimit,
+         shrunken;
 
       if NOT precision
       {
@@ -4841,29 +4890,15 @@ messages:
 
       if NOT absolute
       {
-         % Armor of Gort has a special effect that must go first
-         oGort = Send(SYS,@FindSpellByNum,#Num=SID_ARMOR_OF_GORT);
-         if Send(self,@IsEnchanted,#what=oGort)
+         % If damage reduction hasn't already been handled, handle it now.
+         if reduction = $
          {
-            damage = Send(oGort,@PriorityModifyDefenseDamage,#who=self,
-               #what=what,#damage=damage,#atype=atype,#aspell=aspell);
-         }
-         
-         % Subtract the player's armor. If the damage dealt is part spell
-         % damage, only subtract half of the armor value. If it is pure spell
-         % damage, armor won't help at all.
-         iArmor = Nth(plCombat_mods,3);
-         if aspell <> 0 
-         {
-            iArmor = iArmor / 2;
-         }
-         if atype = 0 
-         {
-            iArmor = 0;
+            reduction = Send(what,@GetDamageReduction,#damage=damage,
+            #atype=atype,#aspell=aspell);
          }
 
-         % No negative damage values allowed of course.
-         damage = bound(damage - iArmor,0,$);
+         % Reduction is capped to be no greater than damage.
+         damage = damage - reduction;
 
          iResistance = Send(self,@ResistanceCheck,#atype=atype,#aspell=aspell);
 
@@ -5014,87 +5049,20 @@ messages:
    % Returns weapon used.
    GetWeapon()
    {
-      local oWeapon, oMonster;
+      local oMonster;
 
-      oWeapon = Send(self,@LookupPlayerWeapon);
-      
-      % If there is no wielded weapon, see if we have an active touch attack.
-      if oWeapon = $
-      {
-         oWeapon = poMagic_weapon;
-
-         % If there is no touch attack, he is using his fists.
-         if oWeapon = $
-         {
-            oWeapon = poMartial_weapon;
-         }
-      }
-
-      % Finally, if we are morphed, we take the monster's weapon instead.
+      % For players only, if we are morphed, we take the weapon of the monster
+      % into which we morphed instead.
       oMonster = Send(self,@GetIllusionForm);
       if (oMonster <> $) AND Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED)
       {
-         oWeapon = Send(oMonster,@GetWeapon);
+         return Send(oMonster,@GetWeapon);
       }
 
-      return oWeapon;
-   }
-
-   % Functions dealing with a player's magic and martial weapons.
-   CreateMartialWeapon(cweapon=$,lstats=$,ltypes=$)
-   {
-      if poMartial_weapon <> $
-      {
-         Send(poMartial_weapon,@Delete);
-      }
-      poMartial_weapon = Create(cweapon,#lstats=lstats,#ltypes=ltypes);
-      
-      return poMartial_weapon;
-   }
-
-   GetMartialWeapon()
-   {
-      return poMartial_weapon;
-   }
-
-   DeleteMartialWeapon()
-   {
-      if poMartial_weapon <> $
-      {
-         Send(poMartial_weapon,@Delete);
-      }
-
-      return;
-   }
-
-   CreateMagicWeapon(cweapon=$,lstats=$,ltypes=$)
-   {
-      if poMagic_weapon <> $
-      {
-         Send(poMagic_weapon,@Delete);
-      }
-      poMagic_weapon = Create(cweapon,#lstats=lstats,#ltypes=ltypes);
-      
-      return poMagic_weapon;
-   }
-
-   GetMagicWeapon()
-   {
-      return poMagic_weapon;
-   }
-
-   DeleteMagicWeapon()
-   {
-      if poMagic_weapon <> $
-      {
-         Send(poMagic_weapon,@Delete);
-      }
-
-      return;
+      propagate;
    }
 
    % The next three functions deal with weapon improvement.
-
    % This keeps track of the weapon swings.
    SwingWeapon(times=1)
    {
@@ -7018,7 +6986,7 @@ messages:
 
       iModifier = 0;
       
-      for i in Nth(plCombat_mods,10)
+      for i in plSpellmods
       {
          if First(i) = spell_num
          {
@@ -7577,7 +7545,7 @@ messages:
 
       iModifier = 0;
       
-      for i in Nth(plCombat_mods,9)
+      for i in plSkillmods
       {
          if First(i) = Skill_num
          {
@@ -10935,9 +10903,20 @@ messages:
 
       Send(self,@EndCrystalizeManaSurge);
 
-      % Reset their combat mods.
-      plCombat_mods = [0,0,0,0,0,0,0,0,$,$];
-      
+      % Reset the various combat mods.
+      piCombatModDefense = 0;
+      piCombatModOffense = 0;
+      piCombatModMelee = 0;
+      piCombatModRanged = 0;
+      piCombatModMagic = 0;
+      piPhysicalReductionFactor = 0;
+      piMagicalReductionFactor = 0;
+      piPhysicalReductionFlat = 0;
+      piMagicalReductionFlat = 0;
+      piBaseSpellpowerMod = 0;
+      plSkillmods = $;
+      plSpellmods = $;
+
       if plResistances <> $
       {
          for i in plResistances
@@ -13723,7 +13702,7 @@ messages:
 
    SumDamageReduction()
    {
-      return Nth(plCombat_mods,3);
+      return piPhysicalReductionFlat;
    }
 
    CanEvilTwin()

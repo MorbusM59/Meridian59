@@ -17,18 +17,20 @@ constants:
    HITVALUE_MAX = 100
 
 resources:
-   stroke_name_rsc = "Weapon stroke"
+   stroke_name_rsc = "stroke"
    stroke_icon_rsc = light.bgf
    stroke_desc_rsc = "This is a weapon stroke."
 
    stroke_need_weapon_rsc = "You need a weapon to perform this stroke!"
 
-   stroke_miss_attacker = "%sYour %s misses %s%s."
-   stroke_miss_defender = "%s%s misses you."
    stroke_miss_sound = swordmis.wav
 
    stroke_hit_attacker = "%sYour %s hits %s%s."
    stroke_hit_defender = "%s%s hits you."
+
+   stroke_first_person = "hit"
+   stroke_third_person = "hits"
+   stroke_action_noun = "attack"
 
    stroke_hit_sound = patk.wav
 
@@ -46,9 +48,9 @@ classvars:
    vrPlayer_was_hit = stroke_hit_defender
    vrPlayer_killed_something = $
    vrPlayer_was_killed = $
-
-   vrMissed_Message_attacker = stroke_miss_attacker
-   vrMissed_Message_defender = stroke_miss_defender
+   vrStroke_first_person = stroke_first_person
+   vrStroke_third_person = stroke_third_person
+   vrStroke_action_noun = stroke_action_noun
    vrMiss_Sound = stroke_miss_sound
 
    viIndefinite = ARTICLE_NONE
@@ -93,7 +95,7 @@ messages:
      local prof, target_level;
 
      target_level = send(target,@GetLevel);
-     prof=send(use_weapon,@GetProfNumber);
+     prof=send(use_weapon,@GetProfNum);
 
      if random(1,100) > 60 or not send(who,@HasSkill,#num=prof)
      {
@@ -105,7 +107,7 @@ messages:
      }
      else
      {
-        if send(use_weapon,@getprof,#who=who) < 100
+        if send(who,@GetSkillAbility,#skill_num=Send(use_weapon,@GetProfNum)) < 100
           {
              % checking for weapon proficiency advancement
              send(use_weapon,@ImproveProficiency,#who=who,#target=target,#bonus=Send(who,@GetWeaponSwingBonus));
@@ -153,19 +155,18 @@ messages:
       return;
    }
 
-   FindDamage(use_weapon=$, who=$, what=$)
+   GetDamage(use_weapon=$, who=$, what=$)
    {
-      local iDamage, iMin, iMax, iSkill, iBonus, iStat, iFactor, iPower,
+      local iDamage, iDeviation, iSkill, iBonus, iStat, iFactor, iPower,
          iStrokeMod, iSpecialBonus;
 
       % Get base values from the weapon.
-      iMin = Send(use_weapon,@GetMinDamage,#who=who,#what=what,
-         #use_weapon=use_weapon,#stroke_obj=self);
-      iMax = Send(use_weapon,@GetMaxDamage,#who=who,#what=what,
-         #use_weapon=use_weapon,#stroke_obj=self);
+      iDamage = Send(use_weapon,@GetDamage,#who=who,#what=what);
 
-      % Pick damage at random within the base values.
-      iDamage = random(iMin,iMax);
+      iDeviation = Send(use_weapon,@GetDeviation);
+
+      % Pick damage at random based on the weapon's damage deviation.
+      iDamage = iDamage * (100 + random(-iDeviation,iDeviation))/100;
 
       % Factor in proficiency with the weapon.
       iSkill = Send(who,@GetSkillAbility,#Skill_num=Send(use_weapon,@GetProfNum));
@@ -186,25 +187,21 @@ messages:
       iPower = iFactor * iStat / 50 ;
       iDamage = iDamage + iDamage * iPower / 100;
 
-      % Finally, scale damage with the stroke modifier the weapon carries,
-      % factoring in the player's expertise in the stroke.
+      % Scale damage between 50 and 100% with the user's ability in the stroke.
       iSkill = Send(use_weapon,@GetStrokeAbility,#who=who,#Skill_num=viSkill_num);
+      iDamage = iDamage * (100 + iSkill) / 200;
+
+      % Finally, scale damage with the weapon's stroke modifier for the stroke
+      % we are using for this attack.
       iStrokeMod = Send(use_weapon,@GetStrokeMod,#Skill_num=viSkill_num);
-      iDamage = iDamage * (50 + (iSkill/2)) * iStrokeMod / 10000;
+      iDamage = iDamage * iStrokeMod / 100;
 
       return bound(iDamage,0,$);
    }
 
-   SendMissMessageToAttacker(who=$,victim=$,use_weapon = $,color_rsc = $,bText = TRUE)
+   SendMissSound(who=$,victim=$,use_weapon = $)
    {
       local iRoll;
-
-      %% Text messages
-      if bText
-      {
-         send(who,@msgsenduser,#message_rsc=vrMissed_Message_Attacker,#parm1=color_rsc,
-              #parm2=vrName,#parm3=send(victim,@getdef),#parm4=send(victim,@getname));
-      }
 
       %% 'miss' sound
       if IsClass(victim,&Monster) or use_weapon = $
@@ -253,14 +250,6 @@ messages:
          }
       }
       
-      return;
-   }
-
-   SendMissMessageToDefender(who=$,attacker=$)
-   {
-      send(who,@MsgSendUser,#message_rsc=vrMissed_Message_Defender,
-           #parm1=send(attacker,@getcapdef),#parm2=send(attacker,@getname));
-           
       return;
    }
 
@@ -315,6 +304,20 @@ messages:
       return stroke_hit_sound;
    }
 
+   GetStrokeFirstPerson()
+   {
+      return vrStroke_first_person;
+   }
+
+   GetStrokeThirdPerson()
+   {
+      return vrStroke_third_person;
+   }
+
+   GetActionNoun()
+   {
+      return vrStroke_action_noun;
+   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

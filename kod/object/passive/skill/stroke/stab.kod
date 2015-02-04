@@ -25,6 +25,10 @@ resources:
       "assassins and other likable folks that lurk in the shadows.  Works great "
       "with small bladed weapons."
 
+   stab_first_person = "stab at"
+   stab_third_person = "stabs at"
+   stab_action_noun = "stab"
+
 classvars:
 
    vrName = stab_name_rsc
@@ -32,6 +36,10 @@ classvars:
    vrDesc = stab_desc_rsc
 
    vrSkill_intro = stab_skill_intro
+
+   vrStroke_first_person = stab_first_person
+   vrStroke_third_person = stab_third_person
+   vrStroke_action_noun = stab_action_noun
 
    viIndefinite = ARTICLE_NONE
    viDefinite = ARTICLE_NONE

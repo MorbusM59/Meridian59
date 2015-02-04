@@ -296,8 +296,8 @@ messages:
 
       % Does the animations and overlays
       Send(self,@WeaponAttack);
-      Send(Send(SYS,@findskillbynum,#num=SKID_SLASH),@SendMissMessageToAttacker,
-           #who=poOwner,#victim=target,#use_weapon=self,#bText=FALSE);
+      Send(Send(SYS,@findskillbynum,#num=SKID_STAB),@SendMissSound,#who=poOwner,
+         #victim=target,#use_weapon=self);
 
       return;
    }

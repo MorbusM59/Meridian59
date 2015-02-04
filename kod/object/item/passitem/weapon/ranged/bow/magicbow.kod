@@ -32,8 +32,8 @@ classvars:
 properties:
 
    viWeaponDamage = 1
-   viRange = 100
-   viHit_roll_modifier = 100
+   viHitMod = 100
+   viSpellpowerMod = -10
 
    % What's the basic color of the wood?
    viBaseXLAT = XLAT_TO_SKIN4

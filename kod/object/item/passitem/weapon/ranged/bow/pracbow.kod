@@ -29,8 +29,8 @@ classvars:
    vrDesc = PracticeBow_desc_rsc
 
    viWeaponDamage = -3
-   viRange = 30
-   viHit_roll_modifier = 200
+   viRange = 20
+   viHitMod = 200
    
    viValue_average = 1750
    viBulk = 60
@@ -40,7 +40,7 @@ classvars:
    viHits_init_min = 400
    viHits_init_max = 500
 
-   viSpell_modifier = -10
+   viSpellpowerMod = -10
 
    % What's the basic color of the wood?
    viBaseXLAT = XLAT_TO_SKIN1

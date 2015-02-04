@@ -23,11 +23,20 @@ resources:
 
    touch_skill_intro = "Weaponcraft Lv. 1: The most basic way to transfer "
       "magical energy to a target."
+
+   touch_first_person = "touch"
+   touch_third_person = "touches"
+   touch_action_noun = "touch"
+
 classvars:
 
    vrName = touch_name_rsc
    vrIcon = touch_icon_rsc
    vrDesc = touch_desc_rsc
+
+   vrStroke_first_person = touch_first_person
+   vrStroke_third_person = touch_third_person
+   vrStroke_action_noun = touch_action_noun
 
    vrSkill_intro = touch_skill_intro
 
@@ -41,53 +50,11 @@ classvars:
 
    viSkill_level = 1
 
-   viMin_Damage = 2         % Damage_min here replaces a weapon    
-   viMax_Damage = 6         % Damage_max replaces the weapon's stats.
-
-   VbAutomatic = FALSE  %  If this is set to TRUE, then the effects of this
-                        %  skill happen automatically, and are not accessible
-                        %  via menu.
-
-   viAttack_Type = ATCK_WEAP_UNARMED+ATCK_WEAP_PUNCH
-
 properties:
 
 messages:
 
-   PlayerWasHitMsg(who=$,attacker=$,damage=$)
-   "The stroke may choose it's own damage give or recieve message.  Otherwise "
-   "player.kod will just choose a default - which is true for most weapon-"
-   "based combat strokes (but not true for most punch strokes or touch spells."
-   {
-      if vrPlayer_was_hit = $
-      {
-         return FALSE;
-      }
-
-      Send(who,@MsgSendUser,#message_rsc=vrPlayer_was_hit,
-           #parm1=Send(attacker,@GetCapDef),#parm2=Send(attacker,@GetName));
-           
-      return TRUE;
-   }
-
-   PlayerHitSomethingMsg(who=$,victim=$,damage=$,color_rsc=$)
-   "The stroke may choose it's own damage give or recieve message.  Otherwise "
-   "player.kod will just choose a default - which is true for most weapon-"
-   "based combat strokes (but not true for most punch strokes or touch spells."
-   {
-      if vrPlayer_hit_something = $
-      {
-         return FALSE;
-      }
-       
-      Send(who,@MsgSendUser,#message_rsc=vrPlayer_hit_something,
-           #parm1=color_rsc,#parm2=Send(victim,@GetDef),
-           #parm3=Send(victim,@GetName));
-          
-      return TRUE;
-   }
-
-   SendMissMessageToAttacker(who=$,victim=$,color_rsc=$)
+   SendMissSound(who=$,victim=$,use_weapon = $)
    {
       local iRandom, rSound;
       
@@ -118,64 +85,10 @@ messages:
       }
       
       Send(Send(who,@GetOwner),@SomethingWaveRoom,#what=who,#wave_rsc=rSound);
-      
-      % Text messages
-      if vrMissed_Message_Attacker <> $
-      {
-         Send(who,@MsgSendUser,#message_rsc=vrMissed_Message_Attacker,
-              #parm1=color_rsc,#parm2=vrName,#parm3=Send(victim,@GetDef),
-              #parm4=Send(victim,@GetName));
-              
-         return TRUE;
-      }
-      
-      return;
-   }
-
-   SendMissMessageToDefender(who=$,attacker=$)
-   {
-      if vrMissed_message_Defender <> $
-      {
-         Send(who,@MsgSendUser,#message_rsc=vrMissed_Message_Defender,
-              #parm1=Send(attacker,@GetCapDef),#parm2=Send(attacker,@GetName),
-              #parm3=vrName);
-              
-         return TRUE;
-      }
 
       return;
    }
 
-   PlayerKilledSomethingMsg(who=$,victim=$,damage=$)
-   "The stroke may choose it's own damage give or recieve message.  Otherwise"
-   "player.kod will offer the default 'You killed the whatever' message."
-   {
-       if vrPlayer_killed_Something = $
-       {
-         return FALSE ;
-       }
-       
-       Send(who,@MsgSendUser,#message_rsc=vrPlayer_killed_something,
-            #parm1=Send(victim,@GetCapDef),#parm2=Send(victim,@GetName));
-                
-       return TRUE;
-   }
-
-   PlayerWasKilledMsg(who=$,attacker=$,damage=$)
-   "The stroke may choose it's own damage give or recieve message.  Otherwise"
-   "player.kod will just choose a default - as it does for most strokes."
-   {
-       if vrPlayer_was_hit = $
-       {
-         return FALSE ;
-       }
-       
-       Send(who,@MsgSendUser,#message_rsc=vrPlayer_was_killed,
-            #parm1=Send(attacker,@GetDef),#parm2=Send(attacker,@GetName));
-            
-       return TRUE;
-   }
-   
    DoAnimation(who=$)
    "Do the cast animation."
    {
@@ -187,13 +100,6 @@ messages:
    GetHitsound()
    {
       return touchattack_hit_sound;
-   }
-
-   ImproveStroke(who=$,target=$)
-   {
-      Send(self,@ImproveAbility,#who=who,#target=target);
-      
-      return;
    }
 
 end

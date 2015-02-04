@@ -49,24 +49,24 @@ classvars:
    viBroken_group = 2
    
    % These are the default values that plStats is based on in order.
-   viMinDamage = 800
-   viMaxDamage = 1000
+   viDamage = 1000
    viProficiencyBonus = 500
    viHitMod = 0
-   viPrimaryScaling = 100
-   viSecondaryScaling = 100
-   viStab = 100
-   viStrike = 150
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 0
+   viStrike = 120
    viSlash = 80
-   viThrust = 20
-   viFire = 100
-   viTouch = 100
+   viThrust = 40
+   viFire = 0
+   viTouch = 0
    viDisarmMod = 0
    viParryMod = 0
    viSpellpowerMod = 20
+   % Fine grain: 192 = 64 * 3
+   viRange = 192
 
    % These are the default values that plTypes is based on in order.
-   viRange = 3
    viPrimaryStat = STAT_MIGHT
    viSecondaryStat = STAT_MIGHT
    viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON

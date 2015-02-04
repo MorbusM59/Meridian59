@@ -29,13 +29,12 @@ classvars:
 
    viWeaponDamage = 2
    viRange = 17
-   viHit_roll_modifier = 0
    
    viValue_average = 3000
    viBulk = 80
    viWeight = 70
 
-   viSpell_modifier = -30
+   viSpellpowerMod = -30
 
    % What's the basic color of the wood?
    viBaseXLAT = XLAT_TO_SKIN4

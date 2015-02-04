@@ -29,11 +29,6 @@ classvars:
 
 properties:
 
-   % The stats relevant for this weapon. Primary stat scales damage while
-   % secondary stat scales a bonus effect that varies with weapon class.
-   piPrimaryStat = STAT_MYSTICISM
-   piSecondaryStat = STAT_INTELLECT
-
 messages:
 
    % In the case of touchattacks, we use mysticism*2 instead of the player's

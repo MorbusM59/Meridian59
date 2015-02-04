@@ -76,30 +76,46 @@ classvars:
    vrCondition_med = weapon_condition_med 
    vrCondition_poor = weapon_condition_poor 
    vrCondition_broken = weapon_condition_broken
-
-   % These are the default values that plStats is based on in order.
-   viMinDamage = 500
-   viMaxDamage = 1000
+   
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % These are the default values that plStats is based on in order. piQuality %
+   % is calculated based on deviations from these values.                      %
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % Self explanatory. Value inflated by a factor of 100 throughout damage
+   % calculations to reduce truncation issues to a minimum.
+   viDamage = 500
+   % The amount of damage that proficiency in the weapon can add.
    viProficiencyBonus = 500
+   % This is directly added to offense rating in GetOffense.
    viHitMod = 0
-   viPrimaryScaling = 100
-   viSecondaryScaling = 100
+   % The percentage of extra damage that the weapon's primary stat will add at 50.
+   viPrimaryScaling = 30
+   % The percentage of extra effect that the weapon's secondary stat will add at 50.
+   viSecondaryScaling = 30
+   % The percentage of damage the weapon will do with the respective stroke.
    viStab = 100
    viStrike = 100
    viSlash = 100
    viThrust = 100
    viFire = 100
    viTouch = 100
+   % The percentage by which the player's ability in the skill is modified.
    viDisarmMod = 0
    viParryMod = 0
+   % The amount of spellpower the weapon adds.
    viSpellpowerMod = 0
+   % The range of the weapon in fine grain. One regular unit is split up into
+   % 64 fine grain units. 192 = 64 * 3
+   viRange = 192
 
-   % These are the default values that plTypes is based on in order.
-   viRange = 3
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % These are the default values that plTypes is based on in order.           %
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    viPrimaryStat = STAT_MIGHT
    viSecondaryStat = STAT_MIGHT
    viAttackType = 0
    viSpellType = 0
+   viDeviation = 20
    
 properties:
 
@@ -120,11 +136,11 @@ messages:
       local list, i, n, iDeviation, iQuality;
 
       % Initiate plStats and plTypes with the default values.
-      plStats = [viMinDamage,viMaxDamage,viProficiencyBonus,viHitMod,
+      plStats = [viDamage,viProficiencyBonus,viHitMod,
          viPrimaryScaling,viSecondaryScaling,viStab,viStrike,viSlash,viThrust,
-         viFire,viTouch,viDisarmMod,viParryMod,viSpellpowerMod];
+         viFire,viTouch,viDisarmMod,viParryMod,viSpellpowerMod,viRange];
 
-      plTypes = [viRange,viPrimaryStat,viSecondaryStat,viAttackType,viSpellType];
+      plTypes = [viPrimaryStat,viSecondaryStat,viAttackType,viSpellType,viDeviation];
 
       iQuality = 0;
       n = 0;
@@ -169,7 +185,7 @@ messages:
          {
             n = n + 1;
 
-            iDeviation = random(-40,20);
+            iDeviation = random(-30,15);
             
             SetNth(plstats,n,i*(100+iDeviation)/100);
             
@@ -261,32 +277,7 @@ messages:
       return vrName;
    }
 
-   GetRange()
-   {
-      return First(plTypes);
-   }
-
-   GetPrimaryStat()
-   {
-      return Nth(plTypes,2);
-   }
-
-   GetSecondaryStat()
-   {
-      return Nth(plTypes,3);
-   }
-
-   GetAttackType()
-   {
-      return Nth(plTypes,4);
-   }
-
-   GetSpellType()
-   {
-      return Nth(plTypes,5);
-   }
-
-   GetMinDamage(who=$,what=$)
+   GetDamage(who=$,what=$)
    {
       local i, oWeapAtt, iBonus;
 
@@ -303,28 +294,10 @@ messages:
       
       return First(plStats) + iBonus;
    }
-  
-   GetMaxDamage(who=$,what=$)
-   {
-      local i, oWeapAtt, iBonus;
-
-      iBonus = 0;
-
-      for i in plItem_Attributes
-      {
-         oWeapAtt = Send(SYS,@FindItemAttByNum,#num=Send(self,@GetNumFromCompound,#compound=First(i)));
-         if IsClass(oWeapAtt,&WeaponAttribute)
-         {
-            iBonus = iBonus + Send(oWeapAtt,@ModifyDamage,#who=poOwner,#what=what,#lData=i);
-         }
-      }
-      
-      return Nth(plStats,2) + iBonus;
-   }
 
    GetProficiencyBonus(who=$,what=$)
    {
-      return Nth(plStats,3);
+      return Nth(plStats,2);
    }
 
    GetHitMod(who=$,what=$,stroke_obj=$)
@@ -338,45 +311,75 @@ messages:
             iBonus = Send(oWeapAtt,@GetHitMod,#who=poOwner,#what=what,#lData=i);
          }
       }
-      return Nth(plStats,4) + iBonus;
+      return Nth(plStats,3) + iBonus;
    }
 
    GetPrimaryScaling()
    {
-      return Nth(plStats,5);
+      return Nth(plStats,4);
    }
 
    GetSecondaryScaling()
    {
-      return Nth(plStats,6);
+      return Nth(plStats,5);
    }
 
    % This is called by the stroke to retrieve the relevant modifier.
    GetStrokeMod(Skill_num=0)
    {
-      if Skill_num = SKID_STAB {  return Nth(plStats,7); }
-      if Skill_num = SKID_STRIKE {  return Nth(plStats,8); }
-      if Skill_num = SKID_SLASH {  return Nth(plStats,9); }
-      if Skill_num = SKID_THRUST {  return Nth(plStats,10); }
-      if Skill_num = SKID_FIRE {  return Nth(plStats,11); }
-      if Skill_num = SKID_TOUCH {  return Nth(plStats,12); }
+      if Skill_num = SKID_STAB {  return Nth(plStats,6); }
+      if Skill_num = SKID_STRIKE {  return Nth(plStats,7); }
+      if Skill_num = SKID_SLASH {  return Nth(plStats,8); }
+      if Skill_num = SKID_THRUST {  return Nth(plStats,9); }
+      if Skill_num = SKID_FIRE {  return Nth(plStats,10); }
+      if Skill_num = SKID_TOUCH {  return Nth(plStats,11); }
       
       return 100;
    }
 
    GetDisarmMod()
    {
-      return Nth(plStats,13);
+      return Nth(plStats,12);
    }
 
    GetParryMod()
    {
-      return Nth(plStats,14);
+      return Nth(plStats,13);
    }
 
    GetBaseSpellModifier()
    {
+      return Nth(plStats,14);
+   }
+
+   GetRange()
+   {
       return Nth(plStats,15);
+   }
+
+   GetPrimaryStat()
+   {
+      return Nth(plTypes,1);
+   }
+
+   GetSecondaryStat()
+   {
+      return Nth(plTypes,2);
+   }
+
+   GetAttackType()
+   {
+      return Nth(plTypes,3);
+   }
+
+   GetSpellType()
+   {
+      return Nth(plTypes,4);
+   }
+
+   GetDeviation()
+   {
+      return Nth(plTypes,5);
    }
 
    GetProfNum()
@@ -384,32 +387,7 @@ messages:
       return viProficiency_needed;
    }
 
-   GetStrokeNum(squareddistance=0)
-   {
-      if IsClass(self,&MagicWeapon)
-      {
-         return SKID_TOUCH;
-      }
-
-      if IsClass(self,&RangedWeapon)
-      {
-         return SKID_FIRE;
-      }
-
-      if squareddistance < 4
-      {
-         return SKID_STRIKE;
-      }
-
-      if squareddistance < 9
-      {
-         return SKID_SLASH;
-      }
-
-      return SKID_THRUST;
-   }
-
-   GetStrokeObject(squareddistance=0)
+   GetStrokeObject(squareddistance=0,range=0)
    {
       if IsClass(self,&MagicWeapon)
       {
@@ -421,12 +399,12 @@ messages:
          return Send(SYS,@FindSkillByNum,#num=SKID_FIRE);
       }
 
-      if squareddistance < 4
+      if squareddistance < range*range/9
       {
          return Send(SYS,@FindSkillByNum,#num=SKID_STRIKE);
       }
 
-      if squareddistance < 9
+      if squareddistance < range*range*4/9
       {
          return Send(SYS,@FindSkillByNum,#num=SKID_SLASH);
       }
@@ -458,6 +436,25 @@ messages:
    {
       if value
       {
+         SetNth(plTypes,3,Nth(plTypes,3) | flag);
+      }
+      else
+      {
+         SetNth(plTypes,3,Nth(plTypes,3) & ~flag);
+      }
+
+      return;
+   }
+
+   CheckAttackType(flag=0)
+   {
+      return (Nth(plTypes,3) & flag);
+   }
+
+   SetSpellType(flag=0, value=FALSE)
+   {
+      if value
+      {
          SetNth(plTypes,4,Nth(plTypes,4) | flag);
       }
       else
@@ -468,28 +465,9 @@ messages:
       return;
    }
 
-   CheckAttackType(flag=0)
-   {
-      return (Nth(plTypes,4) & flag);
-   }
-
-   SetSpellType(flag=0, value=FALSE)
-   {
-      if value
-      {
-         SetNth(plTypes,5,Nth(plTypes,5) | flag);
-      }
-      else
-      {
-         SetNth(plTypes,5,Nth(plTypes,5) & ~flag);
-      }
-
-      return;
-   }
-
    CheckSpellType(flag=0)
    {
-      return Nth(plTypes,5) & flag;
+      return Nth(plTypes,4) & flag;
    }
 
 

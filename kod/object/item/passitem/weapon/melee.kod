@@ -17,7 +17,7 @@ constants:
 resources:
 
    melee_name_rsc = "Melee Weapon"
-   hammer_desc_rsc = "This is a melee weapon."
+   melee_desc_rsc = "This is a melee weapon."
 
 classvars:
 
