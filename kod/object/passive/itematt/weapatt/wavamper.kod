@@ -88,7 +88,7 @@ messages:
          return FALSE;
       }
 
-      if Send(oItem,@GetProf,#who=oPlayer) < 50      
+      if Send(oPlayer,@GetSkillAbility,#skill_num=Send(oItem,@GetProfNum)) < 50 
       {
          Send(oPlayer, @MsgSendUser, #message_rsc = Vamper_fail_use,
                #parm1=Send(oItem,@GetDef),#parm2=Send(oItem,@GetName));

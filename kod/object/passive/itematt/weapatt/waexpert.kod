@@ -72,7 +72,7 @@ messages:
       local oWeapon, iProf, iPower;
 
       oWeapon = Send(who,@LookUpPlayerWeapon);
-      iProf = Send(oWeapon,@GetProf,#who=who);
+      iProf = Send(who,@GetSkillAbility,#skill_num=Send(oWeapon,@GetProfNum));
 
       iPower = Send(self,@TranslatePowerFromCompound,#iCompound=First(lData));
       iPower = Send(self,@DecipherDamageFromPower,#iPower=iPower);
@@ -98,7 +98,7 @@ messages:
       local oWeapon, iProf, iPower;
 
       oWeapon = Send(who,@LookUpPlayerWeapon);
-      iProf = Send(oWeapon,@GetProf,#who=who);
+      iProf = Send(who,@GetSkillAbility,#skill_num=Send(oWeapon,@GetProfNum));
 
       iPower = Send(self,@TranslatePowerFromCompound,#iCompound=First(lData));
       iPower = Send(self,@DecipherHitRollFromPower,#iPower=iPower);

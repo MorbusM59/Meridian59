@@ -387,38 +387,29 @@ messages:
       return viProficiency_needed;
    }
 
-   GetStrokeObject(squareddistance=0,range=0)
+   GetStrokeNum(squareddistance=0,range=0)
    {
       if IsClass(self,&MagicWeapon)
       {
-         return Send(SYS,@FindSkillByNum,#num=SKID_TOUCH);
+         return SKID_TOUCH;
       }
 
       if IsClass(self,&RangedWeapon)
       {
-         return Send(SYS,@FindSkillByNum,#num=SKID_FIRE);
+         return SKID_FIRE;
       }
 
       if squareddistance < range*range/9
       {
-         return Send(SYS,@FindSkillByNum,#num=SKID_STRIKE);
+         return SKID_STRIKE;
       }
 
       if squareddistance < range*range*4/9
       {
-         return Send(SYS,@FindSkillByNum,#num=SKID_SLASH);
+         return SKID_SLASH;
       }
 
-      return Send(SYS,@FindSkillByNum,#num=SKID_THRUST);
-   }
-
-   % In most cases, we will return the player's ability in the stroke here, but
-   % in some cases, such as touchattacks, we may determine the player's ability
-   % in other ways. Since the way we determine the stroke ability depends on the
-   % chosen weapon, we handle it here.
-   GetStrokeAbility(who=$,Skill_num=0)
-   {
-      return Send(who,@GetSkillAbility,#Skill_num=Skill_num);
+      return SKID_THRUST;
    }
 
    ImproveProficiency(who=$,target=$,bonus=0)

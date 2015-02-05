@@ -4819,7 +4819,12 @@ messages:
          iRedFlat = piPhysicalReductionFlat;
       }
 
-      return  bound(damage*iRedFactor/1000+iRedFlat+iGort,0,damage);
+      if iGort > iRedFlat
+      {
+         iRedFlat = iGort;
+      }
+
+      return  bound(damage*iRedFactor/1000+iRedFlat,0,damage);
    }
 
    % This is the type of damage done.

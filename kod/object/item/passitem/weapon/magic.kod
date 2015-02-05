@@ -31,19 +31,6 @@ properties:
 
 messages:
 
-   % In the case of touchattacks, we use mysticism*2 instead of the player's
-   % ability in the stroke since the stroke is not actually available to players.
-   % Monsters, on the other hand, can be treated as usual.
-   GetStrokeAbility(who=$,Skill_num=0)
-   {
-      if IsClass(who,&User)
-      {
-         return Send(who,@GetMysticism)*2;
-      }
-      
-      propagate;
-   }
-   
    GetParryAbility()
    {
       % Touch attacks have no parrying ability.

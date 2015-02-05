@@ -188,7 +188,10 @@ messages:
       iDamage = iDamage + iDamage * iPower / 100;
 
       % Scale damage between 50 and 100% with the user's ability in the stroke.
-      iSkill = Send(use_weapon,@GetStrokeAbility,#who=who,#Skill_num=viSkill_num);
+      % Note that we are asking stroke for the ability, not player, since not
+      % all strokes may be available to battlers as an actual skill and their
+      % rating may be determined in other ways.
+      iSkill = Send(self,@GetAbility,#who=who);
       iDamage = iDamage * (100 + iSkill) / 200;
 
       % Finally, scale damage with the weapon's stroke modifier for the stroke

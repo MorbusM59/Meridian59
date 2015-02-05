@@ -4975,7 +4975,7 @@ messages:
 
    UserAttack(what=$)
    {
-      local use_weapon, iRange, iSquaredDistance, stroke_obj;
+      local use_weapon, iRange, iSquaredDistance, iStroke, stroke_obj;
 
       % Let's gather some basic information first:
       % What weapon do we want to attack with?
@@ -4986,7 +4986,7 @@ messages:
       % For melee weapons, we determine the weapon stroke based on our distance
       % to the target. For greater accuracy, we use fine grid. This means that
       % we have to make sure we are reasonably close to our target first. If we
-      % are further than 5 units away, feed GetStrokeObject max melee distance
+      % are further than 5 units away, feed GetStrokeNum max melee distance
       % instead.
       iSquaredDistance = Send(self,@SquaredDistanceTo,#what=what);
       
@@ -4999,10 +4999,11 @@ messages:
          iSquaredDistance = 102400;
       }
 
-      % Ask our weapon what stroke we are using based on the target's distance
-      % and the range of our weapon.
-      stroke_obj = Send(use_weapon,@GetStrokeObject,
-                     #squareddistance=iSquaredDistance,#range=iRange);
+      % Ask our weapon for the stroke number based on the target's distance
+      % and the range of our weapon. Then get the actual stroke object.
+      iStroke = Send(use_weapon,@GetStrokeNum,#squareddistance=iSquaredDistance,
+         #range=iRange);
+      stroke_obj = Send(SYS,@FindSkillByNum,#num=iStroke);
 
       % Now that that's out of the way, let's go through various checks to see
       % whether we are actually eligible to attack our target. Please answer the
@@ -7382,11 +7383,12 @@ messages:
    
    SendStatOffense()
    {
-      local iOffense_send, oWeapon;
+      local iOffense_send, oWeapon, stroke_obj;
 
       oWeapon = Send(self,@GetWeapon);
+      stroke_obj = Send(SYS,@FindSkillByNum,#num=Send(oWeapon,@GetStrokeNum));
       iOffense_send = Send(self,@GetOffense,#use_weapon=oWeapon,
-         #stroke_obj=Send(oWeapon,@GetStrokeObject));
+         #stroke_obj=stroke_obj);
       
       AddPacket(1,10, 4,user_stat_offense, 1,STAT_VALUE, 1,STAT_INTEGER,
                 4,iOffense_send, 4,0, 4,1000, 4,iOffense_send);

@@ -54,6 +54,13 @@ properties:
 
 messages:
 
+   GetAbility(who=$)
+   {
+      % Touch is not available to battlers as an actual skill. Instead, we return
+      % a rating based on the battler's mysticism.
+      return Send(who,@GetMysticism)*2;
+   }
+
    SendMissSound(who=$,victim=$,use_weapon = $)
    {
       local iRandom, rSound;
