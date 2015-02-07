@@ -163,7 +163,7 @@ messages:
       }
       
       if host_object <> $
-         AND IsClass(host_object,&Armor)
+         AND IsClass(host_object,&BodyArmor)
       {
          if iRandomSpell < 35
          {

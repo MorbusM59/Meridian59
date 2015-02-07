@@ -241,33 +241,6 @@ messages:
       return TRUE;
    }
 
-   %%% Defense and attack modifier stuff.
-
-   ModifyDamage(damage=$)
-   {
-      return damage;
-   }
-
-   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
-   {
-      return 0;
-   }
-
-   DefendingHit()
-   {
-      return;
-   }
-
-   ModifyDefenseDamage(damage=$)
-   {
-      return damage;
-   }
-
-   ModifyDefensePower(who=$,what=$,defense_power=$)
-   {
-      return defense_power;
-   }
-
    EffectDesc(who=$)
    {
       local i, iDuration, iMinutes, iSeconds, oSpell, oList;

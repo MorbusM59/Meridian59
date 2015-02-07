@@ -587,8 +587,8 @@ messages:
       Send(self,@RecreateNodeAttack);
       Send(self,@RecreateRentableRoomMaintenance);
       Send(self,@RecreateWarEvent);
-	  Send(self,@CreateAllSpellsIfNew);
-	  Send(self,@CreateAllRoomsIfNew);
+      Send(self,@CreateAllSpellsIfNew);
+      Send(self,@CreateAllRoomsIfNew);
 
       if plSavedFlagStates <> $
       {

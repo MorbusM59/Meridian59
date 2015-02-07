@@ -14,8 +14,6 @@ constants:
 
    include blakston.khd
    include protocol.khd
-
-   ARMOR_TAKE_DAMAGE_PCT = 75
    
 resources:
 
@@ -873,12 +871,50 @@ messages:
       return;
    }
 
+   %%% Dynamic Modification Hooks %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % These messages hook into combat calculations at different locations and
+   % allow any equipped item to dynamically modify the respective message it
+   % hooks into.
+   
+   % Hooks into UserAttack and decides whether we can attack or not. Needs to
+   % provide the user with a reason why the attack was not executed.
+   AttackHook(who=$,what=$,use_weapon=$,stroke_obj=$)
+   {
+      return TRUE;
+   }
+   
+   % Hooks into GetDamage and can modify the damage bonus factor.
+   DamageHook(who=$,what=$,use_weapon=$,stroke_obj=$)
+   {
+      return 0;
+   }
+
+   % Hooks into GetDamageReduction and can modify the damage reduction factor.
+   DamageReductionHook(who=$,what=$,damage=0,atype=0,aspell=0)
+   {
+      return 0;
+   }
+
+   % Hooks into GetOffense and can modify offense rating.
+   OffenseHook(who=$,what=$,use_weapon=$,stroke_obj=$)
+   {
+      return 0;
+   }
+
+   % Hooks into GetDefense and can modify defense rating.
+   DefenseHook(who=$,what=$,use_weapon=$,stroke_obj=$)
+   {
+      return 0;
+   }
+   
+   % Infrastructure Messages
+
    NewOwner(what = $)
    {
       local lData;
 
       % If the person who is supposed to pick up an item picks up 
-      %  the item, then remove the corpsepointer.
+      % the item, then remove the corpsepointer.
           
       if poOwner <> $ AND Send(self,@HasAttribute,#ItemAtt=IA_CORPSEPOINTER)
       {  
@@ -1124,25 +1160,9 @@ messages:
       return FALSE;
    }
 
-   ModifyDefensePower(defense_power = 0)
-   "Gives the defensive bonus"
+   % Armor and weapon handle this independently.
+   DamageGear(damage=0,atype=0,aspell=0)
    {
-      return defense_power;            
-   }
-
-   DefendingHit(who = $,what = $)
-   {
-      % Set to 75% currently
-      if random(1,100) < ARMOR_TAKE_DAMAGE_PCT   
-      {
-         piHits = piHits - 1;
-      }
-      
-      if piHits <= 0
-      {
-         Send(self,@ItemBrokenInBattle);
-      }
-      
       return;
    }
 
@@ -1365,7 +1385,7 @@ messages:
 
       if iSpell = SID_SHROUD
       AND (IsClass(self,&Weapon)
-         OR IsClass(self,&DefenseModifier))
+         OR IsClass(self,&Armor))
       {
          for i in plItem_Attributes
          {
@@ -1833,18 +1853,18 @@ messages:
       return tTimer;
    }
 
-   GetBaseSpellModifier(oSpell=$)
+   % This is a bonus to SP that depends on the spell cast. We don't handle this
+   % through combat modifiers, but allow  the spell to ask the items directly.
+   GetSpellpowerBonus(oSpell=$)
    {
-      % Doing it this way, we can have different items give different bonuses
-      %  in different situations, while still giving itematt bonuses.
-      return viSpell_modifier;
+      return 0;
    }
 
    GetSpellModifier(oSpell=$)
    {
       local oItemAtt, iModifier, i, iNum, oObjectAttribute;
 
-      iModifier = Send(self,@GetBaseSpellModifier,#oSpell=oSpell);
+      iModifier = Send(self,@GetSpellpowerBonus,#oSpell=oSpell);
       for i in plItem_Attributes
       {
          iNum = Send(self,@GetNumFromCompound,#compound=First(i));
@@ -1860,7 +1880,7 @@ messages:
       
       return iModifier;
    }
-   
+
    GetHeatDamage()
    "Only things worn at the armor position will be asked this, but "
    "just in case, default is 0."

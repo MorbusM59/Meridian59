@@ -4975,7 +4975,7 @@ messages:
 
    UserAttack(what=$)
    {
-      local use_weapon, iRange, iSquaredDistance, iStroke, stroke_obj;
+      local i, use_weapon, iRange, iSquaredDistance, iStroke, stroke_obj;
 
       % Let's gather some basic information first:
       % What weapon do we want to attack with?
@@ -5095,14 +5095,14 @@ messages:
          }
       }
 
-      % Almost done: AllowPlayerAttack handles the necessary PvP checks for us.
+      % AllowPlayerAttack handles the necessary PvP checks for us.
       if NOT Send(self,@AllowPlayerAttack,#victim=what,#stroke_obj=stroke_obj,
                   #use_weapon=use_weapon)
       {
          return FALSE;
       }
 
-      % Final check: Is it even time for another attack yet? We do this check
+      % Almost done: Is it even time for another attack yet? We do this check
       % last because we don't want to start a timer, only to have the check fail
       % at a later stage.
       if NOT Send(self,@IsOkayAttackTime)
@@ -5110,7 +5110,33 @@ messages:
          return FALSE;
       }
 
-      % If we are wielding a Black Dagger, we're not doing an actual attack but
+      % Allow spells and items to hook in here.
+      for i in plUsing
+      {
+         if NOT Send(i,@AttackHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj)
+         {
+            return FALSE;
+         }
+      }
+      for i in plEnchantments
+      {
+         if NOT Send(Nth(i,2),@AttackHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj)
+         {
+            return FALSE;
+         }
+      }
+      for i in plRadiusEnchantments
+      {
+         if NOT Send(First(i),@AttackHook,#who=self,#what=what,#iPower=Nth(i,2),
+            #caster=Nth(i,3),#use_weapon=use_weapon,#stroke_obj=stroke_obj)
+         {
+            return FALSE;
+         }
+      }
+
+      % If we are wielding a Black Dagger, we're not doing an actual attack and
       % let the assassin game handle the attack instead.
       if IsClass(use_weapon,&BlackDagger)
       {
@@ -5118,7 +5144,7 @@ messages:
          return Send(Send(SYS,@GetAssassinGame),@TryAssassinAttack,
                      #attacker=self,#target=what,#dagger_obj=use_weapon);
       }
-      
+
       % Well, all seems in order, let's do that attack already.
       return Send(self,@TryAttack,#what=what,#use_weapon=use_weapon,
                   #stroke_obj=stroke_obj);

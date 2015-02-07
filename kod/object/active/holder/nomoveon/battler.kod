@@ -166,7 +166,7 @@ properties:
    % Each element is [ timer, object of spell, [optional state] ].
    plEnchantments = $
 
-   % Combat modifiers. These are handles as deviations from the base value
+   % Combat modifiers. These are handled as deviations from the base value
    % expressed in per MILLE: A rating of 200 will enhance the base value by a
    % factor of 1.2.
    piCombatModDefense = 0
@@ -874,7 +874,7 @@ messages:
          % modifying damage accordingly.
          iDamage = Send(self,@GetDamage,#what=what,#use_weapon=use_weapon,
             #stroke_obj=stroke_obj);
-         
+
          % Also figure attack and spell types.
          atype = Send(use_weapon,@GetAttackType);
          aspell = Send(use_weapon,@GetSpellType);

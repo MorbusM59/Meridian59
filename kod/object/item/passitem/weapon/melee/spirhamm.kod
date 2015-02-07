@@ -108,7 +108,7 @@ messages:
       propagate;
    }
 
-   WeaponHitTarget()
+   DamageGear()
    {
       % Return here so that spiritual hammers don't get damaged.
       return;

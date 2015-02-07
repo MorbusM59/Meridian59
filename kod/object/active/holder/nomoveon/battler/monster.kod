@@ -4819,7 +4819,7 @@ messages:
 
    IsObjectWearable(what=$)
    {
-      if IsClass(what,&Armor)
+      if IsClass(what,&BodyArmor)
          OR IsClass(what,&Helmet)
          OR IsClass(what,&Gauntlet)
          OR IsClass(what,&necklace)

@@ -145,7 +145,7 @@ messages:
       propagate;
    }
      
-   WeaponHitTarget()
+   DamageGear()
    "Sword wears down rapidly in the hands of someone else, but does not break."
    {
       if poOwner <> poQuester

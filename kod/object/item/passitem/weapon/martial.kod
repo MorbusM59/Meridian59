@@ -30,7 +30,7 @@ properties:
 messages:
 
    % Fists don't break.
-   WeaponHitTarget()
+   DamageGear()
    {
       return;
    }

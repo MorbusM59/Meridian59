@@ -3554,7 +3554,7 @@ messages:
          }
 
          % These unequip amongst themselves automatically.
-         if IsClass(what,&DefenseModifier)
+         if IsClass(what,&Armor)
             OR IsClass(what,&Gauntlet)
          {
             return TRUE;
@@ -4627,6 +4627,24 @@ messages:
 
       iOffense = iOffense + Send(Send(SYS,@GetParliament),@GetFactionHitrollBonus,#who=self);
 
+      % Allow spells and items to hook in here for dynamic offense modification.
+      for i in plUsing
+      {
+         iOffense = iOffense + Send(i,@OffenseHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+      for i in plEnchantments
+      {
+         iOffense = iOffense + Send(Nth(i,2),@OffenseHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+      for i in plRadiusEnchantments
+      {
+         iOffense = iOffense + Send(First(i),@OffenseHook,#who=self,
+         #what=what,#iPower=Nth(i,2),#caster=Nth(i,3),
+         #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+
       % If we're using a ranged weapon and don't have a clear line of sight,
       %  then half our offense.
       if what <> $
@@ -4668,6 +4686,24 @@ messages:
 
       iDefense = iDefense + Send(Send(SYS,@GetParliament),@GetFactionDefenseBonus,#who=self);
 
+      % Allow spells and items to hook in here for dynamic offense modification.
+      for i in plUsing
+      {
+         iDefense = iDefense + Send(i,@DefenseHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+      for i in plEnchantments
+      {
+         iDefense = iDefense + Send(Nth(i,2),@DefenseHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+      for i in plRadiusEnchantments
+      {
+         iDefense = iDefense + Send(First(i),@DefenseHook,#who=self,
+         #what=what,#iPower=Nth(i,2),#caster=Nth(i,3),
+         #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+
       return bound(iDefense,1,2000);
    }
 
@@ -4693,18 +4729,24 @@ messages:
 
       iMod = Send(Send(self,@GetWeapon),@GetParryMod);
 
+      % Certain weapons may not permit parrying. If so, their bonus returns nil
+      % instead of 0.
+      if iMod = $
+      {
+         return 0;
+      }
+
       return Send(self,@GetSkillAbility,#skill_num=SKID_PARRY)*(100+iMod)/100;
    }
 
    GetBlockAbility(stroke_obj=$)
    {
-      local oShield, oMonster;
+      local iMod, oShield, oMonster;
 
       % Morphed?
       oMonster = Send(self,@GetIllusionForm);
       if oMonster <> $ AND Send(self,@CheckPlayerFlag,#flag=PFLAG_MORPHED)
       {
-         % Should only be one morph enchantment on the player.
          return Send(oMonster,@GetBlockAbility,#stroke_obj=stroke_obj);
       }
 
@@ -4716,7 +4758,16 @@ messages:
          return 0;
       }
 
-      return Send(oShield,@GetBlockAbility,#who=self);
+      iMod = Send(oShield,@GetBlockMod);
+
+      % Certain shields may not permit blocking (torch!) If so, their bonus 
+      % returns nil instead of 0.
+      if iMod = $
+      {
+         return 0;
+      }
+
+      return Send(self,@GetSkillAbility,#skill_num=SKID_BLOCK)*(100+iMod)/100;
    }
 
    GetDodgeAbility(stroke_obj=$)
@@ -4747,7 +4798,7 @@ messages:
    % This returns the damage done to target "what" before resistances.
    GetDamage(what = $, use_weapon = $, stroke_obj = $)
    {
-      local iDamage, oMonster, iStrokeNum;
+      local i, iDamage, iBonus, oMonster, iStrokeNum;
 
       % Ask the stroke, which asks the weapon, each modifying damage accordingly.
       iDamage = Send(stroke_obj,@GetDamage,#use_weapon=use_weapon,#who=self,#what=what);
@@ -4764,45 +4815,64 @@ messages:
       iStrokeNum = Send(stroke_obj,@GetSkillNum);
       if iStrokeNum = SKID_FIRE
       {
-         iDamage = iDamage + iDamage * piCombatModRanged;
+         iBonus = piCombatModRanged;
       }
       
       if iStrokeNum = SKID_TOUCH
       {
-         iDamage = iDamage + iDamage * piCombatModMagic;
+         iBonus = piCombatModMagic;
       }
       
       if iStrokeNum <> SKID_FIRE AND iStrokeNum <> SKID_TOUCH
       {
-         iDamage = iDamage + iDamage * piCombatModMelee;
+         iBonus = piCombatModMelee;
       }
 
-      iDamage = iDamage + Send(Send(SYS,@GetParliament),@GetFactionDamageBonus,#who=self);
+      % Allow spells and items to hook in here for dynamic damage modification.
+      for i in plUsing
+      {
+         iBonus = iBonus + Send(i,@DamageHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+      for i in plEnchantments
+      {
+         iBonus = iBonus + Send(Nth(i,2),@DamageHook,#who=self,#what=what,
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+      for i in plRadiusEnchantments
+      {
+         iBonus = iBonus + Send(First(i),@DamageHook,#who=self,
+            #what=what,#iPower=Nth(i,2),#caster=Nth(i,3),
+            #use_weapon=use_weapon,#stroke_obj=stroke_obj);
+      }
+
+      iBonus = iBonus + Send(Send(SYS,@GetParliament),@GetFactionDamageBonus,#who=self);
+      
+      iDamage = iDamage + iDamage*iBonus/1000;
 
       return iDamage;
    }
 
-   GetDamageReduction(damage=0,atype=0,aspell=0)
+   GetDamageReduction(damage=0,what=$,atype=0,aspell=0)
    {
-      local iRedFlat, iRedFactor, oGort, iGort;
+      local i, iRedFlat, iRedFactor, iReduction, oGort, iGort, oShield;
 
       % Armor of Gort may limit the initial damage.
       oGort = Send(SYS,@FindSpellByNum,#Num=SID_ARMOR_OF_GORT);
       if Send(self,@IsEnchanted,#what=oGort)
       {
-         iGort = Send(oGort,@PriorityModifyDefenseDamage,
-            #damage=damage,#atype=atype,#aspell=aspell);
+         iGort = Send(oGort,@GetDamageReduction,#damage=damage,#atype=atype,
+            #aspell=aspell);
       }
       else
       {
          iGort = 0;
       }
 
-      damage = damage - iGort;
-      
       % Reduce damage based on our damage reduction values.
       iRedFactor = 0;
       iRedFlat = 0;
+
       if aspell <> 0 AND atype <> 0 
       {
          iRedFactor = (piPhysicalReductionFactor + piMagicalReductionFactor) / 2;
@@ -4819,12 +4889,35 @@ messages:
          iRedFlat = piPhysicalReductionFlat;
       }
 
-      if iGort > iRedFlat
+      % Allow spells and items to hook in here for dynamic damage modification.
+      for i in plUsing
       {
-         iRedFlat = iGort;
+         iRedFactor = iRedFactor + Send(i,@DamageReductionHook,#who=self,#what=what,
+            #damage=damage,#atype=atype,#aspell=aspell);
+      }
+      for i in plEnchantments
+      {
+         iRedFactor = iRedFactor + Send(Nth(i,2),@DamageReductionHook,#who=self,#what=what,
+            #damage=damage,#atype=atype,#aspell=aspell);
+      }
+      for i in plRadiusEnchantments
+      {
+         iRedFactor = iRedFactor + Send(First(i),@DamageReductionHook,#who=self,
+            #what=what,#iPower=Nth(i,2),#caster=Nth(i,3),
+            #damage=damage,#atype=atype,#aspell=aspell);
       }
 
-      return  bound(damage*iRedFactor/1000+iRedFlat,0,damage);
+      iReduction = (damage*iRedFactor/1000) + iRedFlat;
+      
+      % Gort only takes effect if its effect is greater than that of regular
+      % damage reduction. Since Gort is greater than 0, this also makes sure
+      % that damage reduction doesn't become negative. (debuffs)
+      if iGort > iRedFlat
+      {
+         iReduction = iGort;
+      }
+
+      return  iReduction;
    }
 
    % This is the type of damage done.
@@ -4884,8 +4977,18 @@ messages:
          damage = damage * 100;
       }
 
+      % Ask Gear if it takes damage.
+      for i in plUsing
+      {
+         if IsClass(i,&Armor) OR IsClass(i,&ResistRing)
+         {
+            Send(i,@DamageGear,#who=self,#what=what,#damage=damage,#atype=atype,
+               #aspell=aspell,#report_resistance=report_resistance);
+         }
+      }
+
       origdamage = damage/100;
-      
+
       color_rsc = player_hit_color_none;
 
       if what <> $ AND IsClass(what,&monster)
@@ -4898,11 +5001,11 @@ messages:
          % If damage reduction hasn't already been handled, handle it now.
          if reduction = $
          {
-            reduction = Send(what,@GetDamageReduction,#damage=damage,
+            reduction = Send(what,@GetDamageReduction,#damage=damage,#what=what,
             #atype=atype,#aspell=aspell);
          }
 
-         % Reduction is capped to be no greater than damage.
+         % Reduction is already capped to be no greater than damage.
          damage = damage - reduction;
 
          iResistance = Send(self,@ResistanceCheck,#atype=atype,#aspell=aspell);
@@ -5028,7 +5131,7 @@ messages:
       local i, shrunken;
 
       % See if the weapon is being damaged.
-      Send(use_weapon,@WeaponHitTarget);
+      Send(use_weapon,@DamageGear);
 
       if Send(self,@GetSkillAbility,#Skill_num=SKID_DISARM) > 0
       {
@@ -5845,7 +5948,6 @@ messages:
       for i in plUsing
       {
          if IsClass(i,&Shield)
-            AND Send(i,@GetBlockAbility,#who=self) > 0
          {
             return i;
          }
@@ -6632,6 +6734,11 @@ messages:
       }
       
       return;
+   }
+
+   GetMana()
+   {
+      return piMana;
    }
 
    GetStat(stat=0)
@@ -9623,7 +9730,7 @@ messages:
          oHighestGear = $;
          for i in plUsing
          {
-            if IsClass(i,&DefenseModifier)
+            if IsClass(i,&Armor)
                AND Send(i,@GetItemUseType) & n
             {
                if Send(i,@GetLayer) >= iHighestLayer
@@ -9646,7 +9753,7 @@ messages:
       oLowestGear = $;
       for i in plUsing
       {
-         if IsClass(i,&DefenseModifier)
+         if IsClass(i,&Armor)
             AND Send(i,@GetItemUseType) & ITEM_USE_HEAD
          {
             if Send(i,@GetLayer) <= iLowestLayer
@@ -10682,7 +10789,7 @@ messages:
 
       for i in plUsing
       {
-         if IsClass(i,&Armor)
+         if IsClass(i,&BodyArmor)
          {
             return i;
          }

@@ -38,7 +38,7 @@ messages:
    }
 
    % Magic doesn't break.
-   WeaponHitTarget()
+   DamageGear()
    {
       return;
    }

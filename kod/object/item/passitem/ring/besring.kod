@@ -50,6 +50,11 @@ classvars:
    
    viValue_average = 200
 
+   viCombatModDefense = -300
+   viCombatModMelee = 150
+   viCombatModMagic = 150
+   viCombatModRanged = -300
+
 properties:
 
 
@@ -65,7 +70,10 @@ messages:
       
       Send(poOwner,@MsgSendUser,#message_rsc=berserkerring_use_rsc);
 
-      Send(what,@AddAttackModifier,#what=self);
+      Send(poOwner,@AddCombatModDefense,#amount=viCombatModDefense);
+      Send(poOwner,@AddCombatModMelee,#amount=viCombatModMelee);
+      Send(poOwner,@AddCombatModMagic,#amount=viCombatModMagic);
+      Send(poOwner,@AddCombatModRanged,#amount=viCombatModRanged);
             
       propagate;
    }
@@ -74,12 +82,15 @@ messages:
    {
       Send(poOwner,@MsgSendUser,#message_rsc=berserkerring_unuse_rsc);
 
-      Send(what,@RemoveAttackModifier,#what=self);
+      Send(poOwner,@AddCombatModDefense,#amount=-viCombatModDefense);
+      Send(poOwner,@AddCombatModMelee,#amount=-viCombatModMelee);
+      Send(poOwner,@AddCombatModMagic,#amount=-viCombatModMagic);
+      Send(poOwner,@AddCombatModRanged,#amount=-viCombatModRanged);
       
       propagate;
    }
 
-   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
+   AttackHook(who=$,what=$,use_weapon=$,stroke_obj=$)
    {
       piHits = piHits - 1;
       if piHits <= 0
@@ -90,29 +101,9 @@ messages:
 
          return 0;
       }
-      
-      return -Random(150,250);
+
+      return TRUE;
    }
-
-   ModifyDamage(who = $, what = $, damage = $)
-   {
-      local oWeapon;
-
-      oWeapon = send(who,@GetWeapon);
-
-      if oWeapon = $ OR NOT IsClass(oWeapon,&RangedWeapon)
-      {
-         return damage + random(1,4);
-      }
-
-      return damage;
-   }
-
-   WeaponHitTarget()
-   {
-      return;
-   }
-
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

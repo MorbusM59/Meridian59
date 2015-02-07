@@ -483,7 +483,7 @@ messages:
       propagate;
    }
 
-   WeaponHitTarget()
+   DamageGear()
    {
       % 75% chance to be damaged, currently.
       if random(1,100) < WEAPON_TAKE_DAMAGE_PCT

@@ -90,7 +90,7 @@ messages:
       return iSpellPower;
    }
 
-   PriorityModifyDefenseDamage(damage=$,atype=0,aspell=0)
+   GetDamageReduction(damage=$,atype=0,aspell=0)
    {
       local iMax;
 
@@ -109,11 +109,6 @@ messages:
       }
 
       return bound(damage-iMax,0,$);
-   }
-
-   ModifyDefenseDamage(who=$,what=$,damage=$,atype=0,aspell=0)
-   {
-      return damage;
    }
 
    EndEnchantment(who=$,report=TRUE,state=0)

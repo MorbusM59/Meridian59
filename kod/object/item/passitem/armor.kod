@@ -1,0 +1,253 @@
+% Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+% All rights reserved.
+%
+% This software is distributed under a license that is described in
+% the LICENSE file that accompanies it.
+%
+% Meridian is a registered trademark.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Armor is PassiveItem
+
+constants:
+
+   include blakston.khd
+
+   ARMOR_TAKE_DAMAGE_PCT = 100
+
+resources:
+
+   armor_broken = "Your %s falls to pieces."   
+   armor_broken_plural = "Your %s fall to pieces."   
+   armor_broken_plural_clothes = "Your %s collapse into unwearable tatters."
+
+classvars:
+
+   viItem_type = ITEMTYPE_ARMOR
+   vrItem_broken = armor_broken
+
+   % Layer represents clothing and gear that may override visually.
+   % Higher numbers override lower numbers.
+   viLayer = 0                      
+
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%% Combat Mods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   % These are the default values for the properties listed below. See
+   % player.kod for a detailed description of what each value does.
+   viCombatModDefense = 0
+   viCombatModOffense = 0
+   viCombatModMelee = 0
+   viCombatModRanged = 0
+   viCombatModMagic = 0
+   viPhysicalReductionFactor = 0
+   viMagicalReductionFactor = 0
+   viPhysicalReductionFlat = 0
+   viMagicalReductionFlat = 0
+   viBaseSpellpowerMod = 0
+
+properties:
+
+   piCombatModDefense = 0
+   piCombatModOffense = 0
+   piCombatModMelee = 0
+   piCombatModRanged = 0
+   piCombatModMagic = 0
+   piPhysicalReductionFactor = 0
+   piMagicalReductionFactor = 0
+   piPhysicalReductionFlat = 0
+   piMagicalReductionFlat = 0
+   piBaseSpellpowerMod = 0
+   plSkillmods = $
+   plSpellmods = $
+
+messages:
+
+   ReqUseSomething(what = $)
+   {
+      if IsClass(what,&Armor)
+         AND (Send(what,@GetItemUseType) & Send(self,@GetItemUseType)
+              OR Send(self,@GetItemUseType) & Send(what,@GetItemUseType))
+         AND Send(what,@GetLayer) = Send(self,@GetLayer)
+      {
+         if Send(poOwner,@TryUnuseItem,#what=self)
+         {
+            propagate;
+         }
+         else
+         {
+            return FALSE;
+         }
+      }
+
+      propagate;
+   }
+
+   DefaultValues()
+   {
+      piCombatModDefense = viCombatModDefense;
+      piCombatModOffense = viCombatModOffense;
+      piCombatModMelee = viCombatModMelee;
+      piCombatModRanged = viCombatModRanged;
+      piCombatModMagic = viCombatModMagic;
+      piPhysicalReductionFactor = viPhysicalReductionFactor;
+      piMagicalReductionFactor = viMagicalReductionFactor;
+      piPhysicalReductionFlat = viPhysicalReductionFlat;
+      piMagicalReductionFlat = viMagicalReductionFlat;
+      piBaseSpellpowerMod = viBaseSpellpowerMod;
+
+      propagate;
+   }
+
+   NewUsed(what = $)
+   {
+      Send(self,@ActivateCombatMods);
+      propagate;
+   }
+
+   NewUnused(what = $)
+   {
+      Send(self,@DeactivateCombatMods);
+      propagate;
+   }
+
+   ActivateCombatMods()
+   {
+      local i;
+      
+      Send(poOwner,@AddCombatModDefense,#amount=piCombatModDefense);
+      Send(poOwner,@AddCombatModOffense,#amount=piCombatModOffense);
+      Send(poOwner,@AddCombatModMelee,#amount=piCombatModMelee);
+      Send(poOwner,@AddCombatModRanged,#amount=piCombatModRanged);
+      Send(poOwner,@AddCombatModMagic,#amount=piCombatModMagic);
+      Send(poOwner,@AddPhysicalReductionFactor,#amount=piPhysicalReductionFactor);
+      Send(poOwner,@AddMagicalReductionFactor,#amount=piMagicalReductionFactor);
+      Send(poOwner,@AddPhysicalReductionFlat,#amount=piPhysicalReductionFlat);
+      Send(poOwner,@AddMagicalReductionFlat,#amount=piMagicalReductionFlat);
+      Send(poOwner,@AddBaseSpellpowerMod,#amount=piBaseSpellpowerMod);
+
+      for i in plSkillmods
+      {
+         Send(poOwner,@AddSkillmod,#num=First(i),#amount=Nth(i,2));
+      }
+
+      for i in plSpellmods
+      {
+         Send(poOwner,@AddSpellmod,#num=First(i),#amount=Nth(i,2));
+      }
+
+      return;
+   }
+
+   DeactivateCombatMods()
+   {
+      local i;
+      
+      Send(poOwner,@AddCombatModDefense,#amount=-piCombatModDefense);
+      Send(poOwner,@AddCombatModOffense,#amount=-piCombatModOffense);
+      Send(poOwner,@AddCombatModMelee,#amount=-piCombatModMelee);
+      Send(poOwner,@AddCombatModRanged,#amount=-piCombatModRanged);
+      Send(poOwner,@AddCombatModMagic,#amount=-piCombatModMagic);
+      Send(poOwner,@AddPhysicalReductionFactor,#amount=-piPhysicalReductionFactor);
+      Send(poOwner,@AddMagicalReductionFactor,#amount=-piMagicalReductionFactor);
+      Send(poOwner,@AddPhysicalReductionFlat,#amount=-piPhysicalReductionFlat);
+      Send(poOwner,@AddMagicalReductionFlat,#amount=-piMagicalReductionFlat);
+      Send(poOwner,@AddBaseSpellpowerMod,#amount=-piBaseSpellpowerMod);
+
+      for i in plSkillmods
+      {
+         Send(poOwner,@AddSkillmod,#num=First(i),#amount=-Nth(i,2));
+      }
+
+      for i in plSpellmods
+      {
+         Send(poOwner,@AddSpellmod,#num=First(i),#amount=-Nth(i,2));
+      }
+
+      return;
+   }
+
+   GetResistanceModifiers()
+   {
+      % format is [ [TYPE,resistance], [ATCK_WEAP_BLUDGEON,-20], ...]
+      return [];
+   }
+
+   DamageGear(damage=0,atype=0,aspell=0)
+   {
+      local iChance;
+      
+      % Chance to take damage is based on the amount and type of damage taken.
+      iChance = ARMOR_TAKE_DAMAGE_PCT;
+
+      if damage < 1500
+      {
+         iChance = iChance * 3 / 4;
+      }
+
+      if damage < 1000
+      {
+         iChance = iChance * 1 / 2;
+      }
+
+      if damage < 500
+      {
+         iChance = iChance * 1 / 4;
+      }
+
+      if atype <> 0
+      {
+         iChance = iChance * 3 / 2;
+      }
+
+      if aspell <> 0
+      {
+         iChance = iChance * 1 / 2;
+      }
+
+      if random(1,100) < iChance
+      {
+         piHits = piHits - 1;
+      }
+
+      if piHits <= 0
+      {
+         Send(self,@ItemBrokenInBattle);
+      }
+
+      return;
+   }
+
+   CanMend()
+   "For most armors (armor and shields), mend is true."
+   {   
+      local i, oItemAtt;
+      
+      for i in plItem_Attributes
+      {
+         oItemAtt = send(SYS,@FindItemAttByNum,#num=send(self,@GetNumFromCompound,#compound=first(i)));
+         
+         if oItemAtt = $
+         {
+            DEBUG("Illegal ItemAtt in list!");
+            
+            continue;
+         }
+         
+         if NOT send(oItemAtt,@ItemCanMend,#oItem=self)
+         {
+            return FALSE;
+         }
+      }
+      
+      return TRUE; 
+   }
+
+   GetLayer()
+   {
+      return viLayer;
+   }
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
