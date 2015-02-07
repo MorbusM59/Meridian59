@@ -141,7 +141,7 @@ messages:
    % For ranged weapons, we leave the special effects to ammo.
    DoSpecialEffect(who=$,what=$,stroke_obj=$,power=0)
    {
-      local ammotype, i;
+      local ammotype, i, iBonus;
 
       if poOwner = $
       {
@@ -158,7 +158,7 @@ messages:
             {
                if (send(i,@GetAmmoType) = ammotype)
                { 
-                  Send(i,@DoSpecialEffect,#who=who,#what=what,#stroke_obj=stroke_obj,#power=power);
+                  iBonus = Send(i,@DoSpecialEffect,#who=who,#what=what,#stroke_obj=stroke_obj,#power=power);
                
                   break;
                }
@@ -166,7 +166,7 @@ messages:
          }
       }
 
-      return;
+      return iBonus;
    }
 
 end

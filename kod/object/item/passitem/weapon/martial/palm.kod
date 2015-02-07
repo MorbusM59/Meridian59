@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   palm_name_rsc = "palm"
+
 classvars:
+
+   vrName = palm_name_rsc
 
    viProficiency_needed = SKID_BRAWLING
 

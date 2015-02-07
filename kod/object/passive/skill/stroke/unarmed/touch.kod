@@ -57,8 +57,8 @@ messages:
    GetAbility(who=$)
    {
       % Touch is not available to battlers as an actual skill. Instead, we return
-      % a rating based on the battler's mysticism.
-      return Send(who,@GetMysticism)*2;
+      % a rating based on the battler's maximum health.
+      return bound(Send(who,@GetMaxHealth),20,100);
    }
 
    SendMissSound(who=$,victim=$,use_weapon = $)

@@ -25,7 +25,11 @@ constants:
 
 resources:
 
+   magic_weapon_name_rsc = "palm"
+
 classvars:
+
+   vrName = magic_weapon_name_rsc
 
 properties:
 

@@ -520,6 +520,8 @@ messages:
       if poMartial_weapon <> $
       {
          Send(poMartial_weapon,@Delete);
+
+         poMartial_weapon = $;
       }
 
       return;
@@ -546,6 +548,8 @@ messages:
       if poMagic_weapon <> $
       {
          Send(poMagic_weapon,@Delete);
+
+         poMagic_weapon = $;
       }
 
       return;

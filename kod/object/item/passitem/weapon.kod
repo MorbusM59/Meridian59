@@ -133,7 +133,7 @@ messages:
    % stats is provided, we randomize the process of creation instead.
    Constructor(lstats=$,ltypes=$)
    {
-      local list, i, n, iDeviation, iQuality;
+      local i, n, iDeviation, iQuality;
 
       % Initiate plStats and plTypes with the default values.
       plStats = [viDamage,viProficiencyBonus,viHitMod,
@@ -210,9 +210,11 @@ messages:
       % Time to set item's quality.
       piQuality = iQuality;
 
+      n = 0;
+
       if ltypes <> $
       {
-         for i in list
+         for i in plTypes
          {
             n = n + 1;
             SetNth(plTypes,n,Nth(ltypes,n));
@@ -389,6 +391,11 @@ messages:
 
    GetStrokeNum(squareddistance=0,range=0)
    {
+      if IsClass(self,&MartialWeapon)
+      {
+         return SKID_PUNCH;
+      }
+
       if IsClass(self,&MagicWeapon)
       {
          return SKID_TOUCH;

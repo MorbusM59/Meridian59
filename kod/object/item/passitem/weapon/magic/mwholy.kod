@@ -16,13 +16,28 @@ constants:
 
 resources:
 
+   magic_weapon_holy_name_rsc = "holy hand"
+
 classvars:
+
+   vrName = magic_weapon_holy_name_rsc
 
    viProficiency_needed = SID_HOLY_TOUCH
 
 properties:
 
 messages:
+
+   DamageHook(who=$,what=$,use_weapon=$,stroke_obj=$)
+   {
+      % 100% damage bonus if fighting the undead.
+      if (what <> $) AND Send(what,@IsUndead)
+      {
+         return 1000;
+      }
+      
+      return 0;
+   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

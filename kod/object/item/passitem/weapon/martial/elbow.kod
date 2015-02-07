@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   elbow_name_rsc = "elbow"
+
 classvars:
+
+   vrName = elbow_name_rsc
 
    viProficiency_needed = SKID_BRAWLING
 

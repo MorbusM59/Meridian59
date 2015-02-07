@@ -4562,7 +4562,7 @@ messages:
          % side of the line the target is.
          % Equation of the SW-NE line: iTargetRow - iRow = iCol - iTargetRow
          % Equation of the SE-NW line: iTargetRow - iRow = iTargetCol - iCol
-         if iDist > 1
+         if iDist > 4096
             AND (((iAngle > ANGLE_ENE OR iAngle <= ANGLE_ESE)
                   AND iTargetCol < iCol)
                OR (iAngle > ANGLE_ESE AND iAngle <= ANGLE_SSE
@@ -4623,7 +4623,7 @@ messages:
       }
 
       % Check for any modification to our offense rating. 
-      iOffense = iOffense + iOffense * piCombatModOffense;
+      iOffense = iOffense + piCombatModOffense;
 
       iOffense = iOffense + Send(Send(SYS,@GetParliament),@GetFactionHitrollBonus,#who=self);
 
@@ -4682,7 +4682,7 @@ messages:
       }
 
       % Check for any modification to our defense rating.
-      iDefense = iDefense + iDefense * piCombatModDefense;
+      iDefense = iDefense + piCombatModDefense;
 
       iDefense = iDefense + Send(Send(SYS,@GetParliament),@GetFactionDefenseBonus,#who=self);
 
@@ -5873,38 +5873,36 @@ messages:
 
    SendAttackOutOfRangeMessage(what = $, use_weapon = $, stroke_obj = $)
    {
-      if use_weapon = $
-         AND stroke_obj = $
+      if use_weapon = $ AND stroke_obj <> $
       {
+         if IsClass(stroke_obj,&RadiusEnchantment)
+         {
+            return;
+         }
+
+         Send(self,@MsgSendUser,#message_rsc=player_attack_out_of_SPELL_range,
+               #parm1=Send(what,@GetDef),#parm2=Send(what,@GetName),
+               #parm3=Send(stroke_obj,@GetName));
          return;
       }
 
-      if use_weapon <> $
+      if IsClass(use_weapon,&MeleeWeapon) OR IsClass(use_weapon,&RangedWeapon)
       {
          Send(self,@MsgSendUser,#message_rsc=player_attack_out_of_range,
                #parm1=Send(what,@GetCapDef),#parm2=Send(what,@GetName),
                #parm3=Send(use_weapon,@GetIndef),
                #parm4=Send(use_weapon,@GetName));
-      }
-      else
-      {
-         if IsClass(stroke_obj,&spell)
-         {
-            if IsClass(stroke_obj,&RadiusEnchantment)
-            {
-               return;
-            }
 
-            Send(self,@MsgSendUser,#message_rsc=player_attack_out_of_SPELL_range,
-                  #parm1=Send(what,@GetDef),#parm2=Send(what,@GetName),
-                  #parm3=Send(stroke_obj,@GetName));
-         }
-         else
-         {
-            Send(self,@MsgSendUser,#message_rsc=player_attack_out_of_PUNCH_range,
-                  #parm1=Send(what,@GetDef),#parm2=Send(what,@GetName),
-                  #parm3=Send(stroke_obj,@GetName));
-         }
+         return;
+      }
+
+      if IsClass(use_weapon,&MagicWeapon) OR IsClass(use_weapon,&MartialWeapon)
+      {
+         Send(self,@MsgSendUser,#message_rsc=player_attack_out_of_PUNCH_range,
+               #parm1=Send(what,@GetDef),#parm2=Send(what,@GetName),
+               #parm3=Send(stroke_obj,@GetName));
+
+         return;
       }
 
       return;

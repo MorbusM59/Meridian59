@@ -76,27 +76,12 @@ properties:
 
 messages:
 
-   PlayerWasHitMsg(who=$,attacker=$,damage=$)
-   "The stroke may choose it's own damage give or recieve message.  Otherwise"
-   "player.kod will just choose a default."
+   DoAnimation(who=$)
+   "Do a classy punch animation."
    {
-       send(who,@msgsenduser,#message_rsc=vrPlayer_was_hit,
-                #parm1=send(attacker,@getcapdef),#parm2=send(attacker,@getname));
-       return TRUE;
-   }
+      Send(who,@DoFistAttack);
 
-   PlayerKilledSomethingMsg(who=$,victim=$,damage=$)
-   "The stroke may choose it's own damage give or recieve message.  Otherwise"
-   "player.kod will offer the default 'You killed the whatever' message."
-   {
-      if (Send(who,@GetWeapon) <> $)
-      {
-         % They have a weapon, probably a touch attack.  Let that do it's own damage message.
-         return FALSE;
-      }
-      send(who,@msgsenduser,#message_rsc=vrPlayer_killed_something,
-           #parm1=send(victim,@getCapdef),#parm2=send(victim,@getname));
-      return TRUE;
+      return;
    }
 
 end

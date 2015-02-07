@@ -80,7 +80,6 @@ messages:
       }
 
       Send(First(lTargets),@ResetPlayerFlagList);
-      Send(First(lTargets),@AddDefenseModifier,#what=self);
 
       propagate;
    }

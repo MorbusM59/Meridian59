@@ -130,7 +130,7 @@ messages:
          % A little fudge factor to account for lag drift, etc.
          if IsClass(target,&Player) AND Send(target,@HasMovedRecently)
          {
-            iTotalRange = iTotalRange + RANGE_MOVEMENT_BONUS;
+            iTotalRange = iTotalRange + 1;
          }
 
          if Send(target,@GetOwner) <> $

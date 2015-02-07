@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   knee_name_rsc = "knee"
+
 classvars:
+
+   vrName = knee_name_rsc
 
    viProficiency_needed = SKID_BRAWLING
 

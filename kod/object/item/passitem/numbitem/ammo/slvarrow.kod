@@ -61,7 +61,7 @@ messages:
       {
          if IsClass(what,&Player)
          {
-            Send(what,@MsgSendUser,#message_rsc=silver_arrow_burns_you);
+            Post(what,@MsgSendUser,#message_rsc=silver_arrow_burns_you);
          }
 
          return Random(viMinUndeadDamage,viMaxUndeadDamage)*power/100;

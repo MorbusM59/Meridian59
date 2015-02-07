@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   shin_name_rsc = "shin"
+
 classvars:
+
+   vrName = shin_name_rsc
 
    viProficiency_needed = SKID_BRAWLING
 

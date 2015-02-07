@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   heel_name_rsc = "heel"
+
 classvars:
+
+   vrName = heel_name_rsc
 
    viProficiency_needed = SKID_BRAWLING
 

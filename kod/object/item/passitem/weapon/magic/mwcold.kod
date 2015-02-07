@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   magic_weapon_cold_name_rsc = "icy fingers"
+
 classvars:
+
+   vrName = magic_weapon_cold_name_rsc
 
    viProficiency_needed = SID_ICY_FINGERS
 

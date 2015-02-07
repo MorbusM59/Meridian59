@@ -16,7 +16,11 @@ constants:
 
 resources:
 
+   fist_name_rsc = "fist"
+
 classvars:
+
+   vrName = fist_name_rsc
 
    viProficiency_needed = SKID_BRAWLING
 
