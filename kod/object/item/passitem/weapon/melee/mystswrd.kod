@@ -31,14 +31,9 @@ classvars:
    vrIcon = mysticsword_icon_rsc
    vrDesc = mysticsword_desc_rsc
 
-   % Mystic swords are high quality thrusting weapons
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_HIGH
-
    viProficiency_needed = SKID_PROFICIENCY_SWORD
 
    viValue_average = 1250
-   % light because it is made from an ancient, better metal
    viWeight = 60 
    viBulk = 60
 
@@ -49,12 +44,31 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
+   viDamage = 500
+   viProficiencyBonus = 500
+   viHitMod = 200
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 60
+   viStrike = 0
+   viSlash = 80
+   viThrust = 100
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 20
+   viParryMod = 20
+   viSpellpowerMod = -10
+   viRange = 192
+
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_AIM
+   viAttackType = ATCK_WEAP_MAGIC + ATCK_WEAP_THRUST
+   viSpellType = 0
+   viDeviation = 20
+
 properties:
 
-   piAttack_type = ATCK_WEAP_MAGIC+ATCK_WEAP_THRUST
-
 messages:
-
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

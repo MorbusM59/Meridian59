@@ -48,7 +48,6 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
    
-   % These are the default values that plStats is based on in order.
    viDamage = 1000
    viProficiencyBonus = 500
    viHitMod = 0
@@ -63,14 +62,13 @@ classvars:
    viDisarmMod = 0
    viParryMod = 0
    viSpellpowerMod = 20
-   % Fine grain: 192 = 64 * 3
    viRange = 192
 
-   % These are the default values that plTypes is based on in order.
    viPrimaryStat = STAT_MIGHT
    viSecondaryStat = STAT_MIGHT
    viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON
    viSpellType = 0
+   viDeviation = 20
 
 properties:
 

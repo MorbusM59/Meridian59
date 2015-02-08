@@ -90,13 +90,19 @@ properties:
 
 messages:
 
-   Constructor()
+   Constructor(lstats=$,lower=-20,upper=20)
    {
-      % Essential for creation stuff that needs to happen AFTER constructors
-      %  called
-      Send(self,@Constructed);
-      % Set any default values
-      Send(self,@DefaultValues);
+      % Set any default values, but only if we haven't provided a list of stats
+      % to set.
+      if lstats = $
+      {
+         Send(self,@DefaultValues);
+      }
+
+      % This allows us to set properties after constructor has been called and
+      % default values have been asigned (or not).
+      Send(self,@Constructed,#lstats=lstats,#lower=lower,#upper=upper);
+
       return;
    }
 

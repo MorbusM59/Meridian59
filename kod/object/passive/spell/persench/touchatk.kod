@@ -109,8 +109,7 @@ messages:
 
       % Create the appropriate magic weapon.
       Send(who,@CreateMagicWeapon,#cweapon=Send(self,@GetWeaponClass),
-      #who=who,#spellpower=iSpellPower,#lstats=Send(self,@GetWeaponStats),
-      #ltypes=Send(self,@GetWeaponTypes));
+      #who=who,#spellpower=iSpellPower,#lstats=Send(self,@GetWeaponStats));
 
       Send(who,@GainLight,#amount=viEnchantmentLight);
 
@@ -156,16 +155,8 @@ messages:
                0,
                0,
                0,
-               viRange];
-
-      return lstats;
-   }
-
-   GetWeaponTypes()
-   {
-      local lstats;
-
-      lstats = [viPrimaryStat,
+               viRange,
+               viPrimaryStat,
                viSecondaryStat,
                viAttackType,
                viSpellType,

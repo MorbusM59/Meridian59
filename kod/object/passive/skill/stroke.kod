@@ -163,16 +163,11 @@ messages:
       % Get base values from the weapon.
       iDamage = Send(use_weapon,@GetDamage,#who=who,#what=what);
 
-      iDeviation = Send(use_weapon,@GetDeviation);
-
-      % Pick damage at random based on the weapon's damage deviation.
-      iDamage = iDamage * (100 + random(-iDeviation,iDeviation))/100;
-
       % Factor in proficiency with the weapon.
       iSkill = Send(who,@GetSkillAbility,#Skill_num=Send(use_weapon,@GetProfNum));
       iBonus = Send(use_weapon,@GetProficiencyBonus) * iSkill / 100;
       iDamage = iDamage + iBonus;
-      
+
       % Allow the weapon to add a special effect based on its secondary stat. 
       % This may include, but is not limited to extra damage.
       iFactor = Send(use_weapon,@GetSecondaryScaling);
@@ -194,10 +189,14 @@ messages:
       iSkill = Send(self,@GetAbility,#who=who);
       iDamage = iDamage * (100 + iSkill) / 200;
 
-      % Finally, scale damage with the weapon's stroke modifier for the stroke
+      % Scale damage with the weapon's stroke modifier for the stroke
       % we are using for this attack.
       iStrokeMod = Send(use_weapon,@GetStrokeMod,#Skill_num=viSkill_num);
       iDamage = iDamage * iStrokeMod / 100;
+
+      % Finally, pick damage at random based on the weapon's damage deviation.
+      iDeviation = Send(use_weapon,@GetDeviation);
+      iDamage = iDamage * (100 + random(-iDeviation,iDeviation))/100;
 
       return bound(iDamage,0,$);
    }

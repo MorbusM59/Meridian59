@@ -100,21 +100,21 @@ messages:
          }
       }
       
-      iAttackType = iAttackType |  Nth(plTypes,3);
+      iAttackType = iAttackType |  piAttackType;
 
       return iAttackType;
    }
 
    GetSpellType()
    {
-      local iAttackType, ammotype, i;
+      local iSpellType, ammotype, i;
 
       if poOwner = $
       {
          return 0;
       }
 
-      iAttackType = 0;
+      iSpellType = 0;
       ammotype = send(self,@GetAmmoType);
 
       if IsClass(poOwner,&User)
@@ -125,7 +125,7 @@ messages:
             {
                if (send(i,@GetAmmoType) = ammotype)
                { 
-                  iAttackType = send(i,@GetSpellType);
+                  iSpellType = send(i,@GetSpellType);
                
                   break;
                }
@@ -133,9 +133,9 @@ messages:
          }
       }
       
-      iAttackType = iAttackType | Nth(plTypes,4);
+      iSpellType = iSpellType | piSpellType;
 
-      return iAttackType;
+      return iSpellType;
    }
 
    % For ranged weapons, we leave the special effects to ammo.
