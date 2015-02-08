@@ -33,8 +33,8 @@ classvars:
    vrHit = attack_spell_hit_rsc
 
 
-   viAttack_type = 0
-   viAttack_spell = ATCK_SPELL_ALL
+   viAttackType = 0
+   viSpellType = ATCK_SPELL_ALL
 
    % In seconds, since it works off GetTime(),
    viPostCast_time = 2
@@ -243,10 +243,10 @@ messages:
             % For the sake of printing the absorbed amount later, we split damage
             % absorption from AssessDamage and handle it here.
             iReduction = Send(i,@GetDamageReduction,#damage=iDamage,
-                  #atype=viAttack_type,#aspell=viAttack_spell);
+                  #attacktype=viAttackType,#spelltype=viSpellType);
 
             iDamage = Send(i,@AssessDamage,#what=who,#damage=iDamage,
-                        #reduction=iReduction,#atype=viAttack_type,#aspell=viAttack_spell,
+                        #reduction=iReduction,#attacktype=viAttackType,#spelltype=viSpellType,
                         #absolute=pbAbsolute,#precision=TRUE);
             if iDamage = $
             {
@@ -271,11 +271,11 @@ messages:
          else
          {
             iReduction = Send(i,@GetDamageReduction,#damage=iDamage,
-                  #atype=viAttack_type,#aspell=viAttack_spell);
+                  #attacktype=viAttackType,#spelltype=viSpellType);
 
             iDamage = Send(i,@AssessDamage,#what=who,#damage=iDamage,
-                        #reduction=iReduction,#atype=viAttack_type,
-                        #aspell=viAttack_spell,#absolute=pbAbsolute,#precision=TRUE);
+                        #reduction=iReduction,#attacktype=viAttackType,
+                        #spelltype=viSpellType,#absolute=pbAbsolute,#precision=TRUE);
          }
 
          if IsClass(who,&Battler)
@@ -314,12 +314,12 @@ messages:
 
    GetSpellType()
    {
-      return viAttack_spell;
+      return viSpellType;
    }
 
    GetAttackType()
    {
-      return viAttack_type;
+      return viAttackType;
    }
 
    IsRangedAttack()
@@ -343,10 +343,10 @@ messages:
       if IsClass(who,&Player)
       {
          iReduction = Send(who,@GetDamageReduction,#damage=iDamage,
-               #atype=viAttack_type,#aspell=viAttack_spell);
+               #attacktype=viAttackType,#spelltype=viSpellType);
          % Apply the spell damage to the caster. Kill them if necessary.
          iFinalDamage = Send(who,@AssessDamage,#what=who,#damage=iDamage,
-            #reduction=iReduction,#atype=viAttack_type,#aspell=viAttack_spell,
+            #reduction=iReduction,#attacktype=viAttackType,#spelltype=viSpellType,
             #report=TRUE,#precision=TRUE);
 
          if iFinalDamage = $

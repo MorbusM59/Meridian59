@@ -561,7 +561,7 @@ messages:
       return $;
    }
  
-   ResistanceCheck(atype = 0, aspell = 0)
+   ResistanceCheck(attacktype = 0, spelltype = 0)
    "Given bitvectors of attack type and spell, find the resistance modifier "
    "which applies. Largest resistance plus worst weakness gives the modifier."
    {
@@ -579,8 +579,8 @@ messages:
          {
             % It's a resistance to weapon type
 
-            if (atype & iResType) <> 0
-               OR (atype <> 0 AND iResType = ATCK_WEAP_ALL)
+            if (attacktype & iResType) <> 0
+               OR (attacktype <> 0 AND iResType = ATCK_WEAP_ALL)
             {
                iResistance = Nth(j,2);
                
@@ -600,8 +600,8 @@ messages:
             % It's a resistance to spell type
             iResType = -iResType;
 
-            if (aspell & iResType) <> 0
-               OR (aspell <> 0 AND iResType = ATCK_SPELL_ALL)
+            if (spelltype & iResType) <> 0
+               OR (spelltype <> 0 AND iResType = ATCK_SPELL_ALL)
             {
                iResistance = Nth(j,2);
                
@@ -863,7 +863,7 @@ messages:
    TryAttack(what=$,use_weapon=$,stroke_obj=$)
    {
       local iOffense, iDefense, iChanceToHit, iDamage, iScalefactor, iReduction,
-         atype, aspell;
+         attacktype, spelltype;
 
       iOffense = Send(self,@GetOffense,#what=what,#use_weapon=use_weapon,
          #stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
@@ -880,12 +880,12 @@ messages:
             #stroke_obj=stroke_obj);
 
          % Also figure attack and spell types.
-         atype = Send(use_weapon,@GetAttackType);
-         aspell = Send(use_weapon,@GetSpellType);
+         attacktype = Send(use_weapon,@GetAttackType);
+         spelltype = Send(use_weapon,@GetSpellType);
 
          % Figure out the damage reduction before resistances.
          iReduction = Send(what,@GetDamageReduction,#damage=iDamage,
-            #atype=atype,#aspell=aspell);
+            #attacktype=attacktype,#spelltype=spelltype);
 
          % Scale damage with chance to hit beyond 100 percent.
          if iChanceToHit > 1000 AND Send(Send(SYS,@GetSettings),@GetDamageScaling)
@@ -898,7 +898,7 @@ messages:
          }
 
          iDamage = Send(what,@AssessDamage,#what=self,#damage=iDamage,
-            #reduction=iReduction,#atype=atype,#aspell=aspell,
+            #reduction=iReduction,#attacktype=attacktype,#spelltype=spelltype,
             #scalefactor=iScalefactor,#precision=TRUE);
 
          Send(self,@AssessHit,#what=what,#stroke_obj=stroke_obj,
@@ -965,7 +965,7 @@ messages:
       return 0;
    }
 
-   AssessDamage(what = $,damage = $,atype = $, aspell = $)
+   AssessDamage(what = $,damage = $,attacktype = $, spelltype = $)
    "This applies damage to the battler, calculating appropriate resistances.  "
    "Return $ if we were killed."
    {

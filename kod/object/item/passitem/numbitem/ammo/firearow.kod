@@ -49,7 +49,7 @@ classvars:
 properties:
 
    piNumber = 10
-   piAttack_spell = ATCK_SPELL_FIRE
+   piSpellType = ATCK_SPELL_FIRE
 
 messages:
 

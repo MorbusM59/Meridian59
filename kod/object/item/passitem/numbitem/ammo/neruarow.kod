@@ -44,11 +44,12 @@ classvars:
    viMinShatterDamage = 300
    viMaxShatterDamage = 800
 
+   viAttackType = ATCK_WEAP_NERUDITE
+
 properties:
 
    piNumber = 5
-   piAttack_type = ATCK_WEAP_NERUDITE
-
+   
 messages:
 
    % Ammo may add a special effect to bow shots.

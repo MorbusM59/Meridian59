@@ -30,10 +30,6 @@ classvars:
    vrIcon = scimitar_icon_rsc
    vrDesc = scimitar_desc_rsc
 
-   % Scimitars are high quality slashing weapons
-   viWeaponType = WEAPON_TYPE_SLASH
-   viWeaponQuality = WEAPON_QUALITY_HIGH
-
    viProficiency_Needed = SKID_PROFICIENCY_SCIMITAR
 
    viValue_average = 150
@@ -47,12 +43,31 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
+   viDamage = 200
+   viProficiencyBonus = 800
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 0
+   viStrike = 60
+   viSlash = 120
+   viThrust = 60
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 192
+
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_AGILITY
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH
+   viSpellType = 0
+   viDeviation = 20
+
 properties:
 
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH
-
 messages:
-
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

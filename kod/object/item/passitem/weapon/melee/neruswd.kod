@@ -34,10 +34,6 @@ classvars:
 
    vrWeaponBroke = nerusword_shatters
 
-   % Nerudite swords are nerudite quality thrusting weapons
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_NERUDITE
-
    viProficiency_needed = SKID_PROFICIENCY_SWORD
 
    viValue_average = 1000
@@ -51,10 +47,29 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
-properties:
+   viDamage = 500
+   viProficiencyBonus = 500
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 60
+   viStrike = 0
+   viSlash = 100
+   viThrust = 100
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 192
 
-   piAttack_type = ATCK_WEAP_THRUST + ATCK_WEAP_NERUDITE
-   piAttack_Spell = 0
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_AIM
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
+   viSpellType = 0
+   viDeviation = 40
+
+properties:
 
 messages:
 
@@ -70,7 +85,7 @@ messages:
       if poOwner <> $ AND isClass(poOwner,&User)
       {
          if send(poOwner,@AssessDamage,#what=self,#damage=random(10,25),
-            #report=FALSE,#atype=ATCK_WEAP_NERUDITE) = $
+            #report=FALSE,#attacktype=ATCK_WEAP_NERUDITE) = $
          {
             Send(Send(poOwner,@GetOwner),@SomethingKilled,#what=self,#victim=poOwner);
             Send(poOwner,@Killed,#what=self);

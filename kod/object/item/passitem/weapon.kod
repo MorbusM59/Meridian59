@@ -186,6 +186,7 @@ messages:
          {
             n = n + 1;
             iDeviation = 100*First(lstats)/viDamage - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piDamage = First(lstats);
@@ -193,23 +194,34 @@ messages:
          if viProficiencyBonus <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viProficiencyBonus - 100;
+            iDeviation = 100*Nth(lstats,2)/viProficiencyBonus - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piProficiencyBonus = Nth(lstats,2);
 
-         if viHitMod <> 0
+         if viHitMod > 0 AND Nth(lstats,3) > 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viHitMod - 100;
+            iDeviation = 100*Nth(lstats,3)/viHitMod - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
+         }
+         
+         if viHitMod < 0 AND Nth(lstats,3) < 0
+         {
+            n = n + 1;
+            iDeviation = 100*Nth(lstats,3)/viHitMod - 100;
+            iDeviation = bound(iDeviation,-100,100);
+            iQuality = iQuality - iDeviation;
          }
          piHitMod = Nth(lstats,3);
 
          if viPrimaryScaling <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viPrimaryScaling - 100;
+            iDeviation = 100*Nth(lstats,4)/viPrimaryScaling - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piPrimaryScaling = Nth(lstats,4);
@@ -217,7 +229,8 @@ messages:
          if viSecondaryScaling <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viSecondaryScaling - 100;
+            iDeviation = 100*Nth(lstats,5)/viSecondaryScaling - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piSecondaryScaling = Nth(lstats,5);
@@ -225,7 +238,8 @@ messages:
          if viStab <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viStab - 100;
+            iDeviation = 100*Nth(lstats,6)/viStab - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piStab = Nth(lstats,6);
@@ -233,7 +247,8 @@ messages:
          if viStrike <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viStrike - 100;
+            iDeviation = 100*Nth(lstats,7)/viStrike - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piStrike = Nth(lstats,7);
@@ -241,7 +256,8 @@ messages:
          if viSlash <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viSlash - 100;
+            iDeviation = 100*Nth(lstats,8)/viSlash - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piSlash = Nth(lstats,8);
@@ -249,7 +265,8 @@ messages:
          if viThrust <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viThrust - 100;
+            iDeviation = 100*Nth(lstats,9)/viThrust - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piThrust = Nth(lstats,9);
@@ -257,7 +274,8 @@ messages:
          if viFire <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viFire - 100;
+            iDeviation = 100*Nth(lstats,10)/viFire - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piFire = Nth(lstats,10);
@@ -265,39 +283,52 @@ messages:
          if viTouch <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viTouch - 100;
+            iDeviation = 100*Nth(lstats,11)/viTouch - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piTouch = Nth(lstats,11);
 
-         if viDisarmMod <> 0
+         if viDisarmMod <> 0 AND viDisarmMod <> $
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viDisarmMod - 100;
+            iDeviation = 100*Nth(lstats,12)/viDisarmMod - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piDisarmMod = Nth(lstats,12);
 
-         if viParryMod <> 0
+         if viParryMod <> 0 AND viParryMod <> $
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viParryMod - 100;
+            iDeviation = 100*Nth(lstats,13)/viParryMod - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piParryMod = Nth(lstats,13);
 
-         if viSpellpowerMod <> 0
+         if viSpellpowerMod > 0 AND Nth(lstats,14) > 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viSpellpowerMod - 100;
+            iDeviation = 100*Nth(lstats,14)/viSpellpowerMod - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
+         }
+         
+         if viSpellpowerMod < 0 AND Nth(lstats,14) < 0
+         {
+            n = n + 1;
+            iDeviation = 100*Nth(lstats,14)/viSpellpowerMod - 100;
+            iDeviation = bound(iDeviation,-100,100);
+            iQuality = iQuality - iDeviation;
          }
          piSpellpowerMod = Nth(lstats,14);
 
          if viRange <> 0
          {
             n = n + 1;
-            iDeviation = 100*First(lstats)/viRange - 100;
+            iDeviation = 100*Nth(lstats,15)/viRange - 100;
+            iDeviation = bound(iDeviation,-100,100);
             iQuality = iQuality + iDeviation;
          }
          piRange = Nth(lstats,15);
@@ -333,11 +364,18 @@ messages:
             iQuality = iQuality + iDeviation;
             piProficiencyBonus = piProficiencyBonus*(100+iDeviation)/100;   
          }
-         if piHitMod <> 0
+         if piHitMod > 0
          {
             n = n + 1;
             iDeviation = random(lower,upper);
             iQuality = iQuality + iDeviation;
+            piHitMod = piHitMod*(100+iDeviation)/100;   
+         }
+         if piHitMod < 0
+         {
+            n = n + 1;
+            iDeviation = random(-upper,lower);
+            iQuality = iQuality - iDeviation;
             piHitMod = piHitMod*(100+iDeviation)/100;   
          }
          if piPrimaryScaling <> 0
@@ -396,25 +434,32 @@ messages:
             iQuality = iQuality + iDeviation;
             piTouch = piTouch*(100+iDeviation)/100;   
          }
-         if piDisarmMod <> 0
+         if piDisarmMod <> 0 AND piDisarmMod <> $
          {
             n = n + 1;
             iDeviation = random(lower,upper);
             iQuality = iQuality + iDeviation;
             piDisarmMod = piDisarmMod*(100+iDeviation)/100;   
          }
-         if piParryMod <> 0
+         if piParryMod <> 0 AND piParryMod <> $
          {
             n = n + 1;
             iDeviation = random(lower,upper);
             iQuality = iQuality + iDeviation;
             piParryMod = piParryMod*(100+iDeviation)/100;   
          }
-         if piSpellpowerMod <> 0
+         if piSpellpowerMod > 0
          {
             n = n + 1;
             iDeviation = random(lower,upper);
             iQuality = iQuality + iDeviation;
+            piSpellpowerMod = piSpellpowerMod*(100+iDeviation)/100;   
+         }
+         if piSpellpowerMod < 0
+         {
+            n = n + 1;
+            iDeviation = random(-upper,lower);
+            iQuality = iQuality - iDeviation;
             piSpellpowerMod = piSpellpowerMod*(100+iDeviation)/100;   
          }
          if piRange <> 0

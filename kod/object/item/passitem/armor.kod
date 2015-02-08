@@ -174,7 +174,7 @@ messages:
       return [];
    }
 
-   DamageGear(damage=0,atype=0,aspell=0)
+   DamageGear(damage=0,attacktype=0,spelltype=0)
    {
       local iChance;
       
@@ -196,12 +196,12 @@ messages:
          iChance = iChance * 1 / 4;
       }
 
-      if atype <> 0
+      if attacktype <> 0
       {
          iChance = iChance * 3 / 2;
       }
 
-      if aspell <> 0
+      if spelltype <> 0
       {
          iChance = iChance * 1 / 2;
       }

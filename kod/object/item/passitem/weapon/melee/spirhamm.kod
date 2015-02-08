@@ -33,10 +33,6 @@ classvars:
    vrIcon = spirithammer_icon_rsc
    vrDesc = spirithammer_desc_rsc
 
-   % Spiritual Hammers are high quality bludgeoning weapons
-   viWeaponType = WEAPON_TYPE_BLUDGEON
-   viWeaponQuality = WEAPON_QUALITY_HIGH
-
    viProficiency_Needed = SKID_PROFICIENCY_HAMMER
 
    viValue_average = 0
@@ -51,9 +47,30 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
+   viDamage = 600
+   viProficiencyBonus = 400
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 0
+   viStrike = 120
+   viSlash = 80
+   viThrust = 40
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 160
+
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_STAMINA
+   viAttackType = ATCK_WEAP_MAGIC+ATCK_WEAP_BLUDGEON
+   viSpellType = 0
+   viDeviation = 30
+   
 properties:
 
-   piAttack_type = ATCK_WEAP_MAGIC+ATCK_WEAP_BLUDGEON
    ptLongevity
    piItem_flags = 10
 

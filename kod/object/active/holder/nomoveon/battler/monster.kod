@@ -229,8 +229,8 @@ classvars:
    vrDead_icon = $
    vrDead_name = $
 
-   viAttack_type = ATCK_WEAP_HIT
-   viAttack_spell = 0
+   viAttackType = ATCK_WEAP_HIT
+   viSpellType = 0
    viMerchant_markup = MERCHANT_NORMAL
    viCancel_offer_time = 30000
    % Default to teleport if there's no move anim, also used for movement timer
@@ -1846,13 +1846,13 @@ messages:
    % This is the type of damage done.
    GetAttackType(what = $)
    {
-      return viAttack_type;
+      return viAttackType;
    }
 
    % This is the magical type of damage done.
    GetSpellType(what = $)
    {
-      return viAttack_spell;
+      return viSpellType;
    }
 
    IsRangedAttack()
@@ -1870,7 +1870,7 @@ messages:
    % calculations. Most notably, damage from attackspells and melee is now 
    % handled with high precision. Eventually, all damage calculations should 
    % be handled in high precision mode.
-   AssessDamage(what=$,damage=$,atype=0,aspell=0,bonus=0,scalefactor=1000,
+   AssessDamage(what=$,damage=$,attacktype=0,spelltype=0,bonus=0,scalefactor=1000,
       absolute=FALSE,precision=FALSE)
    {
       local iDamage,iResist,iPercentClass,i,each_obj;
@@ -1891,9 +1891,9 @@ messages:
 
       if NOT absolute
       {
-         iDamage = Send(self,@ArmorCheck,#what=what,#bonus=bonus,#atype=atype,
-            #aspell=aspell,#damage=damage);
-         iResist = Send(self,@ResistanceCheck,#atype=atype,#aspell=aspell);
+         iDamage = Send(self,@ArmorCheck,#what=what,#bonus=bonus,#attacktype=attacktype,
+            #spelltype=spelltype,#damage=damage);
+         iResist = Send(self,@ResistanceCheck,#attacktype=attacktype,#spelltype=spelltype);
          iDamage = Send(self,@GetDamageFromResistance,#what=iDamage,#value=iResist);
          iDamage = iDamage + bonus;
          iDamage = iDamage * scalefactor / 1000;
@@ -1960,14 +1960,14 @@ messages:
 
    % Allows monsters to have armor not related to specific equipped items. 
    % Based on piArmor.
-   ArmorCheck(what=$,damage=0,atype=0,aspell=0,bonus=0)
+   ArmorCheck(what=$,damage=0,attacktype=0,spelltype=0,bonus=0)
    {
       local iDamageReduce, oAttribute;
 
       for oAttribute in plObject_attributes
       {
          damage = Send(oAttribute,@ModifyDefenseDamage,#who=self,#what=what,
-            #damage=damage,#atype=atype,#aspell=aspell);
+            #damage=damage,#attacktype=attacktype,#spelltype=spelltype);
       }
 
       iDamageReduce = 0;
@@ -1977,10 +1977,10 @@ messages:
          iDamageReduce = bound(iDamageReduce,0,(damage-100));
       }
 
-      if aspell <> 0
+      if spelltype <> 0
       {
          % Reduce damage if part of the damage is spell
-         if atype <> 0
+         if attacktype <> 0
          {
             % Only 2/3 of the damage reduction if we're doing both weapon
             % and spell damage types.

@@ -31,10 +31,6 @@ classvars:
    vrIcon = hammer_icon_rsc
    vrDesc = hammer_desc_rsc
 
-   % Hammers are average quality blunt weapons
-   viWeaponType = WEAPON_TYPE_BLUDGEON
-   viWeaponQuality = WEAPON_QUALITY_NORMAL
-
    viProficiency_Needed = SKID_PROFICIENCY_HAMMER
 
    viValue_average = 450
@@ -48,8 +44,8 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
    
-   viDamage = 1000
-   viProficiencyBonus = 500
+   viDamage = 600
+   viProficiencyBonus = 400
    viHitMod = 0
    viPrimaryScaling = 30
    viSecondaryScaling = 30
@@ -61,14 +57,14 @@ classvars:
    viTouch = 0
    viDisarmMod = 0
    viParryMod = 0
-   viSpellpowerMod = 20
-   viRange = 192
+   viSpellpowerMod = 0
+   viRange = 128
 
    viPrimaryStat = STAT_MIGHT
-   viSecondaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_STAMINA
    viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON
    viSpellType = 0
-   viDeviation = 20
+   viDeviation = 30
 
 properties:
 

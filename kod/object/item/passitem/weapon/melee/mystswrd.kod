@@ -46,25 +46,25 @@ classvars:
 
    viDamage = 500
    viProficiencyBonus = 500
-   viHitMod = 200
+   viHitMod = 0
    viPrimaryScaling = 30
    viSecondaryScaling = 30
    viStab = 60
    viStrike = 0
-   viSlash = 80
+   viSlash = 100
    viThrust = 100
    viFire = 0
    viTouch = 0
-   viDisarmMod = 20
-   viParryMod = 20
-   viSpellpowerMod = -10
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
    viRange = 192
 
    viPrimaryStat = STAT_MIGHT
    viSecondaryStat = STAT_AIM
-   viAttackType = ATCK_WEAP_MAGIC + ATCK_WEAP_THRUST
+   viAttackType = ATCK_WEAP_MAGIC+ATCK_WEAP_THRUST
    viSpellType = 0
-   viDeviation = 20
+   viDeviation = 30
 
 properties:
 

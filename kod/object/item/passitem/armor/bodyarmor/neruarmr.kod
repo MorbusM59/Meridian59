@@ -103,7 +103,7 @@ messages:
          send(poOwner,@MsgSendUser,#message_rsc=neruarmor_shatters);
 
          if send(poOwner,@AssessDamage,#what=self,#damage=random(15,30),
-                 #report=FALSE,#atype=ATCK_WEAP_NERUDITE) = $
+                 #report=FALSE,#attacktype=ATCK_WEAP_NERUDITE) = $
          {
             send(send(poOwner,@GetOwner),@SomethingKilled,#what=self,#victim=poOwner);
             send(poOwner,@Killed,#what=self);

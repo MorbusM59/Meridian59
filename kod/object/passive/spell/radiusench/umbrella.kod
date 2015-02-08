@@ -93,7 +93,7 @@ messages:
       return iPower*2;
    }
 
-   ModifyResistance(attacker=$,atype=-ATCK_SPELL_ALL,iPower=0,caster=$,resistance=$)
+   ModifyResistance(attacker=$,attacktype=-ATCK_SPELL_ALL,iPower=0,caster=$,resistance=$)
    {
       if attacker <> $
       {

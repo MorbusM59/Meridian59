@@ -3552,33 +3552,33 @@ messages:
       return;
    }
    
-   DamageTypeFlashEffect(aspell=0, duration=800)
+   DamageTypeFlashEffect(spelltype=0, duration=800)
    {
-      if aspell & ATCK_SPELL_QUAKE
+      if spelltype & ATCK_SPELL_QUAKE
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=65);
       }
-      if aspell & ATCK_SPELL_HOLY
+      if spelltype & ATCK_SPELL_HOLY
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=116);
       }
-      if aspell & ATCK_SPELL_UNHOLY
+      if spelltype & ATCK_SPELL_UNHOLY
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=112);
       }
-      if aspell & ATCK_SPELL_ACID
+      if spelltype & ATCK_SPELL_ACID
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=86);
       }
-      if aspell & ATCK_SPELL_COLD
+      if spelltype & ATCK_SPELL_COLD
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=85);
       }
-      if aspell & ATCK_SPELL_SHOCK
+      if spelltype & ATCK_SPELL_SHOCK
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=82);
       }
-      if aspell & ATCK_SPELL_FIRE
+      if spelltype & ATCK_SPELL_FIRE
       {
          Send(self,@EffectSendUserDurationAndXlat,#effect=EFFECT_FLASHXLAT,#duration=duration,#xlat=81);
       }

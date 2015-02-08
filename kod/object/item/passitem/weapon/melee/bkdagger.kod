@@ -80,10 +80,6 @@ classvars:
    vrName = BlackDagger_name_rsc
    vrIcon = BlackDagger_icon_rsc
 
-   % Black daggers are low quality swords (?), just like shortswords
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_LOW
-
    vrWeapon_window_overlay = BlackDagger_window_overlay_rsc
    vrWeapon_overlay = BlackDagger_player_overlay
 
@@ -96,9 +92,9 @@ classvars:
 
    viItem_type = ITEMTYPE_WEAPON | ITEMTYPE_SPECIAL
 
-properties:
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_PIERCE
 
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_PIERCE
+properties:
 
    piNotches = 0
    piPlayer_hits = 4

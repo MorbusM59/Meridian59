@@ -18,11 +18,11 @@ WeapAttSpellType is WeaponAttribute
 % 
 %  Form is:
 %
-%      [WA_ATTACKSPELLTYPE, timer, spell_attack_type ]
+%      [WA_ATTACKSPELLTYPE, timer, spell_AttackType ]
 %
 %       timer::the length of time, from 1 to 25 realtime hours,
 %       that the enchantment lasts (depending on spell factors).
-%       spell_attack_type : as defined in blakston.khd.
+%       spell_AttackType : as defined in blakston.khd.
 %       examples: ATCK_SPELL_FIRE, ATCK_SPELL_UNHOLY, ATCK_SPELL_ACID
 %
 %  Note that if a weapon ends up permanently holy or unholy, then this

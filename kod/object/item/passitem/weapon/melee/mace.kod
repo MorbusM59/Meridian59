@@ -32,10 +32,6 @@ classvars:
    vrIcon = mace_icon_rsc
    vrDesc = mace_desc_rsc
 
-   % Maces are low quality bludugeoning weapons
-   viWeaponType = WEAPON_TYPE_BLUDGEON
-   viWeaponQuality = WEAPON_QUALITY_LOW
-
    viProficiency_Needed = SKID_PROFICIENCY_MACE
 
    viValue_average = 50
@@ -50,9 +46,29 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
-properties:
+   viDamage = 600
+   viProficiencyBonus = 200
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 0
+   viStrike = 120
+   viSlash = 80
+   viThrust = 40
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 128
 
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_STAMINA
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON
+   viSpellType = 0
+   viDeviation = 30
+
+properties:
 
 messages:
 

@@ -37,14 +37,6 @@ classvars:
    vrIcon = UniqueWeapon_icon_rsc
    vrDesc = UniqueWeapon_desc_rsc
 
-   % The Assassin's dagger is a low quality thrusting weapon, making it
-   %  shortsword like.
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_LOW
-
-   viMin_damage = 8
-   viMax_damage = 12
-
    viProficiency_Needed = SKID_PROFICIENCY_SWORD
 
    viValue_average = 0
@@ -60,9 +52,10 @@ classvars:
    vrWeapon_window_overlay = blackdagger_window_overlay_rsc
    vrWeapon_overlay = blackdagger_player_overlay
 
+   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_PIERCE
+
 properties:
 
-   piAttack_type = ATCK_WEAP_NONMAGIC + ATCK_WEAP_PIERCE
    pbNewlyCreated = 0
 
 messages:
@@ -74,17 +67,6 @@ messages:
       pbNewlyCreated = 0;
         
       propagate;
-   }
-
-   GetBaseDamage(who=$,target=$)
-   {
-      return random(viMin_damage,viMax_damage);
-   }
-
-   GetHitMod(who=$,what=$,stroke_obj=$,use_weapon=$)
-   {
-      % Return a good bonus
-      return 20;
    }
 
    CheckNewlyCreated()

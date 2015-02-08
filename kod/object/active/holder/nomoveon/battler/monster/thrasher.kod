@@ -59,7 +59,7 @@ classvars:
    viCashmin = -12000
    viCashmax = 6000
    viNormalSpeed = SPEED_FAST
-   viAttack_type = ATCK_WEAP_BLUDGEON
+   viAttackType = ATCK_WEAP_BLUDGEON
    viVisionDistance = 25
    viAttributes = 0
    viKarma = -75
@@ -359,7 +359,7 @@ messages:
       for i in lTargets
       {
          iDamage = Send(i,@AssessDamage,#what=self,#damage=iDamage,
-                        #atype=viAttack_type,#aspell=viAttack_spell);
+                        #attacktype=viAttackType,#spelltype=viSpellType);
          if iDamage = $
          {
             Send(self,@KilledSomething,#what=i,#use_weapon=self);

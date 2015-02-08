@@ -4544,6 +4544,7 @@ messages:
             OR (IsClass(stroke_obj,&Spell)
                AND Send(stroke_obj,@GetNumSpellTargets) = 1))
       {
+         iDist = Send(self,@SquaredDistanceTo,#what=oFinalTarget);
          iAngle = Send(self,@GetAngle);
          iRow = piRow;
          iCol = piCol;
@@ -4562,7 +4563,7 @@ messages:
          % side of the line the target is.
          % Equation of the SW-NE line: iTargetRow - iRow = iCol - iTargetRow
          % Equation of the SE-NW line: iTargetRow - iRow = iTargetCol - iCol
-         if iDist > 4096
+         if iDist > 1
             AND (((iAngle > ANGLE_ENE OR iAngle <= ANGLE_ESE)
                   AND iTargetCol < iCol)
                OR (iAngle > ANGLE_ESE AND iAngle <= ANGLE_SSE
@@ -4862,7 +4863,7 @@ messages:
       return iDamage;
    }
 
-   GetDamageReduction(damage=0,what=$,atype=0,aspell=0)
+   GetDamageReduction(damage=0,what=$,attacktype=0,spelltype=0)
    {
       local i, iRedFlat, iRedFactor, iReduction, oGort, iGort, oShield;
 
@@ -4870,8 +4871,8 @@ messages:
       oGort = Send(SYS,@FindSpellByNum,#Num=SID_ARMOR_OF_GORT);
       if Send(self,@IsEnchanted,#what=oGort)
       {
-         iGort = Send(oGort,@GetDamageReduction,#damage=damage,#atype=atype,
-            #aspell=aspell);
+         iGort = Send(oGort,@GetDamageReduction,#damage=damage,#attacktype=attacktype,
+            #spelltype=spelltype);
       }
       else
       {
@@ -4882,17 +4883,17 @@ messages:
       iRedFactor = 0;
       iRedFlat = 0;
 
-      if aspell <> 0 AND atype <> 0 
+      if spelltype <> 0 AND attacktype <> 0 
       {
          iRedFactor = (piPhysicalReductionFactor + piMagicalReductionFactor) / 2;
          iRedFlat = (piPhysicalReductionFlat + piMagicalReductionFlat) / 2;
       }
-      if aspell <> 0 AND atype = 0 
+      if spelltype <> 0 AND attacktype = 0 
       {
          iRedFactor = piMagicalReductionFactor;
          iRedFlat = piMagicalReductionFlat;
       }
-      if aspell = 0 AND atype <> 0 
+      if spelltype = 0 AND attacktype <> 0 
       {
          iRedFactor = piPhysicalReductionFactor;
          iRedFlat = piPhysicalReductionFlat;
@@ -4902,18 +4903,18 @@ messages:
       for i in plUsing
       {
          iRedFactor = iRedFactor + Send(i,@DamageReductionHook,#who=self,#what=what,
-            #damage=damage,#atype=atype,#aspell=aspell);
+            #damage=damage,#attacktype=attacktype,#spelltype=spelltype);
       }
       for i in plEnchantments
       {
          iRedFactor = iRedFactor + Send(Nth(i,2),@DamageReductionHook,#who=self,#what=what,
-            #damage=damage,#atype=atype,#aspell=aspell);
+            #damage=damage,#attacktype=attacktype,#spelltype=spelltype);
       }
       for i in plRadiusEnchantments
       {
          iRedFactor = iRedFactor + Send(First(i),@DamageReductionHook,#who=self,
             #what=what,#iPower=Nth(i,2),#caster=Nth(i,3),
-            #damage=damage,#atype=atype,#aspell=aspell);
+            #damage=damage,#attacktype=attacktype,#spelltype=spelltype);
       }
 
       iReduction = (damage*iRedFactor/1000) + iRedFlat;
@@ -4974,7 +4975,7 @@ messages:
    % calculations. Most notably, damage from attackspells and melee is now 
    % handled with high precision. Eventually, all damage calculations should 
    % be handled in high precision mode.
-   AssessDamage(what=$,damage=0,reduction=$,atype=0,aspell=0,stroke_obj=$,
+   AssessDamage(what=$,damage=0,reduction=$,attacktype=0,spelltype=0,stroke_obj=$,
       scalefactor=1000,report=TRUE,report_resistance=TRUE,absolute=FALSE,
       precision=FALSE)
    {
@@ -4991,8 +4992,8 @@ messages:
       {
          if IsClass(i,&Armor) OR IsClass(i,&ResistRing)
          {
-            Send(i,@DamageGear,#who=self,#what=what,#damage=damage,#atype=atype,
-               #aspell=aspell,#report_resistance=report_resistance);
+            Send(i,@DamageGear,#who=self,#what=what,#damage=damage,#attacktype=attacktype,
+               #spelltype=spelltype,#report_resistance=report_resistance);
          }
       }
 
@@ -5011,18 +5012,18 @@ messages:
          if reduction = $
          {
             reduction = Send(what,@GetDamageReduction,#damage=damage,#what=what,
-            #atype=atype,#aspell=aspell);
+            #attacktype=attacktype,#spelltype=spelltype);
          }
 
          % Reduction is already capped to be no greater than damage.
          damage = damage - reduction;
 
-         iResistance = Send(self,@ResistanceCheck,#atype=atype,#aspell=aspell);
+         iResistance = Send(self,@ResistanceCheck,#attacktype=attacktype,#spelltype=spelltype);
 
          for i in plRadiusEnchantments
          {
             iResistance = Send(Nth(i,1),@ModifyResistance,#attacker=what,
-               #atype=atype,#iPower=Nth(i,2),
+               #attacktype=attacktype,#iPower=Nth(i,2),
                #caster=Nth(i,3),#resistance=iResistance);
          }
 
@@ -5031,7 +5032,7 @@ messages:
          % Allow protective spells a chance to improve when they take effect!
          for i in plPassiveImprovement
          {
-            if (aspell & -Nth(i,4)) AND random(1,10) = 10
+            if (spelltype & -Nth(i,4)) AND random(1,10) = 10
             {
                Send(First(i),@ImproveAbility,#who=self,#target=what);
             }
@@ -5071,7 +5072,7 @@ messages:
       }
 
       % Handle visual pain feedback.
-      Send(self,@DoDamageFlash,#damage=damage,#aspell=aspell);
+      Send(self,@DoDamageFlash,#damage=damage,#spelltype=spelltype);
 
       Send(self,@LoseHealth,#amount=damage,#precision=TRUE);
 
@@ -5079,14 +5080,14 @@ messages:
       if IsClass(what,&Monster)
       {
          RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),
-            Send(what,@GetTrueName),aspell,atype,damage/100,origdamage,
+            Send(what,@GetTrueName),spelltype,attacktype,damage/100,origdamage,
             player_monster_attack_string);
       }
 
       if IsClass(what,&Player)
       {
          RecordStat(STAT_ASSESS_DAM,Send(self,@GetTrueName),
-            Send(what,@GetTrueName),aspell,atype,damage/100,origdamage,
+            Send(what,@GetTrueName),spelltype,attacktype,damage/100,origdamage,
             Send(Send(what,@GetWeapon),@GetTrueName));
       }
 
@@ -5520,7 +5521,7 @@ messages:
       return player_sound_female_ouch4;
    }
 
-   DoDamageFlash(damage=0,aspell=0)
+   DoDamageFlash(damage=0,spelltype=0)
    {
       local iDuration;
       
@@ -5539,10 +5540,10 @@ messages:
       % If it's just physical damage, do pain instead. Notably: spell
       % damage type flashes cannot be turned off by unchecking the
       % Show Pain option in client config.
-      if aspell <> 0
+      if spelltype <> 0
       {
          iDuration = iDuration / 2;
-         Send(self,@DamageTypeFlashEffect,#aspell=aspell,#duration=iDuration);
+         Send(self,@DamageTypeFlashEffect,#spelltype=spelltype,#duration=iDuration);
       }
       else
       {
@@ -7582,7 +7583,7 @@ messages:
 
    ActivateSpellAtrophy()
    {
-      local i, j, iability, lSchoolsUsed, aSpell, bSpell,
+      local i, j, iability, lSchoolsUsed, spelltype, bSpell,
             bFound, highmark, iAmount;
 
       % Must get below highmark for atrophy to activate
@@ -7595,7 +7596,7 @@ messages:
             iAbility = Send(self,@DecodeSpellAbility,#compound=i);
             if iAbility > 2
             {
-               aSpell = Send(SYS,@FindSpellByNum,
+               spelltype = Send(SYS,@FindSpellByNum,
                      #num=Send(self,@DecodeSpellNum,#compound=i));
                bFound = FALSE;
 
@@ -7603,14 +7604,14 @@ messages:
                {
                   bSpell = Send(SYS,@FindSpellByNum,
                         #num=Send(self,@DecodeSpellNum,#compound=j));
-                  if j > 0 AND Send(aSpell,@GetSchool) = Send(bSpell,@GetSchool)
+                  if j > 0 AND Send(spelltype,@GetSchool) = Send(bSpell,@GetSchool)
                   {
                      iAmount = -1;
 
                      break;
                   }
                }
-               Send(self,@ChangeSpellAbility,#spell_num=Send(aSpell,@GetSpellNum),
+               Send(self,@ChangeSpellAbility,#spell_num=Send(spelltype,@GetSpellNum),
                     #amount=iamount);
             }
          }

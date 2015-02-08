@@ -61,7 +61,7 @@ classvars:
                         %  skill happen automatically, and are not accessible
                         %  via menu.
 
-   viAttack_Type = ATCK_WEAP_UNARMED+ATCK_WEAP_KICK
+   viAttackType = ATCK_WEAP_UNARMED+ATCK_WEAP_KICK
 
 properties:
 

@@ -95,12 +95,19 @@ messages:
 
    DoSkill(who=$,what=$,use_weapon=$)
    {
-      local iAbil,iModifier,oOppWeapon, oHoldSpell;
+      local iAbil,iMod,oOppWeapon, oHoldSpell;
 
       % Get the weapon's disarm modifier.
-      iModifier = Send(use_weapon,@GetDisarmMod);
+      iMod = Send(use_weapon,@GetDisarmMod);
+
+      % Certain weapons may not permit disarming. If so, their bonus returns nil
+      % instead of 0.
+      if iMod = $
+      {
+         return 0;
+      }
       
-      if NOT (Send(self,@CanPayCosts,#who=who) AND Send(self,@PayCosts,#who=who,#modifier=iModifier))
+      if NOT (Send(self,@CanPayCosts,#who=who) AND Send(self,@PayCosts,#who=who,#modifier=iMod))
       {
          return FALSE;
       }
@@ -120,7 +127,7 @@ messages:
          if Send(what,@TryUnuseItem,#what=oOppWeapon)
          {
             % Currently, have 1/5th your percent plus your modifier chance to make opponent drop weapon.
-            iAbil = (iAbil + 1 + iModifier) / DISARM_FACTOR;
+            iAbil = (iAbil + 1 + iMod) / DISARM_FACTOR;
             if (random(1,100) < iAbil) AND (NOT Send(Send(what,@GetOwner),@IsArena))
             {
                % Success!  They dropped it!
@@ -160,7 +167,7 @@ messages:
          % The better you are, the better your weapon, the longer your stun is.
          % The bigger the monster is, the shorter the stun is.
          % Stun between 2 and 6 seconds.
-         iAbil = bound((iAbil + iModifier - Send(what,@GetLevel)/2)/10,2,6);
+         iAbil = bound((iAbil + iMod - Send(what,@GetLevel)/2)/10,2,6);
          Send(oHoldSpell,@DoHold,#what=who,#what=what,#idurationsecs=iAbil,#report=FALSE);
       }
 

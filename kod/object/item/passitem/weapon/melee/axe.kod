@@ -33,10 +33,6 @@ classvars:
 
    viIndefinite = ARTICLE_AN
 
-   % Axes are normal quality slashing weapons.
-   viWeaponType = WEAPON_TYPE_SLASH
-   viWeaponQuality = WEAPON_QUALITY_NORMAL
-
    viProficiency_Needed = SKID_PROFICIENCY_AXE
    
    viValue_average = 600
@@ -50,9 +46,29 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
-properties:
+   viDamage = 400
+   viProficiencyBonus = 600
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 0
+   viStrike = 100
+   viSlash = 100
+   viThrust = 60
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 160
 
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_STAMINA
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH
+   viSpellType = 0
+   viDeviation = 50
+
+properties:
 
 messages:
 

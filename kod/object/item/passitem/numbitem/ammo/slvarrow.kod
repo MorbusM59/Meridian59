@@ -47,10 +47,11 @@ classvars:
    viMinUndeadDamage = 600
    viMaxUndeadDamage = 1200
 
+   viAttackType = ATCK_WEAP_SILVER
+
 properties:
 
    piNumber = 10
-   piAttack_type = ATCK_WEAP_SILVER
 
 messages:
 

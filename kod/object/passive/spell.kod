@@ -2603,7 +2603,7 @@ messages:
    }
 
    % Hooks into GetDamageReduction and can modify the damage reduction factor.
-   DamageReductionHook(who=$,what=$,damage=0,atype=0,aspell=0,caster=$,iPower=0)
+   DamageReductionHook(who=$,what=$,damage=0,attacktype=0,spelltype=0,caster=$,iPower=0)
    {
       return 0;
    }

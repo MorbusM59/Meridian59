@@ -91,10 +91,6 @@ classvars:
    vrWeapon_window_overlay = HunterSword_window_overlay_rsc
    vrWeapon_overlay = HunterSword_player_overlay
 
-   % Hunter swords are high quality thrusting weapons
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_HIGH
-
    viProficiency_needed = SKID_PROFICIENCY_SWORD
 
    viGround_group = 1
@@ -113,6 +109,9 @@ classvars:
 
    viItem_type = ITEMTYPE_WEAPON | ITEMTYPE_SPECIAL
 
+   viAttackType = ATCK_WEAP_SLASH
+   viSpellType = ATCK_SPELL_HUNTERSWORD
+
 properties:
 
    plStatmods = $
@@ -126,9 +125,6 @@ properties:
    piHoldingDamageInterval = 10 * 1000     % ten seconds
    piHpWorthyThreshold = 60
    piKarmaWorthyThreshold = -30
-
-   piAttack_type = ATCK_WEAP_SLASH
-   piAttack_Spell = ATCK_SPELL_HUNTERSWORD
 
    pbCounted = FALSE
    pbCheapDeath = FALSE

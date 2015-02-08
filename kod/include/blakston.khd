@@ -1758,20 +1758,6 @@
 
    %%% Weapons
 
-   % Classes of weapon quality.
-   WEAPON_QUALITY_LOW = 0
-   WEAPON_QUALITY_NORMAL = 1
-   WEAPON_QUALITY_HIGH = 2
-   WEAPON_NERUDITE = 3
-
-   % General types of weapons.
-   %  Bludgeon weapons are blunt weapons.
-   WEAPON_TYPE_BLUDGEON = 0
-   %  Thrust weapons are swords.
-   WEAPON_TYPE_THRUST = 1
-   %  Slash weapons are the heavier weapons.
-   WEAPON_TYPE_SLASH = 2
-
    % How much range bonus do we get if a player target has moved recently?
    RANGE_MOVEMENT_BONUS = 64
 

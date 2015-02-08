@@ -47,7 +47,7 @@ classvars:
    viTreasure_type = TID_NONE
 
    viSpeed = SPEED_FAST
-   viAttack_type = ATCK_WEAP_SLASH
+   viAttackType = ATCK_WEAP_SLASH
    viAttributes = 0
    viLevel = 20
    viDifficulty = 8
@@ -466,7 +466,7 @@ messages:
    {
       if poOriginal = $
       {
-         return viAttack_type;
+         return viAttackType;
       }
 
       return Send(poOriginal,@GetAttackType,#what=what,#use_weapon=use_weapon);
@@ -476,7 +476,7 @@ messages:
    {
       if poOriginal = $
       {
-         return viAttack_spell;
+         return viSpellType;
       }
 
       return Send(poOriginal,@GetSpellType,#what=what,#use_weapon=use_weapon);

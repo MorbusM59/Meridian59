@@ -54,39 +54,6 @@ classvars:
 
 properties:
 
-   piRange = 4
-
-   % Damage values are using high precision.
-   piMinDamage = 1000
-   piMaxDamage = 1000
-   piProficiencyBonus = 500
-   piHitMod = 0
-   piSpellpowerMod = 0
-
-   piDisarmMod = 0
-   piParryMod = 0
-   
-   piStab = 100
-   piStrike = 100
-   piSlash = 100
-   piThrust = 100
-   piFire = 100
-   piTouch = 100
-
-   % The stats relevant for this weapon. Primary stat scales damage while
-   % secondary stat scales a bonus effect that varies with weapon class.
-   piPrimaryStat = STAT_MIGHT
-   piSecondaryStat = STAT_MIGHT
-
-   % The percentage of effect that primary and secondary stats add at 50.
-   piPrimaryScaling = 100
-   piSecondaryScaling = 100
-
-   piQuality = 100
-
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
-   piAttack_spell = 0
-
    % Overriding.
    viProficiency_Needed = SKID_PROFICIENCY_SWORD
 
@@ -106,30 +73,30 @@ messages:
 
       if what=1
       {
-         piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON;
+         piAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_BLUDGEON;
       }
 
       if what=2
       {
-         piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST;
+         piAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST;
       }
 
       if what=3
       {
-         piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH;	  
+         piAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_SLASH;	  
       }
 
       if what=4
       {
-         piAttack_type = ATCK_WEAP_THRUST+ATCK_WEAP_NERUDITE;
+         piAttackType = ATCK_WEAP_THRUST+ATCK_WEAP_NERUDITE;
       }
 
       if what=5
       {
-         piAttack_type = ATCK_WEAP_MAGIC+ATCK_WEAP_THRUST;
+         piAttackType = ATCK_WEAP_MAGIC+ATCK_WEAP_THRUST;
       }
 
-      return piAttack_type;
+      return piAttackType;
    }
 
 end

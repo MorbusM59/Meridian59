@@ -35,10 +35,6 @@ classvars:
    viWeight = 90
    viBulk = 60
 
-   % Gold swords are average quality thrusting weapons
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_NORMAL
-
    viProficiency_Needed = SKID_PROFICIENCY_SWORD
 
    vrWeapon_window_overlay = goldsword_window_overlay_rsc
@@ -48,12 +44,29 @@ classvars:
    viInventory_group = 3
    viBroken_group = 2
 
-   viMin_damage = 2
-   viMax_damage = 5
+   viDamage = 500
+   viProficiencyBonus = 500
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 60
+   viStrike = 0
+   viSlash = 100
+   viThrust = 100
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 192
+
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_AIM
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
+   viSpellType = 0
+   viDeviation = 40
 
 properties:
-
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
 
 messages:
 

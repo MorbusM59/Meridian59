@@ -31,10 +31,6 @@ classvars:
    vrIcon = shortsword_icon_rsc
    vrDesc = shortsword_desc_rsc
 
-   % Short Swords are low quality thrusting weapons
-   viWeaponType = WEAPON_TYPE_THRUST
-   viWeaponQuality = WEAPON_QUALITY_LOW
-
    viProficiency_Needed = SKID_PROFICIENCY_SHORTSWORD
 
    viValue_average = 250
@@ -48,9 +44,29 @@ classvars:
    vrWeapon_window_overlay = shortsword_window_overlay_rsc
    vrWeapon_overlay = shortsword_player_overlay
 
-properties:
+   viDamage = 500
+   viProficiencyBonus = 500
+   viHitMod = 0
+   viPrimaryScaling = 30
+   viSecondaryScaling = 30
+   viStab = 120
+   viStrike = 0
+   viSlash = 80
+   viThrust = 100
+   viFire = 0
+   viTouch = 0
+   viDisarmMod = 0
+   viParryMod = 0
+   viSpellpowerMod = 0
+   viRange = 128
 
-   piAttack_type = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
+   viPrimaryStat = STAT_MIGHT
+   viSecondaryStat = STAT_AIM
+   viAttackType = ATCK_WEAP_NONMAGIC+ATCK_WEAP_THRUST
+   viSpellType = 0
+   viDeviation = 20
+
+properties:
 
 messages:
 
