@@ -157,7 +157,7 @@ messages:
 
    GetDamage(use_weapon=$, who=$, what=$)
    {
-      local iDamage, iDeviation, iSkill, iBonus, iStat, iFactor, iPower,
+      local iDamage, iSkill, iBonus, iStat, iFactor, iPower,
          iStrokeMod, iSpecialBonus;
 
       % Get base values from the weapon.
@@ -193,10 +193,6 @@ messages:
       % we are using for this attack.
       iStrokeMod = Send(use_weapon,@GetStrokeMod,#Skill_num=viSkill_num);
       iDamage = iDamage * iStrokeMod / 100;
-
-      % Finally, pick damage at random based on the weapon's damage deviation.
-      iDeviation = Send(use_weapon,@GetDeviation);
-      iDamage = iDamage * (100 + random(-iDeviation,iDeviation))/100;
 
       return bound(iDamage,0,$);
    }

@@ -4798,7 +4798,7 @@ messages:
    % This returns the damage done to target "what" before resistances.
    GetDamage(what = $, use_weapon = $, stroke_obj = $)
    {
-      local i, iDamage, iBonus, oMonster, iStrokeNum;
+      local i, iDamage, iBonus, oMonster, iStrokeNum, iDeviation;
 
       % If we are morphed, we take the monster's damage, if we are not, we ask
       % our stroke instead.
@@ -4852,6 +4852,12 @@ messages:
       iBonus = iBonus + Send(Send(SYS,@GetParliament),@GetFactionDamageBonus,#who=self);
       
       iDamage = iDamage + iDamage*iBonus/1000;
+
+      % As a last step, run damage by the deviation factor to randomize. We do
+      % this last to avoid discrete damage levels that occur when damage is
+      % randomized first and scaled later.
+      iDeviation = Send(use_weapon,@GetDeviation);
+      iDamage = iDamage * (100 + random(-iDeviation,iDeviation))/100;
 
       return iDamage;
    }

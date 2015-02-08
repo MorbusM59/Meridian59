@@ -147,8 +147,9 @@ messages:
       % This is special 'status' stuff, like the number of 
       %  number items you have left, or the condition of your 
       %  weapon.
-      local rItem_condition, iHit_percent, i, bFoundProperties, oSpell, iHigh_level, n,
-                             iFarenPower, iRiijaPower, iKraananPower, iJalaPower, iShalPower, iQorPower, iInstrumentPower;
+      local rItem_condition, iHit_percent, i, bFoundProperties, oSpell, 
+         iHigh_level, n, iFarenPower, iRiijaPower, iKraananPower, iJalaPower,
+         iShalPower, iQorPower, iInstrumentPower;
 
       for i in plObject_attributes
       {
@@ -164,7 +165,9 @@ messages:
             AppendTempString(special_properties_header);
          }
 
-         AppendTempString(Send(self,@GetRange));
+         % This appends our current range in decimals.
+         Send(SYS,@IntToString,#num=Send(self,@GetRange)*100/64,
+            #decimals=2,#append=TRUE);
          AppendTempString(" range");
          AppendTempString("\n");
 

@@ -36,20 +36,20 @@ resources:
    % battler_defender_miss - Psychochild's slash is blocked by you.
    % battler_defender_fail - Psychochild slashes at you with his scimitar, but fails to cause any real harm.
 
-   battler_attacker_hit_blue = "~bYou %s %s%s with your %s, %s %s for ~k~B%i~B %q~b damage."
+   battler_attacker_hit_blue = "~bYou %s %s%s with your %s, %s %s for ~k~B%q~B %q~b damage."
    battler_attacker_slay_blue = "~bYou %s %s%s with your %s, %s %s."
    battler_attacker_miss_blue = "~bYour %s %s %s%s."
    battler_attacker_fail_blue = "~bYou %s %s%s with your %s, but fail to cause any real harm."
-   battler_defender_hit_blue = "~b%s%s %s you with %s %s, %s you for ~r~B%i~B %q~b damage."
+   battler_defender_hit_blue = "~b%s%s %s you with %s %s, %s you for ~r~B%q~B %q~b damage."
    battler_defender_slay_blue = "~b%s%s %s you with %s %s, %s you."
    battler_defender_miss_blue = "~b%s%s's %s %s you."
    battler_defender_fail_blue = "~b%s%s %s you with %s %s, but fails to cause any real harm."
 
-   battler_attacker_hit_plain = "~nYou %s %s%s with your %s, %s %s for ~k~B%i~B %q~n damage."
+   battler_attacker_hit_plain = "~nYou %s %s%s with your %s, %s %s for ~k~B%q~B %q~n damage."
    battler_attacker_slay_plain = "~nYou %s %s%s with your %s, %s %s."
    battler_attacker_miss_plain = "~nYour %s %s %s%s."
    battler_attacker_fail_plain = "~nYou %s %s%s with your %s, but fail to cause any real harm."
-   battler_defender_hit_plain = "~n%s%s %s you with %s %s, %s you for ~r~B%i~B %q~n damage."
+   battler_defender_hit_plain = "~n%s%s %s you with %s %s, %s you for ~r~B%q~B %q~n damage."
    battler_defender_slay_plain = "~n%s%s %s you with %s %s, %s you."
    battler_defender_miss_plain = "~n%s%s's %s %s you."
    battler_defender_fail_plain = "~n%s%s %s you with %s %s, but fails to cause any real harm."
@@ -1378,17 +1378,36 @@ messages:
       local rWeaponName, iDmg, rDamageDesc, iType, rStrokeFirst, rStrokeThird,
       battler_attacker_hit, battler_attacker_slay, battler_attacker_fail,
       battler_defender_hit, battler_defender_slay, battler_defender_fail,
-      rAbsorb;
+      rDamage,rAbsorb,bAccuracy;
+
+      bAccuracy = Send(Send(SYS,@GetSettings),@GetAccuracy);
 
       rWeaponName = Send(use_weapon,@GetAttackName);
+
+      if bAccuracy
+      {
+         rDamage = Send(SYS,@IntToString,#num=damage,#decimals=2);
+      }
+      else
+      {
+         rDamage = Send(SYS,@IntToString,#num=damage/100);
+      }
+      
 
       % Create the absorb string. Leave it empty if nothing has been absorbed.
       rAbsorb = CreateString();
       ClearTempString();
-      if reduction/100 <> 0
+      if (bAccuracy AND reduction > 0 ) OR reduction > 99
       {
          AppendTempString("~y~B(");
-         AppendTempString(reduction/100);
+         if bAccuracy
+         {
+            Send(SYS,@IntToString,#num=reduction,#decimals=2,#append=TRUE);
+         }
+         else
+         {
+            Send(SYS,@IntToString,#num=reduction/100,#append=TRUE);
+         }
          AppendTempString(")~B");
       }
       else
@@ -1464,12 +1483,12 @@ messages:
             }
             else
             {
-               if damage > 99
+               if damage > 1
                {
                   Send(self,@MsgSendUser,#message_rsc=battler_attacker_hit,
                   #parm1=rStrokeFirst,#parm2=Send(what,@GetDef),#parm3=Send(what,@GetName),
                   #parm4=rWeaponName,#parm5=rDamageDesc,#parm6=Send(what,@GetHimHer),
-                  #parm7=damage/100,#parm8=rAbsorb);
+                  #parm7=rDamage,#parm8=rAbsorb);
                }
                else
                {
@@ -1505,12 +1524,12 @@ messages:
          }
          else
          {
-            if damage > 99
+            if damage > 1
             {
                Send(what,@MsgSendUser,#message_rsc=battler_defender_hit,
                #parm1=Send(self,@GetCapDef),#parm2=Send(self,@GetName),
                #parm3=rStrokeThird,#parm4=Send(what,@GetHisHer),#parm5=rWeaponName,
-               #parm6=rDamageDesc,#parm7=damage/100,#parm8=rAbsorb);
+               #parm6=rDamageDesc,#parm7=rDamage,#parm8=rAbsorb);
             }
             else
             {
