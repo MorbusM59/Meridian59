@@ -60,6 +60,11 @@ messages:
    {
       local oRoom;
 
+      if what = $
+      {
+         return 0;
+      }
+
       if Random(1,100) <= piEffect_percent
       {
          oRoom = Send(what,@GetOwner);

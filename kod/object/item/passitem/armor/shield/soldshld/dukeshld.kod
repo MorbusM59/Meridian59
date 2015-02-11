@@ -150,7 +150,7 @@ messages:
       return;
    }
 
-   GetSpellpowerBonus(oSpell=$)
+   SpellPowerHook(oSpell=$)
    {
       local iModifier;
 

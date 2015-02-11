@@ -71,6 +71,11 @@ Constructor()
    {
       local oSpell;
 
+      if what = $
+      {
+         return 0;
+      }
+
       if (Random(1,100) <= ((100-Nth(lData,3))/10))
          AND Send(who,@CheckPlayerFlag,#flag=PFLAG_PKILL_ENABLE)
       {

@@ -569,7 +569,7 @@ messages:
       return [ [ATCK_WEAP_PIERCE,10] ];
    }
 
-   GetSpellpowerBonus(oSpell=$)
+   SpellPowerHook(oSpell=$)
    {
       local iSchool;
 

@@ -185,7 +185,7 @@ properties:
    piMagicalReductionFlat = 0
 
    % Base value that is added to the SP of any spell the battler casts.
-   piBaseSpellpowerMod = 0
+   piSpellpowerMod = 0
 
    % Each element is [skillnum,skillmod]
    plSkillmods = $
@@ -335,9 +335,9 @@ messages:
       return piMagicalReductionFlat;
    }
 
-   GetBaseSpellpowerMod()
+   GetSpellpowerMod()
    {
-      return piBaseSpellpowerMod;
+      return piSpellpowerMod;
    }
 
    GetSkillmods()
@@ -413,9 +413,9 @@ messages:
       return;
    }
 
-   AddBaseSpellpowerMod(amount=0)
+   AddSpellpowerMod(amount=0)
    {
-      piBaseSpellpowerMod = piBaseSpellpowerMod + amount;
+      piSpellpowerMod = piSpellpowerMod + amount;
       
       return;
    }

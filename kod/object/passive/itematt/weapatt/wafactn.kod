@@ -199,6 +199,11 @@ messages:
    {
       local iTargetFaction, iWielderFaction, iWeaponFaction, iPower;
 
+      if what = $
+      {
+         return 0;
+      }
+
       if lData = $
       {
          Debug("This should definitely not happen! Weapon needs faction defined!");
@@ -238,6 +243,11 @@ messages:
    "do the damage bonus."
    {
       local iTargetFaction, iWielderFaction, iWeaponFaction, iPower;
+
+      if what = $
+      {
+         return 0;
+      }
 
       if lData = $
       {

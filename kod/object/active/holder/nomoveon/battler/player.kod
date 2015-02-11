@@ -2565,7 +2565,7 @@ messages:
       piMagicalReductionFactor = 0;
       piPhysicalReductionFlat = 0;
       piMagicalReductionFlat = 0;
-      piBaseSpellpowerMod = 0;
+      piSpellpowerMod = 0;
       plSkillmods = $;
       plSpellmods = $;
 
@@ -11033,7 +11033,7 @@ messages:
       piMagicalReductionFactor = 0;
       piPhysicalReductionFlat = 0;
       piMagicalReductionFlat = 0;
-      piBaseSpellpowerMod = 0;
+      piSpellpowerMod = 0;
       plSkillmods = $;
       plSpellmods = $;
 

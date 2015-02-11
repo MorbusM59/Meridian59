@@ -84,6 +84,11 @@ messages:
    {
       local iNum, iPower;
 
+      if what = $
+      {
+         return 0;
+      }
+
       %% here, iNum = power itself
       iPower = Send(self,@TranslatePowerFromCompound,#iCompound=first(lData));
       iPower = Send(self,@DecipherDamageFromPower,#iPower=iPower);
@@ -116,6 +121,11 @@ messages:
    "Wielder gets a hit bonus based on whether or not the target is a murderer or outlaw."
    {
       local iNum, iPower;
+
+      if what = $
+      {
+         return 0;
+      }
 
       %% here, iNum = power itself
       iPower = Send(self,@TranslatePowerFromCompound,#iCompound=first(lData));

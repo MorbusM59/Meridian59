@@ -71,6 +71,11 @@ messages:
    {
       local oSpell,iAmountTaken,iAmountGiven,iProficiency;
 
+      if what = $
+      {
+         return 0;
+      }
+
       if Random(1,100) <= piEffect_percent
       {
          iAmountTaken = Random(piMinManaStolen,piMaxManaStolen);

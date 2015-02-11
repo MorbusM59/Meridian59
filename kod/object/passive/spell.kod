@@ -2192,8 +2192,8 @@ messages:
    GetSpellPower(who=$)
    {
       local iSpellPower, i, iTerrain, oRoom, oModifierSpell, iAbilityLoss,
-            iAbilityGain, iItemModifier, iBase, iPrimaryBonus, iSecondaryBonus,
-            iPowerBonus, iShrines, lRadiusState;
+            iAbilityGain, iBase, iPrimaryBonus, iSecondaryBonus, iPowerBonus,
+            iModifier, iShrines, lRadiusState;
 
       oRoom = Send(who,@GetOwner);
 
@@ -2220,18 +2220,7 @@ messages:
       % Spell power starts out as half the player's spell ability.
       iBase = Send(who,@GetSpellAbility,#spell_num=viSpell_num)/2;
 
-      % We add the player's general spellpower bonus from various sources.
-      iItemModifier = Send(who,@GetBaseSpellpowerMod);      
-
-      % Check the player's in use items to see if they have a special effect on
-      % the spell currently cast. The modifier may change from school to school
-      % and spell to spell.
-      for i in Send(who,@GetPlayerUsing)
-      {
-         iItemModifier = iItemModifier + Send(i,@GetSpellModifier,#oSpell=self);
-      }
-   
-      % Each school has a bonus for different things.
+      % Next, we add the school specific primary and secondary boni.
       iPrimaryBonus = 0;
       iSecondaryBonus = 0;
 
@@ -2303,12 +2292,6 @@ messages:
          iPrimaryBonus = Length(Send(oRoom,@GetHolderActive));
          % Kraanan also favors the healthy warrior.  Full hps = more bonus.
          iSecondaryBonus = (Send(who,@GetHealth)*10)/Send(who,@GetMaxHealth);
-
-         % Kraanan, being a combat school, doesn't take penalties from items as much.
-         if iItemModifier < 0
-         {
-            iItemModifier = iItemModifier/2;
-         }
       }
       
       if viSchool = SS_JALA
@@ -2323,9 +2306,6 @@ messages:
          iSecondaryBonus = Send(who,@GetBaseMaxHealth)/12;
       }
 
-      iPowerBonus = Send(Send(SYS,@GetParliament),@GetFactionSpellPowerBonus,
-                         #who=who,#theSpell=self);
-
       % Bind the bonuses to reasonable values.
       if viSchool <> SS_JALA
       {
@@ -2333,28 +2313,69 @@ messages:
       }
       iSecondaryBonus = bound(iSecondaryBonus,0,10);
 
-      iSpellPower = iPrimaryBonus + iSecondaryBonus + iPowerBonus + iBase;
+      % The last part of our "base rating" comes from the faction bonus.
+      iPowerBonus = Send(Send(SYS,@GetParliament),@GetFactionSpellPowerBonus,
+         #who=who,#theSpell=self);
 
-      lRadiusState = Send(who,@GetMostPowerfulRadiusEnchantmentState,#byClass=&AntiMagicAura);
+      % Add what we have so far to get our preliminary spellpower.
+      iSpellPower = iBase + iPrimaryBonus + iSecondaryBonus + iPowerBonus;
+      
+      % Now before any actual boni are taken into account, we allow AMA and MC
+      % to have a say in the matter.
+      lRadiusState = Send(who,@GetMostPowerfulRadiusEnchantmentState,
+         #byClass=&AntiMagicAura);
       if lRadiusState <> $
       {
-         iSpellPower = Send(Nth(lRadiusState,1),@ModifySpellpower,#who=who,#oSpell=self,#state=lRadiusState,#iSpellPower=iSpellPower);
+         iSpellPower = iSpellPower + Send(First(lRadiusState),@SpellPowerPreHook,
+            #who=who,#oSpell=self,#iPower=Nth(lRadiusState,2),
+            #caster=Nth(lRadiusState,3));
       }
 
-      lRadiusState = Send(who,@GetMostPowerfulRadiusEnchantmentState,#byClass=&ManaConvergence);
+      lRadiusState = Send(who,@GetMostPowerfulRadiusEnchantmentState,
+         #byClass=&ManaConvergence);
       if lRadiusState <> $
       {
-         iSpellPower = Send(Nth(lRadiusState,1),@ModifySpellpower,#who=who,#oSpell=self,#state=lRadiusState,#iSpellPower=iSpellPower);
+         iSpellPower = iSpellPower + Send(First(lRadiusState),@SpellPowerPreHook,
+            #who=who,#oSpell=self,#iPower=Nth(lRadiusState,2),
+            #caster=Nth(lRadiusState,3));
       }
 
       % Bound the lower end so that the stuff that follows is truly a bonus.
       iSpellPower = bound(iSpellPower,0,$);
+      
+      % Next, we retrieve the player's general spellpower bonus from items...
+      iModifier = Send(who,@GetSpellpowerMod);      
+
+      % ...as well as any spell, school or situational boni.
+      for i in Send(who,@GetPlayerUsing)
+      {
+         iModifier = iModifier + Send(i,@SpellPowerHookForItems,#oSpell=self);
+      }
+
+      % Kraanan does not care much for puny spellpower penalties from items.
+      if viSchool = SS_KRAANAN AND iModifier < 0
+      {
+         iModifier = iModifier/2;
+      }
+
+      % Allow personal, room and radius enchantments to factor in.
+      for i in Send(who,@GetEnchantmentList)
+      {
+         iModifier = iModifier + Send(Nth(i,2),@SpellPowerHook,#who=who,
+            #oSpell=self);
+      }
+
+      for i in Send(who,@GetRadiusEnchantments)
+      {
+         iModifier = iModifier + Send(First(i),@SpellPowerHook,#who=who,
+            #oSpell=self,#iPower=Nth(i,2),#caster=Nth(i,3));
+      }
 
       % This number is based on the number of shrines this god controls.
       iShrines = Send(SYS,@GetShrineBonus,#school=viSchool);
 
       % These bonuses (shrine, items) can boost spell power after all other modifiers.
-      iSpellPower = iSpellPower + iShrines + iItemModifier;
+      iSpellPower = iSpellPower + iShrines + iModifier;
 
       % Then, add bonus from the system object, set by admins
       iSpellPower = iSpellPower + Send(SYS,@GetBonusSpellpower,#school=viSchool);
@@ -2368,10 +2389,6 @@ messages:
          iSpellpower = iSpellpower - iAbilityLoss;
       }
 
-      % The personal universal modifier.
-      iSpellpower = iSpellpower
-                     + (iSpellpower*Send(who,@CheckPlayerFlag,#flagset=3)/100);
-         
       % Bound the result.
       iSpellPower = bound(iSpellPower,SPELLPOWER_MINIMUM,SPELLPOWER_MAXIMUM);
       
@@ -2618,7 +2635,13 @@ messages:
    DefenseHook(who=$,what=$,use_weapon=$,stroke_obj=$,caster=$,iPower=0)
    {
       return 0;
-   }   
+   }
+
+   % Hooks into GetSpellPower and can modify spellpower.
+   SpellPowerHook(who=$,oSpell=$,caster=$,iPower=0)
+   {
+      return 0;
+   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

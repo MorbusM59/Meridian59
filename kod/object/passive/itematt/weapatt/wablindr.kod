@@ -72,9 +72,14 @@ messages:
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
    ModifyDamage(who=$,what=$,stroke_obj=$,use_weapon=$,lData=$)
-   "Wielder has a 1% chance of blinding target with any hit."
+   "Wielder has a 15% chance of blinding target with any hit."
    {
       local oSpell;
+      
+      if what = $
+      {
+         return 0;
+      }
 
       if Random(1,100) < piEffect_percent
       {

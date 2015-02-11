@@ -59,6 +59,11 @@ messages:
    {
       local oSpell;
 
+      if what = $
+      {
+         return 0;
+      }
+
       if Random(1,100) <= piEffect_percent
       {
          oSpell = Send(SYS,@FindSpellByNum,#num=SID_HOLD);

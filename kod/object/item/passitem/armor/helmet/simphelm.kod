@@ -44,7 +44,7 @@ classvars:
    %%% Combat Mods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    viCombatModDefense = 20
    viPhysicalReductionFlat = 50
-   viBaseSpellpowerMod = -5
+   viSpellpowerMod = -5
 
 properties:
 

@@ -82,7 +82,7 @@ messages:
       propagate;
    }
 
-   GetBaseSpellModifier(oSpell=$)
+   SpellPowerHook(oSpell=$)
    {
       if send(oSpell,@GetSchool) = SS_SHALILLE
       {

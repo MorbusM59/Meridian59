@@ -273,7 +273,7 @@ messages:
    }
 
    % Gives a bonus to Faren spells since it's firey!
-   GetSpellpowerBonus(oSpell=$)
+   SpellPowerHook(oSpell=$)
    {
       if oSpell <> $ AND Send(oSpell,@GetSchool) = SS_FAREN
       {

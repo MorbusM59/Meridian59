@@ -63,7 +63,7 @@ classvars:
 
    %%% Combat Mods %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    viCombatModDefense = 5
-   viBaseSpellpowerMod = 5
+   viSpellpowerMod = 5
 
 properties:   
 
@@ -109,7 +109,7 @@ messages:
       return FALSE;
    }
 
-   GetSpellpowerBonus(oSpell=$)
+   SpellPowerHook(oSpell=$)
    {
       if send(oSpell,@GetSchool) = piSchool
       {

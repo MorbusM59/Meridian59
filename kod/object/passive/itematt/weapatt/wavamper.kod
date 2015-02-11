@@ -66,6 +66,12 @@ messages:
    "Wielder has a piEffect_percent chance of restoring health with any hit."
    {
       local oSpell;
+
+      if what = $
+      {
+         return 0;
+      }
+
       if Random(1,100) <= piEffect_percent
       {
          Send(who,@GainHealth,#amount=random(piMinHealthGain,piMaxHealthGain));
