@@ -75,6 +75,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Fangs;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    DoSpasm()
    {
       local roll;

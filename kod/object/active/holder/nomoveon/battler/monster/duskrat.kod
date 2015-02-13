@@ -90,6 +90,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Fangs;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    MonsterAttack(what=$)
    {
       Send(self,@DoSlash);

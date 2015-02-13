@@ -17,7 +17,7 @@ constants:
    HITVALUE_MAX = 100
 
 resources:
-   stroke_name_rsc = "stroke"
+   stroke_name_rsc = "attack"
    stroke_icon_rsc = light.bgf
    stroke_desc_rsc = "This is a weapon stroke."
 
@@ -28,8 +28,8 @@ resources:
    stroke_hit_attacker = "%sYour %s hits %s%s."
    stroke_hit_defender = "%s%s hits you."
 
-   stroke_first_person = "hit"
-   stroke_third_person = "hits"
+   stroke_first_person = "attack"
+   stroke_third_person = "attacks"
    stroke_action_noun = "attack"
 
    stroke_hit_sound = patk.wav
@@ -164,7 +164,14 @@ messages:
       iDamage = Send(use_weapon,@GetDamage,#who=who,#what=what);
 
       % Factor in proficiency with the weapon.
-      iSkill = Send(who,@GetSkillAbility,#Skill_num=Send(use_weapon,@GetProfNum));
+      if IsClass(who,&Monster)
+      {
+         iSkill = Send(who,@GetProfAbility,#use_weapon=use_weapon);
+      }
+      else
+      {
+         iSkill = Send(who,@GetSkillAbility,#Skill_num=Send(use_weapon,@GetProfNum));
+      }
       iBonus = Send(use_weapon,@GetProficiencyBonus) * iSkill / 100;
       iDamage = iDamage + iBonus;
 
@@ -315,6 +322,18 @@ messages:
    GetActionNoun()
    {
       return vrStroke_action_noun;
+   }
+
+   % Strokes are used by both players and monsters. Instead of keeping track of
+   % monster skills, we calculate them based on difficulty instead.
+   GetAbility(who=$)
+   {
+      if IsClass(who,&Monster)
+      {
+         return Send(who,@GetDifficulty) * 10;
+      }
+
+      propagate;
    }
 
 end

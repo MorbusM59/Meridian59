@@ -5001,8 +5001,7 @@ messages:
 
       % Ask our weapon for the stroke number based on the target's distance
       % and the range of our weapon. Then get the actual stroke object.
-      iStroke = Send(use_weapon,@GetStrokeNum,#squareddistance=iSquaredDistance,
-         #range=iRange);
+      iStroke = Send(use_weapon,@GetStrokeNum,#squareddistance=iSquaredDistance);
       stroke_obj = Send(SYS,@FindSkillByNum,#num=iStroke);
 
       % Now that that's out of the way, let's go through various checks to see

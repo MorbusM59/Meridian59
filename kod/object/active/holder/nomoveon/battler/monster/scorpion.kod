@@ -76,6 +76,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Stinger;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    MonsterAttack(what = $)
    {
       piAnimation = ANIM_ATTACK;

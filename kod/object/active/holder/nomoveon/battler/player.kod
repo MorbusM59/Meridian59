@@ -4663,8 +4663,8 @@ messages:
 
    GetDefense(what=$,stroke_obj=$,use_weapon=$)
    {
-      local i, oShield, iParry, iDodge, iBlock, iAgility,
-            iDefense, iHealth, oMonster;
+      local i, iParry, iDodge, iBlock, iAgility,
+            iDefense, oMonster;
 
       % Get our defensive abilities.
       iParry = Send(self,@GetParryAbility,#stroke_obj=stroke_obj);
@@ -4687,7 +4687,7 @@ messages:
 
       iDefense = iDefense + Send(Send(SYS,@GetParliament),@GetFactionDefenseBonus,#who=self);
 
-      % Allow spells and items to hook in here for dynamic offense modification.
+      % Allow spells and items to hook in here for dynamic defense modification.
       for i in plUsing
       {
          iDefense = iDefense + Send(i,@DefenseHook,#who=self,#what=what,

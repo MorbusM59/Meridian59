@@ -94,6 +94,16 @@ messages:
       return;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Claws;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    DoSlash()
    {
       piAnimation = ANIM_ATTACK;

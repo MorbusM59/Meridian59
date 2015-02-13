@@ -56,9 +56,15 @@ messages:
 
    GetAbility(who=$)
    {
-      % Touch is not available to battlers as an actual skill. Instead, we return
-      % a rating based on the battler's maximum health.
-      return bound(Send(who,@GetMaxHealth),20,100);
+      % Touch is not available to battlers as an actual skill. For players,
+      % we return a rating based on the battler's maximum health. Monsters are
+      % covered in the superclass already.
+      if IsClass(who,&Player)
+      {
+         return bound(Send(who,@GetMaxHealth),20,100);
+      }
+
+      propagate;
    }
 
    SendMissSound(who=$,victim=$,use_weapon = $)

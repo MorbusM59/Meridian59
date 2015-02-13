@@ -91,6 +91,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Scimitar;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    % Used for defense messages
    GetParryAbility(stroke_obj=$)
    {

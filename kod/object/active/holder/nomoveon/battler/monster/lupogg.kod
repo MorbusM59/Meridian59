@@ -79,6 +79,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Fangs;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    GetAttackRange()
    {
       return 2;

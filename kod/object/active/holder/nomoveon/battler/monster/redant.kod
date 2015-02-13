@@ -73,6 +73,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Fangs;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    MonsterAttack(what = $)
    {
       piAnimation = ANIM_ATTACK;

@@ -4,7 +4,7 @@
 
 !include $(TOPDIR)\common.mak
 
-DEPEND = ..\weapon.bof
-BOFS = melee.bof ranged.bof magic.bof martial.bof monsterweapon.bof
+DEPEND = ..\monsterweapon.bof
+BOFS = claws.bof fangs.bof branch.bof stinger.bof
 
 !include $(KODDIR)\kod.mak

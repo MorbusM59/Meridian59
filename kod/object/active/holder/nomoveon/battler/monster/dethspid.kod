@@ -80,6 +80,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Fangs;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    DoSpasm()
    {
       Send(self,@DoLegSpasm);

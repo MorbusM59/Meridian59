@@ -117,6 +117,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Branch;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    MonsterAttack(what=$)
    {
       piAnimation = ANIM_ATTACK;

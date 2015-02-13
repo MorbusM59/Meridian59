@@ -101,6 +101,16 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Claws;
+   }
+
+   GetMonsterWeaponStats()
+   {
+      return $;
+   }
+
    GetObjectFlags()
    {
       if (piRoofState = STATE_ONROOF)

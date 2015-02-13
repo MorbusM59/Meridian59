@@ -587,12 +587,15 @@ messages:
    GetHitMod(who=$,what=$,stroke_obj=$)
    {
       local i, oWeapAtt, iBonus;
+      
+      iBonus = 0;
+      
       for i in plItem_Attributes
       {
          oWeapAtt = Send(SYS,@FindItemAttByNum,#num=Send(self,@GetNumFromCompound,#compound=First(i)));
          if IsClass(oWeapAtt,&WeaponAttribute)
          {
-            iBonus = Send(oWeapAtt,@GetHitMod,#who=poOwner,#what=what,#lData=i);
+            iBonus = iBonus + Send(oWeapAtt,@GetHitMod,#who=poOwner,#what=what,#lData=i);
          }
       }
       return piHitMod + iBonus;
@@ -666,7 +669,7 @@ messages:
       return viProficiency_needed;
    }
 
-   GetStrokeNum(squareddistance=0,range=0)
+   GetStrokeNum(squareddistance=0)
    {
       if IsClass(self,&MartialWeapon)
       {
@@ -685,7 +688,7 @@ messages:
 
       if squareddistance < 9216
       {
-         if viStrike > viStab
+         if piStrike > piStab
          {
             return SKID_STRIKE;
          }

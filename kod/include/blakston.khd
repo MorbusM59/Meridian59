@@ -1787,7 +1787,6 @@
    ATCK_WEAP_CLAW        = 0x00200
    ATCK_WEAP_BITE        = 0x00400
    ATCK_WEAP_STING       = 0x00800
-   ATCK_WEAP_ACID        = 0x01000
 
    % Unarmed
    ATCK_WEAP_UNARMED     = 0x02000
@@ -1821,6 +1820,9 @@
    SKID_BLOCK = 404
    SKID_SECOND_WIND = 405
    SKID_DISARM = 406
+
+   % Monster attacks start here.
+   SKID_ATTACK = 410
 
    % Melee weapon strokes start here.
    SKID_DEFAULT = 420

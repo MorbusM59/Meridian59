@@ -220,13 +220,27 @@ messages:
 
          if Send(self,@GetDisarmMod) <> 0
          {
-            AppendTempString(Send(self,@GetDisarmMod));
-            AppendTempString(" \% increased disarm ability\n");
+            if Send(self,@GetDisarmMod) <> $
+            {
+               AppendTempString(Send(self,@GetDisarmMod));
+               AppendTempString(" \% increased disarm ability\n");
+            }
+            else
+            {
+               AppendTempString("is not suited for disarming\n");
+            }
          }
          if Send(self,@GetParryMod) <> 0
          {
-            AppendTempString(Send(self,@GetParryMod));
-            AppendTempString(" \% increased parry ability\n");
+            if Send(self,@GetDisarmMod) <> $
+            {
+               AppendTempString(Send(self,@GetParryMod));
+               AppendTempString(" \% increased parry ability\n");
+            }
+            else
+            {
+               AppendTempString("is not suited for parrying\n");
+            }
          }
          if Send(self,@GetDeviation) <> 0
          {

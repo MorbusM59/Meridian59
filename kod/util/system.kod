@@ -3503,6 +3503,7 @@ messages:
        Send(self,@CreateOneSKillIfNew,#num=SKID_TOUCH,#class=&Touch);
        Send(self,@CreateOneSKillIfNew,#num=SKID_STRIKE,#class=&Strike);
        Send(self,@CreateOneSKillIfNew,#num=SKID_STAB,#class=&Stab);
+       Send(self,@CreateOneSKillIfNew,#num=SKID_ATTACK,#class=&Attack);
 
        return;
    }
