@@ -179,6 +179,9 @@ classvars:
    viCashMin = 200
    viCashMax = 600
 
+   vbBlock = TRUE
+   vbParry = TRUE
+
 properties:
 
    piBaseLevel = 80
@@ -674,26 +677,6 @@ messages:
       return;
    }
 
-   % Next two messages affect the defense messages.
-   GetParryAbility(stroke_obj=$)
-   {
-      if (stroke_obj <> $) and not Send(stroke_obj,@CanParry)
-      {
-         return 0;
-      }
-      
-      return (viDifficulty*10)/2;
-   }
-
-   GetBlockAbility(stroke_obj=$)
-   {
-      if (stroke_obj <> $) and not Send(stroke_obj,@CanBlock)
-      {
-         return 0;
-      }
-      
-      return (viDifficulty*10);
-   }
    % Returns weapon used.
 
    GetWeapon()

@@ -278,6 +278,10 @@ classvars:
 
    viWimpy = 0
 
+   vbDodge = TRUE
+   vbBlock = FALSE
+   vbParry = FALSE
+
    % If true, items that are sold actually come out of the monster's
    %inventory. If false, the items in the inventory are inexhaustible
    % templates, and copies are sold.
@@ -415,6 +419,10 @@ properties:
    piLastTimeAttacked = 0
    poLastAttacker = $
 
+   pbDodge = TRUE
+   pbBlock = FALSE
+   pbParry = FALSE
+
    % The "weapon" the monster is using.
    poMonster_weapon = $
 
@@ -493,12 +501,18 @@ messages:
          piColor_translation = color;
       }
 
+      % Sets the monster's ability to use defensive techniques.
+      pbDodge = vbDodge;
+      pbBlock = vbBlock;
+      pbParry = vbParry;
+
       Send(self,@CreateMonsterWeapon,#cweapon=Send(self,@GetMonsterWeaponClass),
          #lstats=Send(self,@GetMonsterWeaponStats));
 
       propagate;
    }
 
+   % This is used at creation to equip the monster with a fitting weapon.
    CreateMonsterWeapon(cweapon=$,lstats=$)
    {
       if poMonster_weapon <> $
@@ -508,6 +522,15 @@ messages:
       poMonster_weapon = Create(cweapon,#lstats=lstats);
       
       return poMonster_weapon;
+   }
+
+   % This restores a monster's weapon to its default.
+   RestoreMonsterWeapon()
+   {
+      Send(self,@CreateMonsterWeapon,#cweapon=Send(self,@GetMonsterWeaponClass),
+         #lstats=Send(self,@GetMonsterWeaponStats));
+
+      return;
    }
 
    GetMonsterWeapon()
@@ -1839,7 +1862,7 @@ messages:
       local i, iStroke, iProficiency, iAim, iOffense, oMonster, lRadiusState;
 
       % Figure out the relevant skill levels.
-      iStroke = Send(stroke_obj,@GetAbility,#who=self);
+      iStroke = Send(self,@GetStrokeAbility); 
       iProficiency = Send(self,@GetProfAbility);
 
       % The actual weighting of the different factors.
@@ -1875,12 +1898,12 @@ messages:
 
    GetStrokeAbility(stroke_obj=$)
    {
-      return 100;
+      return Send(self,@GetLevel);
    }
 
    GetProfAbility(use_weapon=$)
    {
-      return 100;
+      return Send(self,@GetDifficulty) * 10;
    }
 
    GetDefense(what=$,stroke_obj=$,use_weapon=$)
@@ -1919,9 +1942,7 @@ messages:
       return bound(iDefense,1,2000);
    }
 
-   % The next message deals with the three defense skills.  These messages
-   %  return the relative values of the three skills.  Used for defense
-   %  messages.
+   % The next message deals with the three defense skills.
    GetDodgeAbility(stroke_obj=$)
    {
       if (stroke_obj <> $) AND NOT Send(stroke_obj,@CanDodge)
@@ -1929,7 +1950,7 @@ messages:
          return 0;
       }
 
-      return (viDifficulty * 10);
+      return pbDodge*viLevel;
    }
 
    GetBlockAbility(stroke_obj=$)
@@ -1939,7 +1960,7 @@ messages:
          return 0;
       }
 
-      return (viDifficulty * 10);
+      return pbBlock*viDifficulty * 10;
    }
 
    GetParryAbility(stroke_obj=$)
@@ -1949,11 +1970,11 @@ messages:
          return 0;
       }
 
-      return (viDifficulty * 10);
+      return pbParry*viDifficulty * 10;
    }
 
    % This returns the damage done to target "what" before resistances.
-   GetDamage(what = $, use_weapon = $, stroke_obj = $)
+   GetDamage(what=$,use_weapon=$,stroke_obj=$)
    {
       local i, iDamage, iBonus, iStrokeNum, iDeviation;
 
@@ -2066,9 +2087,16 @@ messages:
       % Gort only takes effect if its effect is greater than that of regular
       % damage reduction. Since Gort is greater than 0, this also makes sure
       % that damage reduction doesn't become negative. (debuffs)
-      if iGort > iRedFlat
+      if iGort > iReduction
       {
          iReduction = iGort;
+      }
+
+      % We made sure that reduction is positive, now let's make sure it doesn't
+      % exceed the original damage.
+      if iReduction > damage
+      {
+         iReduction = damage;
       }
 
       return  iReduction;
@@ -2076,7 +2104,7 @@ messages:
 
    GetStat(stat=0)
    {
-      return viDifficulty*5;
+      return bound(viLevel/3,0,50) + viDifficulty*2;
    }
 
    % This is the type of damage done.

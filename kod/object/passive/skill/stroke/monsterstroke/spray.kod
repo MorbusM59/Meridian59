@@ -8,30 +8,34 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Stinger is MonsterWeapon
+Spray is MonsterStroke
 
 constants:
 
    include blakston.khd
 
 resources:
+   spray_name_rsc = "attack"
 
-   stinger_name_rsc = "stinger"
+   spray_first_person = "spray"
+   spray_third_person = "sprays"
+   spray_action_noun = "assault"
 
 classvars:
 
-   vrName = stinger_name_rsc
+   vrName = spray_name_rsc
 
-   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_STING
+   vrStroke_first_person = spray_first_person
+   vrStroke_third_person = spray_third_person
+   vrStroke_action_noun = spray_action_noun
+
+   viSchool = SKS_FENCING
+   viSkill_Num = SKID_SPRAY
+   viSkill_level = 50
 
 properties:
 
 messages:
-
-   GetStrokeNum()
-   {
-      return SKID_STRIKE;
-   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

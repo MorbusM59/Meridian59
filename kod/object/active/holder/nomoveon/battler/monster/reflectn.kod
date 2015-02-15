@@ -70,6 +70,9 @@ classvars:
    viDefault_behavior = AI_FIGHT_MONSTERS | AI_FIGHT_NEWBIESAFE \
                         | AI_FIGHT_AGGRESSIVE
 
+   vbBlock = TRUE
+   vbParry = TRUE
+
 properties:
 
    ptManaDrain
@@ -552,9 +555,7 @@ messages:
       return;
    }
 
-   % The next three messages deal with the three defense skills.
-   % These messages return the relative values of the three skills.
-   %  Used in player for defense, used in battler for defense messages.
+   % Defensive Abilities
    GetParryAbility(stroke_obj=$)
    {
       return Send(poOriginal,@GetParryAbility,#stroke_obj=stroke_obj);

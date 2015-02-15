@@ -133,6 +133,11 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &BattleBow;
+   }
+
    SetClan(clan = AVARCLAN_PROMAGIC)
    {
       piColor_translation = clan;

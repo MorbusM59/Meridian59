@@ -3504,6 +3504,9 @@ messages:
        Send(self,@CreateOneSKillIfNew,#num=SKID_STRIKE,#class=&Strike);
        Send(self,@CreateOneSKillIfNew,#num=SKID_STAB,#class=&Stab);
        Send(self,@CreateOneSKillIfNew,#num=SKID_ATTACK,#class=&Attack);
+       Send(self,@CreateOneSKillIfNew,#num=SKID_REND,#class=&Rend);
+       Send(self,@CreateOneSKillIfNew,#num=SKID_TEAR,#class=&Tear);
+       Send(self,@CreateOneSKillIfNew,#num=SKID_SPRAY,#class=&Spray);
 
        return;
    }

@@ -69,6 +69,22 @@ properties:
 
 messages:
 
+   GetSwings(who=$)
+   {
+      local iFactor, iStat, iPower;
+
+      iFactor = Send(self,@GetSecondaryScaling);
+      iStat = Send(who,@GetStat,#stat=Send(self,@GetSecondaryStat));
+      iPower = iFactor * iStat / 50 ;
+
+      if random(0,99) < iPower
+      {
+         return 2;
+      }
+
+      return 1;
+   }
+
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

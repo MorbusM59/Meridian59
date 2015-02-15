@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Stinger is MonsterWeapon
+MonsterStroke is Stroke
 
 constants:
 
@@ -16,22 +16,18 @@ constants:
 
 resources:
 
-   stinger_name_rsc = "stinger"
+   monster_stroke_name_rsc = "monster stroke"
 
 classvars:
 
-   vrName = stinger_name_rsc
+   vrName = monster_stroke_name_rsc
 
-   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_STING
+   viSkill_num = SKID_DEFAULT
+   viSchool = SKS_BRAWLING
 
 properties:
 
 messages:
-
-   GetStrokeNum()
-   {
-      return SKID_STRIKE;
-   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

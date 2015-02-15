@@ -67,6 +67,8 @@ classvars:
 
    viWimpy = 0
 
+   vbParry = TRUE
+
    vrSound_hit = OrcPitBoss_sound_hit
    vrSound_miss = OrcPitBoss_sound_miss
    vrSound_aware = OrcPitBoss_sound_aware
@@ -75,8 +77,6 @@ classvars:
 properties:
 
    piAnimation = ANIM_NONE
-   pbFirstAttack = TRUE
-   ptSecondAttack = $
 
 messages:
 
@@ -101,53 +101,11 @@ messages:
       return $;
    }
 
-   % Used for defense messages
-   GetParryAbility(stroke_obj=$)
+   GetSwings()
    {
-      if (stroke_obj <> $) and not Send(stroke_obj,@CanParry)
-      {
-         return 0;
-      }
+      Send(self,@DoSlash);
 
-      return (viDifficulty*10);
-   }
-
-   MonsterAttack(what = $)
-   {
-      if (NOT pbFirstAttack)
-      {
-         Send(self,@DoSlash);
-         pbFirstAttack = TRUE;
-      }
-      else
-      {
-         pbFirstAttack = FALSE;
-         if ptSecondAttack = $
-         {
-            % This code executes the attack twice,
-            % but only does the animation once.
-            ptSecondAttack = CreateTimer(self,@SecondAttackTimer,400);
-         }
-      }
-
-      return;
-   }
-
-   SecondAttackTimer()
-   {
-      if pbFirstAttack
-      {
-         return;
-      }
-
-      ptSecondAttack = $;
-      if poTarget <> $
-         AND poOwner = Send(poTarget,@GetOwner)
-      {
-         Send(self,@TryAttack,#what=poTarget);
-      }
-
-      return;
+      return 2;
    }
 
    DoSlash()
@@ -189,17 +147,6 @@ messages:
       }
 
       % if no body animation.
-      propagate;
-   }
-
-   Delete()
-   {
-      if ptSecondAttack <> $
-      {
-         DeleteTimer(ptSecondAttack);
-         ptSecondAttack = $;
-      }
-
       propagate;
    }
 

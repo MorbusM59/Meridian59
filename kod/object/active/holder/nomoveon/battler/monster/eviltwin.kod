@@ -68,11 +68,14 @@ classvars:
       AI_FIGHT_SINGLEMINDED | AI_FIGHT_MONSTERS \
       | AI_FIGHT_NEWBIESAFE | AI_FIGHT_AGGRESSIVE
 
+   vbBlock = TRUE
+   vbParry = TRUE
+
 properties:
 
    vrName = EvilTwin_name_rsc
    piDrawfx = 4
-   vrIcon = EvilTwin_male_icon_rsc
+   vrIcon = 0
    piAnimation = PANM_NONE
    poCaster = $
    poOriginal = $         % Who the EvilTwin is of.

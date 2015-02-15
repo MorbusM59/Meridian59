@@ -78,6 +78,11 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Secretions;
+   }
+
    MonsterAttack(what = $)
    {
       piAnimation = ANIM_ATTACK;

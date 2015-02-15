@@ -755,6 +755,11 @@ messages:
       return piSpellType & flag;
    }
 
+   % Weapons may do extra swings, usually depending on their secondary rating.
+   GetSwings(who=$)
+   {
+      return 1;
+   }
 
    %%%  Infrastructure
 

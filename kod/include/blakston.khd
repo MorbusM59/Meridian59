@@ -1823,6 +1823,9 @@
 
    % Monster attacks start here.
    SKID_ATTACK = 410
+   SKID_REND = 411
+   SKID_TEAR = 412
+   SKID_SPRAY = 413
 
    % Melee weapon strokes start here.
    SKID_DEFAULT = 420

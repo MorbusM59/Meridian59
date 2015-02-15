@@ -113,6 +113,11 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Secretions;
+   }
+
    Delete()
    {
       if ptActive <> $

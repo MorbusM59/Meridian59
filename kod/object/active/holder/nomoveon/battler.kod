@@ -36,20 +36,20 @@ resources:
    % battler_defender_miss - Psychochild's slash is blocked by you.
    % battler_defender_fail - Psychochild slashes at you with his scimitar, but fails to cause any real harm.
 
-   battler_attacker_hit_blue = "~bYou %s %s%s with your %s, %s %s for ~k~B%q~B %q~b damage."
+   battler_attacker_hit_blue = "~bYou %s %s%s with your %s, %s %s for ~k~B%q~B%q~b damage."
    battler_attacker_slay_blue = "~bYou %s %s%s with your %s, %s %s."
    battler_attacker_miss_blue = "~bYour %s %s %s%s."
    battler_attacker_fail_blue = "~bYou %s %s%s with your %s, but fail to cause any real harm."
-   battler_defender_hit_blue = "~b%s%s %s you with %s %s, %s you for ~r~B%q~B %q~b damage."
+   battler_defender_hit_blue = "~b%s%s %s you with %s %s, %s you for ~r~B%q~B%q~b damage."
    battler_defender_slay_blue = "~b%s%s %s you with %s %s, %s you."
    battler_defender_miss_blue = "~b%s%s's %s %s you."
    battler_defender_fail_blue = "~b%s%s %s you with %s %s, but fails to cause any real harm."
 
-   battler_attacker_hit_plain = "~nYou %s %s%s with your %s, %s %s for ~k~B%q~B %q~n damage."
+   battler_attacker_hit_plain = "~nYou %s %s%s with your %s, %s %s for ~k~B%q~B%q~n damage."
    battler_attacker_slay_plain = "~nYou %s %s%s with your %s, %s %s."
    battler_attacker_miss_plain = "~nYour %s %s %s%s."
    battler_attacker_fail_plain = "~nYou %s %s%s with your %s, but fail to cause any real harm."
-   battler_defender_hit_plain = "~n%s%s %s you with %s %s, %s you for ~r~B%q~B %q~n damage."
+   battler_defender_hit_plain = "~n%s%s %s you with %s %s, %s you for ~r~B%q~B%q~n damage."
    battler_defender_slay_plain = "~n%s%s %s you with %s %s, %s you."
    battler_defender_miss_plain = "~n%s%s's %s %s you."
    battler_defender_fail_plain = "~n%s%s %s you with %s %s, but fails to cause any real harm."
@@ -200,6 +200,13 @@ properties:
    % This dummy weapon represents the battler's active touchattack and allows us
    % to treat touchattacks like any other weapon attack.
    poMagic_weapon = $
+
+   % This list is created whenever the battler attacks and handles the possibility
+   % of multiple swings.
+   plSwings = $
+
+   % Since we don't want to have all the swings at once, we use a timer.
+   ptSwings = $
 
    % Items currently in use by the battler.
    plUsing = $
@@ -872,8 +879,7 @@ messages:
    % run into this cap as piBaseRating is increased though.
    TryAttack(what=$,use_weapon=$,stroke_obj=$)
    {
-      local iOffense, iDefense, iChanceToHit, iDamage, iScalefactor, iReduction,
-         attacktype, spelltype;
+      local iOffense, iDefense, iChanceToHit, iSwings;
 
       iOffense = Send(self,@GetOffense,#what=what,#use_weapon=use_weapon,
          #stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
@@ -881,6 +887,58 @@ messages:
          #stroke_obj=stroke_obj) + Send(Send(SYS,@GetSettings),@GetBaseRating);
       iChanceToHit = iOffense * Send(Send(SYS,@GetSettings),@GetEqualChanceToHit) / iDefense;
       iChanceToHit = bound(iChanceToHit,125,2000);
+
+      % We may do more than one swing per attack. Ask ourselves how many we do.
+      iSwings = Send(self,@GetSwings,#use_weapon=use_weapon);
+
+      plSwings = [iSwings,iChanceToHit,what,use_weapon,stroke_obj];
+
+      Send(self,@CarryOutAttack);
+
+      if poOwner <> $
+      {
+         Send(poOwner,@SomethingAttacked,#what=self,#victim=what,
+              #use_weapon=use_weapon);
+      }
+
+      return TRUE;
+   }
+
+   % This carries out an actual swing, allowing TryAttack to queue multiple ones up.
+   CarryOutAttack()
+   {
+      local iChanceToHit, what, use_weapon, stroke_obj,
+         iScalefactor, iDamage, attacktype, spelltype, iReduction;
+
+      if ptSwings <> $
+      {
+         ptSwings = $;
+      }
+
+      iChanceToHit = Nth(plSwings,2);
+      what = Nth(plSwings,3);
+      use_weapon = Nth(plSwings,4);
+      stroke_obj = Nth(plSwings,5);
+
+      % Double check to make sure our target is still alive and in the same room.
+      % If not, reset our swing list and return.
+      if (what = $) OR (poOwner <> Send(what,@GetOwner))
+      {
+         plSwings = $;
+         return;
+      }
+
+      % In case our chance to hit is greater than 100 percent, we may scale damage
+      % accordingly. This depends on our settings though.
+      if iChanceToHit > 1000 AND Send(Send(SYS,@GetSettings),@GetDamageScaling)
+      {
+         iScalefactor = iChanceToHit;
+      }
+      else
+      {
+         iScalefactor = 1000;
+      }
+
       if iChanceToHit >= random(1,1000)
       {
          % We hit!
@@ -896,16 +954,6 @@ messages:
          % Figure out the damage reduction before resistances.
          iReduction = Send(what,@GetDamageReduction,#damage=iDamage,
             #attacktype=attacktype,#spelltype=spelltype);
-
-         % Scale damage with chance to hit beyond 100 percent.
-         if iChanceToHit > 1000 AND Send(Send(SYS,@GetSettings),@GetDamageScaling)
-         {
-            iScalefactor = iChanceToHit;
-         }
-         else
-         {
-            iScalefactor = 1000;
-         }
 
          iDamage = Send(what,@AssessDamage,#what=self,#damage=iDamage,
             #reduction=iReduction,#attacktype=attacktype,#spelltype=spelltype,
@@ -929,13 +977,23 @@ messages:
          Send(self,@AssessMiss,#what=what,#stroke_obj=stroke_obj);
       }
 
-      if poOwner <> $
+      Setnth(plSwings,1,First(plSwings)-1);
+
+      if First(plSwings) > 0 AND iDamage <> $
       {
-         Send(poOwner,@SomethingAttacked,#what=self,#victim=what,
-              #use_weapon=use_weapon);
+         ptSwings = CreateTimer(self,@CarryOutAttack,200);
+      }
+      else
+      {
+         plSwings = $;
       }
 
-      return TRUE;
+      return;
+   }
+
+   GetSwings(use_weapon=$)
+   {
+      return 1;
    }
    
    GetLevel()
@@ -1469,17 +1527,17 @@ messages:
             if damage = $
             {
                Send(self,@MsgSendUser,#message_rsc=battler_attacker_slay,
-               #parm1=rStrokeFirst,#parm2=Send(what,@GetDef),#parm3=Send(what,@GetName),
-               #parm4=rWeaponName,#parm5=rDamageDesc,#parm6=Send(what,@GetHimHer));
+                  #parm1=rStrokeFirst,#parm2=Send(what,@GetDef),#parm3=Send(what,@GetName),
+                  #parm4=rWeaponName,#parm5=rDamageDesc,#parm6=Send(what,@GetHimHer));
             }
             else
             {
-               if damage > 1
+               if (bAccuracy AND damage > 0 ) OR damage > 99
                {
                   Send(self,@MsgSendUser,#message_rsc=battler_attacker_hit,
-                  #parm1=rStrokeFirst,#parm2=Send(what,@GetDef),#parm3=Send(what,@GetName),
-                  #parm4=rWeaponName,#parm5=rDamageDesc,#parm6=Send(what,@GetHimHer),
-                  #parm7=rDamage,#parm8=rAbsorb);
+                     #parm1=rStrokeFirst,#parm2=Send(what,@GetDef),#parm3=Send(what,@GetName),
+                     #parm4=rWeaponName,#parm5=rDamageDesc,#parm6=Send(what,@GetHimHer),
+                     #parm7=rDamage,#parm8=rAbsorb);
                }
                else
                {
@@ -1515,12 +1573,12 @@ messages:
          }
          else
          {
-            if damage > 1
+            if (bAccuracy AND damage > 0 ) OR damage > 99
             {
                Send(what,@MsgSendUser,#message_rsc=battler_defender_hit,
-               #parm1=Send(self,@GetCapDef),#parm2=Send(self,@GetName),
-               #parm3=rStrokeThird,#parm4=Send(self,@GetHisHer),#parm5=rWeaponName,
-               #parm6=rDamageDesc,#parm7=rDamage,#parm8=rAbsorb);
+                  #parm1=Send(self,@GetCapDef),#parm2=Send(self,@GetName),
+                  #parm3=rStrokeThird,#parm4=Send(self,@GetHisHer),#parm5=rWeaponName,
+                  #parm6=rDamageDesc,#parm7=rDamage,#parm8=rAbsorb);
             }
             else
             {

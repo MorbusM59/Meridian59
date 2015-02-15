@@ -28,5 +28,10 @@ properties:
 
 messages:
 
+   GetStrokeNum()
+   {
+      return SKID_STRIKE;
+   }
+
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

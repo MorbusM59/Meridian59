@@ -166,7 +166,7 @@ messages:
       % Factor in proficiency with the weapon.
       if IsClass(who,&Monster)
       {
-         iSkill = Send(who,@GetProfAbility,#use_weapon=use_weapon);
+         iSkill = Send(who,@GetProfAbility);
       }
       else
       {
@@ -193,7 +193,14 @@ messages:
       % Note that we are asking stroke for the ability, not player, since not
       % all strokes may be available to battlers as an actual skill and their
       % rating may be determined in other ways.
-      iSkill = Send(self,@GetAbility,#who=who);
+      if IsClass(who,&Monster)
+      {
+         iSkill = Send(who,@GetStrokeAbility);
+      }
+      else
+      {
+         iSkill = Send(self,@GetAbility,#who=who);
+      }
       iDamage = iDamage * (100 + iSkill) / 200;
 
       % Scale damage with the weapon's stroke modifier for the stroke
@@ -330,7 +337,7 @@ messages:
    {
       if IsClass(who,&Monster)
       {
-         return Send(who,@GetDifficulty) * 10;
+         return Send(who,@GetLevel) / 100;
       }
 
       propagate;

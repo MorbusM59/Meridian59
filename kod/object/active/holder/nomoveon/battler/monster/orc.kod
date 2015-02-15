@@ -58,6 +58,8 @@ classvars:
 
    viWimpy = 10
 
+   vbParry = TRUE
+
    vrSound_hit = orc_sound_hit
    vrSound_miss = orc_sound_miss
    vrSound_aware = orc_sound_aware
@@ -81,23 +83,6 @@ messages:
    GetMonsterWeaponClass()
    {
       return &Scimitar;
-   }
-
-   GetMonsterWeaponStats()
-   {
-      return $;
-   }
-
-   % Used for defense messages
-   GetParryAbility(stroke_obj=$)
-   {
-      if stroke_obj <> $
-         AND NOT Send(stroke_obj,@CanParry)
-      {
-         return 0;
-      }
-
-      return (viDifficulty*10)/2;
    }
 
    MonsterAttack(what = $)

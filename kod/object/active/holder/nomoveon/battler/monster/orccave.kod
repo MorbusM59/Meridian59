@@ -56,6 +56,8 @@ classvars:
    viCashmax = 650
    viWimpy = 4
 
+   vbParry = TRUE
+
    vrSound_hit = CaveOrc_sound_hit
    vrSound_miss = CaveOrc_sound_miss
    vrSound_aware = CaveOrc_sound_aware
@@ -79,23 +81,7 @@ messages:
 
    GetMonsterWeaponClass()
    {
-      return &Axe;
-   }
-
-   GetMonsterWeaponStats()
-   {
-      return $;
-   }
-
-   % Used for defense messages
-   GetParryAbility(stroke_obj=$)
-   {
-      if (stroke_obj <> $) and not Send(stroke_obj,@CanParry)
-      {
-         return 0;
-      }
-
-      return (viDifficulty*10)/4;
+      return &Pickaxe;
    }
 
    MonsterAttack(what = $)

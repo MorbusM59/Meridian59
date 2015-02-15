@@ -8,30 +8,34 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Stinger is MonsterWeapon
+Rend is MonsterStroke
 
 constants:
 
    include blakston.khd
 
 resources:
+   rend_name_rsc = "rend"
 
-   stinger_name_rsc = "stinger"
+   rend_first_person = "rend"
+   rend_third_person = "rends"
+   rend_action_noun = "assault"
 
 classvars:
 
-   vrName = stinger_name_rsc
+   vrName = rend_name_rsc
 
-   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_STING
+   vrStroke_first_person = rend_first_person
+   vrStroke_third_person = rend_third_person
+   vrStroke_action_noun = rend_action_noun
+
+   viSchool = SKS_FENCING
+   viSkill_Num = SKID_REND
+   viSkill_level = 50
 
 properties:
 
 messages:
-
-   GetStrokeNum()
-   {
-      return SKID_STRIKE;
-   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

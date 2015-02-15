@@ -60,6 +60,11 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Secretions;
+   }
+
    MonsterAttack(what = $)
    {
       % add in any attack animation calls

@@ -35,10 +35,10 @@ properties:
 
 messages:
 
-   GetParryAbility()
+   GetParryMod()
    {
       % Touch attacks have no parrying ability.
-      return 0;
+      return $;
    }
 
    % Magic doesn't break.

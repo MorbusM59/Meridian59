@@ -64,9 +64,9 @@ classvars:
    viRange = 160
 
    viPrimaryStat = STAT_MIGHT
-   viSecondaryStat = STAT_STAMINA
+   viSecondaryStat = STAT_MYSTICISM
    viAttackType = ATCK_WEAP_MAGIC+ATCK_WEAP_BLUDGEON
-   viSpellType = 0
+   viSpellType = ATCK_SPELL_HOLY
    viDeviation = 30
    
 properties:
@@ -78,7 +78,7 @@ properties:
 
 messages:
 
-   Constructor(iLongevity=$, iToHitBonus=$)
+   Constructor(iLongevity=$)
    {
       local oWeapAtt;
 
@@ -88,14 +88,7 @@ messages:
          iLongevity = 3600000;
       }
 
-      if iToHitBonus <> $
-      {
-         piHitBonus = iToHitBonus;
-      }
-
       ptLongevity = CreateTimer(self,@WeaponExpires,iLongevity);
-
-      Send(self,@SetSpellType,#flag=ATCK_SPELL_HOLY,#value=TRUE);
 
       propagate;
    }

@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Stinger is MonsterWeapon
+Pickaxe is MonsterWeapon
 
 constants:
 
@@ -16,22 +16,23 @@ constants:
 
 resources:
 
-   stinger_name_rsc = "stinger"
+   pickaxe_name_rsc = "pickaxe"
 
 classvars:
 
-   vrName = stinger_name_rsc
+   vrName = pickaxe_name_rsc
 
-   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_STING
+   viStab = 0
+   viStrike = 120
+   viSlash = 80
+   viThrust = 80
+   viRange = 96
+
+   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_THRUST
 
 properties:
 
 messages:
-
-   GetStrokeNum()
-   {
-      return SKID_STRIKE;
-   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

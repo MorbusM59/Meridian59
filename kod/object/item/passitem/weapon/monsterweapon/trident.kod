@@ -8,7 +8,7 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Stinger is MonsterWeapon
+Trident is MonsterWeapon
 
 constants:
 
@@ -16,22 +16,22 @@ constants:
 
 resources:
 
-   stinger_name_rsc = "stinger"
+   trident_name_rsc = "trident"
 
 classvars:
 
-   vrName = stinger_name_rsc
+   vrName = trident_name_rsc
 
-   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_STING
+   viStab = 60
+   viStrike = 0
+   viSlash = 80
+   viThrust = 120
+   viRange = 224
+   viAttackType = ATCK_WEAP_NONMAGIC + ATCK_WEAP_THRUST
 
 properties:
 
 messages:
-
-   GetStrokeNum()
-   {
-      return SKID_STRIKE;
-   }
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

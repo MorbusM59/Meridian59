@@ -113,6 +113,11 @@ messages:
       propagate;
    }
 
+   GetMonsterWeaponClass()
+   {
+      return &Trident;
+   }
+
    SetClan(clan = AVARCLAN_PROMAGIC)
    {
       piColor_translation = clan;
