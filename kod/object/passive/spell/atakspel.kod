@@ -181,7 +181,7 @@ messages:
          if NOT bItemCast
          {
             // Myst and Int boost base damage
-            iDamage = Send(self,@DamageFactors,#damage=iDamage,#who=who);
+            iDamage = Send(self,@DamageFactors,#damage=iDamage,#who=who,#lTargets=lTargets);
 
             // Reduce damage based on spell power.
             iDamage = (iDamage * (50 + (iSpellPower / 2))) / SPELLPOWER_MAXIMUM;

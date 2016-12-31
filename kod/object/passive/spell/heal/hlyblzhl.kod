@@ -1,0 +1,114 @@
+// Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+// All rights reserved.
+//
+// This software is distributed under a license that is described in
+// the LICENSE file that accompanies it.
+//
+// Meridian is a registered trademark.
+
+
+////////////////////////////////////////////////////////////////////////////////
+HolyBlazeHeal is Heal
+
+constants:
+
+   include blakston.khd
+
+resources:
+
+   include hlyblzhl.lkod
+
+   HolyBlazeHeal_cast_rsc = \
+      "%s%s engulfs you in a blaze of holy energy, restoring ~g~B%i~B~n hitpoints."
+
+classvars:
+
+   vrName = HolyBlaze_name_rsc
+   vrIcon = HolyBlaze_icon_rsc
+   vrDesc = HolyBlaze_desc_rsc
+   vrCastOther = HolyBlazeHeal_cast_rsc
+
+   viSpell_num = SID_HOLY_BLAZE_HEAL
+   viSchool = SS_SHALILLE
+   viSpell_level = 100
+   viPostCast_time = 2
+   viMana = 8
+   viSpellExertion = 2
+
+properties:
+
+messages:
+
+   ResetReagents()
+   {
+      // separate message so can change, then set from admin mode
+
+      plReagents = $;
+      plReagents = cons([&Emerald,2],plReagents);
+      plReagents = Cons([&Elderberry,1],plReagents);
+
+      return;
+   }
+
+   GetHealAmount(oTarget=$,iSpellPower=1,who=$)
+   {
+      local iAmount, iMysticism, iIntellect,iCasterKarma,iTargetKarma;
+
+      if (oTarget = $)
+      {
+         Debug("Trying to get heal amount for $ target!");
+
+         return 1;
+      }
+
+      // Get dual stats heal bonus. Karma is a major factor as well.
+      iMysticism = Send(who,@GetMysticism);
+      iIntellect = Send(who,@GetIntellect);
+      iCasterKarma = Send(who,@GetKarma);
+      iTargetKarma = Send(oTarget,@GetKarma);
+      iAmount = Random(2400,3600)*(iSpellpower+100)/200;
+
+      return ((100+bound(((iMysticism+iIntellect+iCasterKarma+iTargetKarma)/5),0,50))*iAmount)/100;
+   }
+
+   CanPayCosts(who=$,lTargets=$,bItemCast=FALSE)
+   {
+      local target, iTotalRange;
+
+      target = First(lTargets);
+
+      // Gotta check for range here since heals don't usually have a limit.
+      iTotalRange = 4 * FINENESS;
+
+      // A little fudge factor to account for lag drift, etc.
+      if IsClass(target,&Player) AND Send(target,@HasMovedRecently)
+      {
+         iTotalRange += RANGE_MOVEMENT_BONUS;
+      }
+
+      if Send(target,@GetOwner) <> $
+         AND Send(who,@SquaredFineDistanceTo3D,#what=target)
+                  > (iTotalRange * iTotalRange)
+      {
+         if NOT bItemCast
+         {
+            Send(who,@MsgSendUser,#message_rsc=attack_spell_out_of_range,
+                  #parm1=Send(target,@GetCapDef),#parm2=Send(target,@GetName),
+                  #parm3=vrName);
+         }
+
+         return FALSE;
+      }
+
+      propagate;
+   }
+
+   ImproveAbility(who=$,target=$)
+   {
+      Send(Send(SYS,@FindSpellByNum,#num=SID_HOLY_BLAZE),@ImproveAbility,#who=who,#target=target);
+
+      return;
+   }
+
+end
+////////////////////////////////////////////////////////////////////////////////

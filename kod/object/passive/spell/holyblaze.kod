@@ -1,0 +1,104 @@
+// Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+// All rights reserved.
+//
+// This software is distributed under a license that is described in
+// the LICENSE file that accompanies it.
+//
+// Meridian is a registered trademark.
+
+
+////////////////////////////////////////////////////////////////////////////////
+HolyBlaze is Spell
+
+// Generic attacking spell, such as blast or bolt spells.
+
+constants:
+
+   include blakston.khd
+
+resources:
+
+   include holyblaze.lkod
+
+   HolyBlaze_name_rsc = "holy blaze"
+   HolyBlaze_icon_rsc = iholybl.bgf
+   HolyBlaze_desc_rsc = "Bathes a target at short range in a blaze of holy energy, healing it "
+      "or harming it, depending on its karma.  Requires emeralds and elderberries to cast. "
+
+classvars:
+
+   vrName = HolyBlaze_name_rsc
+   vrIcon = HolyBlaze_icon_rsc
+   vrDesc = HolyBlaze_desc_rsc
+
+   viSpell_num = SID_HOLY_BLAZE
+   viSchool = SS_SHALILLE
+   viSpell_level = 4
+   viChance_To_Increase = 15
+   viMeditate_ratio = 30
+
+properties:
+
+messages:
+
+   CanPayCosts(who = $, lTargets = $, bItemCast = FALSE)
+   {
+      local oSpell;
+
+      oSpell = Send(self,@GetSubstituteSpell,#who=who,#lTargets=lTargets);
+
+      if oSpell = $
+      {
+         return FALSE;
+      }
+
+      return Send(oSpell,@CanPayCosts,#who=who,#lTargets=lTargets,#bItemCast=bItemCast);
+   }
+
+   CastSpell(who=$,lTargets=$,iSpellPower=0,bItemCast=FALSE)
+   {
+      local oSpell;
+
+      oSpell = Send(self,@GetSubstituteSpell,#lTargets=lTargets);
+
+      if oSpell = $
+      {
+         return;
+      }
+
+      return Send(oSpell,@CastSpell,#who=who,#lTargets=lTargets,
+         #iSpellPower=iSpellPower,#bItemCast=bItemCast);
+   }
+
+   GetSubstituteSpell(who=$,lTargets=$)
+   {
+      local oTarget;
+
+      if Length(lTargets) <> 1
+      {
+         return $;
+      }
+
+      oTarget = First(lTargets);
+
+      if NOT IsClass(oTarget,&Battler)
+      {
+         return $;
+      }
+
+      if oTarget = who
+      {
+         Send(who,@MsgSendUser,#message_rsc=spell_no_self_target,#parm1=Send(self,@GetName));
+         return $;
+      }
+
+      if Send(oTarget,@GetKarma) < 0 OR IsClass(oTarget,&Monster)
+      {
+         return Send(SYS,@FindSpellByNum,#num=SID_HOLY_BLAZE_ATTACK);
+      }
+
+      return Send(SYS,@FindSpellByNum,#num=SID_HOLY_BLAZE_HEAL);
+   }
+
+end
+////////////////////////////////////////////////////////////////////////////////

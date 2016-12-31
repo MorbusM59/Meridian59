@@ -97,7 +97,7 @@ messages:
       }
 
       iHeal = Send(self,@GetHealAmount,#oTarget=oTarget,
-                     #iSpellPower=iSpellPower);
+                     #iSpellPower=iSpellPower,#who=who);
 
       iHeal = Send(oTarget,@GainHealthNormal,#amount=iHeal,#precision=TRUE);
 

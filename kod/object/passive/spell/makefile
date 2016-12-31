@@ -33,6 +33,7 @@ BOFS = animate.bof \
        forsight.bof \
        heal.bof \
        holysymb.bof \
+       holyblaze.bof \
        illform.bof \
        itemench.bof \
        manabomb.bof \

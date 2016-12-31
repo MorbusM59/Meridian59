@@ -3383,6 +3383,9 @@ messages:
       Send(self,@CreateOneSpellIfNew,#num=SID_CRYSTALIZE_MANA,#class=&CrystalizeMana);
       
       Send(self,@CreateOneSpellIfNew,#num=SID_DEATH_RIFT,#class=&DeathRift);
+      Send(self,@CreateOneSpellIfNew,#num=SID_HOLY_BLAZE,#class=&HolyBlaze);
+      Send(self,@CreateOneSpellIfNew,#num=SID_HOLY_BLAZE_ATTACK,#class=&HolyBlazeAttack);
+      Send(self,@CreateOneSpellIfNew,#num=SID_HOLY_BLAZE_HEAL,#class=&HolyBlazeHeal);
 
       Send(self,@CreateOneSpellIfNew,#num=SID_MEDITATE,#class=&Meditate);
       Send(self,@CreateOneSpellIfNew,#num=SID_SET,#class=&Set);

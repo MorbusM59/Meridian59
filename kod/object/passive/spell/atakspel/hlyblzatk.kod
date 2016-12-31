@@ -1,0 +1,98 @@
+// Meridian 59, Copyright 1994-2012 Andrew Kirmse and Chris Kirmse.
+// All rights reserved.
+//
+// This software is distributed under a license that is described in
+// the LICENSE file that accompanies it.
+//
+// Meridian is a registered trademark.
+
+
+////////////////////////////////////////////////////////////////////////////////
+HolyBlazeAttack is AttackSpell
+
+constants:
+
+   include blakston.khd
+
+resources:
+
+   include hlyblzatk.lkod
+
+   HolyBlazeAttack_sound = sholytch.ogg
+
+classvars:
+
+   vrName = HolyBlaze_name_rsc
+   vrIcon = HolyBlaze_icon_rsc
+   vrDesc = HolyBlaze_desc_rsc
+   vrSucceed_wav = HolyBlazeAttack_sound
+
+   viSpell_num = SID_HOLY_BLAZE_ATTACK
+   viAttack_spell = ATCK_SPELL_ALL + ATCK_SPELL_HOLY
+   viSchool = SS_SHALILLE
+   viSpell_level = 100
+   viMana = 8
+   viSpellExertion = 2
+
+properties:
+
+   piDamageMin = 12
+   piDamageMax = 18
+   piRange = 4 * FINENESS
+
+messages:
+
+   ResetReagents()
+   {
+      // separate message so can change, then set from admin mode
+
+      plReagents = $;
+      plReagents = cons([&Emerald,2],plReagents);
+      plReagents = Cons([&Elderberry,1],plReagents);
+
+      return;
+   }
+
+   DamageFactors(damage=0,who=$,lTargets=$)
+   {
+      local iMysticism, iIntellect,oTarget,iCasterKarma,iTargetKarma,bUndead;
+
+      // Get dual stats damage bonus. Karma is a major factor as well.
+      iMysticism = Send(who,@GetMysticism);
+      iIntellect = Send(who,@GetIntellect);
+      iCasterKarma = Send(who,@GetKarma);
+      iTargetKarma = 0;
+      bUndead = FALSE;
+
+      if lTargets <> $
+      {
+         oTarget = First(lTargets);
+         if IsClass(oTarget,&Battler)
+         {
+            iTargetKarma = Send(oTarget,@GetKarma);
+            bUndead = Send(oTarget,@IsUndead);
+         }
+      }
+
+      if bUndead
+      {
+         return ((100+bound(((iMysticism+iIntellect+iCasterKarma-iTargetKarma)/5),0,50))*damage)/50;
+      }
+
+      if iTargetKarma > 0
+      {
+         return ((100+bound(((iMysticism+iIntellect+iCasterKarma-iTargetKarma)/5),0,50))*damage)/200;
+      }
+
+      return ((100+bound(((iMysticism+iIntellect+iCasterKarma-iTargetKarma)/5),0,50))*damage)/100;
+   }
+
+   ImproveAbility(who=$,target=$)
+   {
+      Send(Send(SYS,@FindSpellByNum,#num=SID_HOLY_BLAZE),@ImproveAbility,#who=who,#target=target);
+
+      return;
+   }
+
+end
+////////////////////////////////////////////////////////////////////////////////
